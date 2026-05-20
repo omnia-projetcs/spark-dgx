@@ -45,11 +45,18 @@ When deploying models locally on your DGX Spark, performance will vary depending
 For real-time and crowd-sourced evaluations of model latency, throughput, token generation speed, and task quality specifically calibrated for such workstations, check the official benchmark index:
 👉 **[Spark Arena Leaderboard](https://spark-arena.com/leaderboard)**
 
+To easily launch, manage, and orchestrate LLM inference workloads on one or more NVIDIA DGX Spark systems (without the complexity of Slurm or Kubernetes), check the official management tool:
+👉 **[sparkrun Website](https://sparkrun.dev/)**
+
 #### Key Metrics to Track on the Spark Arena:
 *   **TTFT (Time to First Token):** Critical for interactive applications (e.g., chatbots).
 *   **Inter-Token Latency:** The generation speed (tokens per second).
 *   **Throughput (Tokens/sec/GPU):** Important for batched, offline processing workflows.
 *   **Quantization Quality Degradation:** Compares quantized variants (like AWQ, GPTQ, FP8) against native FP16 baselines.
+
+### 📈 Performance Experience & Concurrency Reports
+For an engineering deep-dive and real-world concurrency benchmark reports on the DGX Spark workstation:
+👉 **[Dendro Logic DGX Spark Concurrency Benchmark](https://dendro-logic.com/engineering/nvidia-dgx-spark-concurrency-benchmark/)**
 
 ---
 
@@ -71,7 +78,10 @@ To get the absolute best out of vLLM on ARM64 (`aarch64`) / Blackwell, **running
 
 ### Running vLLM via Docker
 
-Use the official, pre-optimized ARM64 vLLM containers from NVIDIA NGC or build one cleanly. Launching an OpenAI-compatible API server takes only a single, sandboxed command:
+Use the official pre-optimized ARM64 vLLM containers from NVIDIA NGC, or utilize the optimized community-built setup specifically configured for the Grace Blackwell GB10 (`sm_121`) architecture:
+👉 **[Optimized vLLM GB10 SM121 Repository](https://github.com/saifgithub/vllm-gb10-sm121)**
+
+Launching the OpenAI-compatible API server takes only a single, sandboxed command:
 
 ```bash
 docker run --gpus all \
@@ -106,15 +116,18 @@ To stay updated, ask questions, and troubleshoot bugs, utilize the following com
 
 ### 💬 Forums & Support
 *   **[NVIDIA DGX Spark GB10 Developer Forum](https://forums.developer.nvidia.com/c/accelerated-computing/dgx-spark-gb10/719)**: The official channel to report hardware, kernel driver, or system stability bugs.
+*   **[Optimized vLLM GB10 SM121 (saifgithub)](https://github.com/saifgithub/vllm-gb10-sm121)**: Community-maintained build recipes, Dockerfiles, and specific configurations for running vLLM on DGX Spark GB10 (`sm_121`).
 *   **[vLLM GitHub Issues](https://github.com/vllm-project/vllm/issues)**: Best for library bugs, Triton errors, or unsupported model operators.
 
 ### 📚 Official Documentation
+*   **[sparkrun Workload Orchestrator](https://sparkrun.dev/)**: Launch, manage, and stop LLM inference workloads on one or more NVIDIA DGX Spark systems — no Slurm, no Kubernetes, no fuss.
 *   **[vLLM Official Documentation](https://docs.vllm.ai/)**: For advanced configurations, speculative decoding, and pipeline parallelism.
 *   **[NVIDIA Blackwell Architecture](https://www.nvidia.com/en-us/data-center/blackwell-architecture/)**: Official page highlighting Blackwell's internal tech (FP4 Decompression, Dequantization Engine).
 *   **[NVIDIA NGC Container Catalog](https://catalog.ngc.nvidia.com/)**: For finding official GPU-optimized, ARM64 vLLM and TensorRT-LLM container tags.
 
 ### ⚙️ Alternative Inference & Serving Backends
 If you want to test engines other than vLLM:
+*   **[Atlas](https://github.com/Avarok-Cybersecurity/atlas)**: An extremely fast and lightweight inference and deployment framework optimized for NVIDIA DGX systems.
 *   **[NVIDIA TensorRT-LLM](https://github.com/NVIDIA/TensorRT-LLM)**: NVIDIA's proprietary, hyper-optimized engine. Excellent support for Blackwell FP4/FP8 quantization.
 *   **[Ollama (ARM64 Native)](https://github.com/ollama/ollama)**: Super easy to install for simple terminal-based interaction.
 *   **[SGLang](https://github.com/sgl-project/sglang)**: Extremely high-throughput server, alternative to vLLM.
@@ -124,7 +137,7 @@ If you want to test engines other than vLLM:
 ## Best Practices for DGX Spark (GB10)
 
 ### 1. Leverage Coherent Unified Memory
-Because the Grace CPU and Blackwell GPU share 128GB of LPDDR5x memory over an ultra-high-speed link (up to 900 GB/s bidirectional), CPU-offloading penalties are significantly lower than standard PCIe-based setups. 
+Because the Grace CPU and Blackwell GPU share 128GB of LPDDR5x memory over a high-speed coherent link (up to ~300 GB/s bidirectional, with a total system memory bandwidth of ~273 GB/s), CPU-offloading penalties are significantly lower than standard PCIe-based setups. 
 *   If your model is slightly too large for the GPU's immediate workspace, don't hesitate to utilize CPU-offloading strategies or KV-cache offloading configurations inside vLLM (`--gpu-memory-utilization` adjustments).
 
 ### 2. Go Quantized (FP8 & FP4)
