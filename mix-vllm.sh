@@ -160,14 +160,11 @@ case "${MODEL}" in
     )
 
     EXTRA_ARGS=(
-      "/models/qwen36"        # model path override (local mount)
       "--served-model-name"   "qwen36-fast"
       "--dtype"               "auto"
       "--quantization"        "compressed-tensors"
       "--kv-cache-dtype"      "fp8"
       "--tensor-parallel-size" "1"
-      "--enable-prefix-caching"
-      "--enable-chunked-prefill"
       "--enable-auto-tool-choice"
       "--tool-call-parser"    "qwen3_coder"
       "--reasoning-parser"    "qwen3"
@@ -207,8 +204,6 @@ case "${MODEL}" in
       "--attention-backend"   "FLASHINFER"
       "--kv-cache-dtype"      "fp8"
       "--load-format"         "fastsafetensors"
-      "--enable-prefix-caching"
-      "--enable-chunked-prefill"
       "--reasoning-parser"    "harmony"
     )
     ;;
@@ -242,8 +237,6 @@ case "${MODEL}" in
       "--load-format"         "fastsafetensors"
       "--kv-cache-dtype"      "fp8"
       "--tensor-parallel-size" "1"
-      "--enable-prefix-caching"
-      "--enable-chunked-prefill"
       "--enable-auto-tool-choice"
       "--tool-call-parser"    "qwen3_coder"
       "--reasoning-parser-plugin" "/nano_v3_reasoning_parser.py"
@@ -276,8 +269,6 @@ case "${MODEL}" in
       "--load-format"         "fastsafetensors"
       "--quantization"        "awq"
       "--kv-cache-dtype"      "fp8"
-      "--enable-prefix-caching"
-      "--enable-chunked-prefill"
       "--enable-auto-tool-choice"
       "--tool-call-parser"    "glm4_moe"
     )
@@ -307,8 +298,6 @@ case "${MODEL}" in
       "--dtype"               "auto"
       "--load-format"         "fastsafetensors"
       "--kv-cache-dtype"      "fp8"
-      "--enable-prefix-caching"
-      "--enable-chunked-prefill"
       "--enable-auto-tool-choice"
       "--tool-call-parser"    "qwen3_coder"
       "--reasoning-parser"    "qwen3"
@@ -342,7 +331,6 @@ case "${MODEL}" in
       "--load-format"         "fastsafetensors"
       "--kv-cache-dtype"      "fp8"
       "--tensor-parallel-size" "1"
-      "--enable-prefix-caching"
       "--enable-auto-tool-choice"
       "--tool-call-parser"    "qwen3_coder"
       "--reasoning-parser-plugin" "/super_v3_reasoning_parser.py"
@@ -375,8 +363,6 @@ case "${MODEL}" in
       "--load-format"         "fastsafetensors"
       "--attention-backend"   "flashinfer"
       "--kv-cache-dtype"      "fp8"
-      "--enable-prefix-caching"
-      "--enable-chunked-prefill"
       "--enable-auto-tool-choice"
       "--tool-call-parser"    "qwen3_coder"
       "--reasoning-parser"    "qwen3"
@@ -403,8 +389,6 @@ case "${MODEL}" in
       "--dtype"               "bfloat16"
       "--load-format"         "fastsafetensors"
       "--attention-backend"   "flashinfer"
-      "--enable-prefix-caching"
-      "--enable-chunked-prefill"
       "--enable-auto-tool-choice"
       "--tool-call-parser"    "pythonic"
     )
@@ -432,7 +416,6 @@ case "${MODEL}" in
       "--load-format"          "fastsafetensors"
       "--kv-cache-dtype"       "fp8"
       "--tensor-parallel-size" "4"
-      "--enable-prefix-caching"
       "--async-scheduling"
       "--enable-auto-tool-choice"
       "--tool-call-parser"     "gemma4"
