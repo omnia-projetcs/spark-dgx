@@ -37,7 +37,39 @@
 # ⚠️  For gated models (Llama, Gemma, etc.) you must also accept the model
 #     license on its Hugging Face page before downloading.
 # ─────────────────────────────────────────────────────────────────────────────
-HUGGING_FACE_HUB_TOKEN="hf_..."
+HUGGING_FACE_HUB_TOKEN="${HUGGING_FACE_HUB_TOKEN:-hf_...}"
+
+# ── TOKEN VALIDATION ──────────────────────────────────────────────────────────
+if [[ -z "${HUGGING_FACE_HUB_TOKEN}" || "${HUGGING_FACE_HUB_TOKEN}" == "hf_..." ]]; then
+  echo ""
+  echo "╔══════════════════════════════════════════════════════════════════════╗"
+  echo "║  ⚠️  WARNING — Hugging Face token is NOT configured!               ║"
+  echo "╠══════════════════════════════════════════════════════════════════════╣"
+  echo "║                                                                    ║"
+  echo "║  Most models require a valid Hugging Face token to download.       ║"
+  echo "║  Without it, gated models (Llama, Gemma, etc.) will FAIL.          ║"
+  echo "║                                                                    ║"
+  echo "║  How to get your token:                                            ║"
+  echo "║                                                                    ║"
+  echo "║   1. Create an account  → https://huggingface.co/join              ║"
+  echo "║   2. Go to Settings → Access Tokens:                               ║"
+  echo "║      → https://huggingface.co/settings/tokens                      ║"
+  echo "║   3. Click 'Create new token'                                      ║"
+  echo "║   4. Name: e.g. 'dgx-spark' — Permission: 'Read'                  ║"
+  echo "║   5. Copy the token (starts with hf_...)                           ║"
+  echo "║   6. Paste it in this script at line ~40:                          ║"
+  echo "║      HUGGING_FACE_HUB_TOKEN=\"hf_YourTokenHere\"                     ║"
+  echo "║                                                                    ║"
+  echo "║  Or set it as an environment variable before running:              ║"
+  echo "║      export HUGGING_FACE_HUB_TOKEN=\"hf_YourTokenHere\"              ║"
+  echo "║                                                                    ║"
+  echo "║  📖 Doc: https://huggingface.co/docs/hub/en/security-tokens        ║"
+  echo "║                                                                    ║"
+  echo "╚══════════════════════════════════════════════════════════════════════╝"
+  echo ""
+  exit 1
+fi
+# ─────────────────────────────────────────────────────────────────────────────
 
 CONTAINER_NAME="mix-vllm"
 PORT=8000

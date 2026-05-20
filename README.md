@@ -141,6 +141,29 @@ A turnkey Bash script that launches a fully configured, production-ready **vLLM 
 
 > 💬 Text &nbsp; 🖼️ Image &nbsp; 🎥 Video &nbsp; 🔊 Audio &nbsp; 🔧 Tool-call (MCP-compatible) &nbsp; 🧠 Reasoning/thinking
 
+> [!WARNING]
+> **Hugging Face Token Required** — Most models need a valid Hugging Face access token to download weights. Without it, gated models (Llama, Gemma, etc.) will **fail to start**.
+>
+> **How to get your token:**
+> 1. Create an account on [huggingface.co/join](https://huggingface.co/join)
+> 2. Go to **Settings → Access Tokens**: [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens)
+> 3. Click **"Create new token"**
+> 4. Choose a name (e.g. `dgx-spark`) and select permission **"Read"** (or *Fine-grained* with at least *Read access to contents of all repos under your personal namespace*)
+> 5. Copy the token (starts with `hf_...`)
+>
+> **Configure it** (pick one):
+> ```bash
+> # Option A — Edit the script directly (line ~40)
+> HUGGING_FACE_HUB_TOKEN="hf_YourTokenHere"
+>
+> # Option B — Export as environment variable before running
+> export HUGGING_FACE_HUB_TOKEN="hf_YourTokenHere"
+> ```
+>
+> ⚠️ For **gated models** (Llama, Gemma, etc.), you must also **accept the model license** on its [Hugging Face model page](https://huggingface.co/models) before downloading.
+>
+> 📖 **Documentation**: [Hugging Face — Security Tokens](https://huggingface.co/docs/hub/en/security-tokens)
+
 #### Usage:
 ```bash
 # 1. Edit mix-vllm.sh to uncomment the desired MODEL line
