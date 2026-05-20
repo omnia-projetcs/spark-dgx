@@ -118,6 +118,7 @@ VLLM_IMAGE="${IMG_STOCK}"
 EXTRA_ARGS=()
 ENV_ARGS=()
 VOLUME_ARGS=()
+MODEL_DOWNLOADS=()   # "repo_id|/local/dir" or "repo_id" (HF cache)
 
 case "${MODEL}" in
 
@@ -127,10 +128,7 @@ case "${MODEL}" in
   # Dedicated image: ghcr.io/aeon-7/vllm-spark-omni-q36:v1.2
   # 8 SM121 patches, CUTLASS NVFP4 (not Marlin), DFlash spec-decode.
   # DFlash drafter (z-lab/Qwen3.6-35B-A3B-DFlash, ~870 MB) boosts to 117 tok/s.
-  #
-  # PRE-REQUISITE — download both models before running:
-  #   hf download AEON-7/Qwen3.6-35B-A3B-heretic-NVFP4 --local-dir /opt/qwen36/model
-  #   hf download z-lab/Qwen3.6-35B-A3B-DFlash        --local-dir /opt/qwen36/dflash
+  # Both models are auto-downloaded to /opt/qwen36/ if not present.
   #
   # ⚠️  DO NOT set max_model_len=262144 on first boot — torch.compile autotune
   #     will freeze the system. Use 131072 (safe) then raise if needed.
@@ -142,6 +140,11 @@ case "${MODEL}" in
     MAX_BATCHED_TOKENS=4096
     MAX_NUM_SEQS=2
 
+    MODEL_DOWNLOADS=(
+      "AEON-7/Qwen3.6-35B-A3B-heretic-NVFP4|/opt/qwen36/model"
+      "z-lab/Qwen3.6-35B-A3B-DFlash|/opt/qwen36/dflash"
+    )
+
     VOLUME_ARGS=(
       -v /opt/qwen36/model:/models/qwen36:ro
       -v /opt/qwen36/dflash:/models/qwen36-dflash:ro
@@ -152,7 +155,6 @@ case "${MODEL}" in
       -e TORCH_MATMUL_PRECISION=high
       -e PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
       -e NVIDIA_FORWARD_COMPAT=1
-      -e VLLM_TEST_FORCE_FP8_MARLIN=1
       -e TORCHINDUCTOR_MAX_AUTOTUNE=0
       -e TRITON_MAX_AUTOTUNE=0
       -e VLLM_USE_V1=1
@@ -163,7 +165,6 @@ case "${MODEL}" in
       "--served-model-name"   "qwen36-fast"
       "--dtype"               "auto"
       "--quantization"        "compressed-tensors"
-      "--kv-cache-dtype"      "fp8"
       "--tensor-parallel-size" "1"
       "--enable-auto-tool-choice"
       "--tool-call-parser"    "qwen3_coder"
@@ -519,6 +520,73 @@ case "${MODEL}" in
     MAX_NUM_SEQS=128
     ;;
 esac
+
+# ── AUTO-DOWNLOAD MODELS ─────────────────────────────────────────────────────
+# Downloads models that are not yet present locally.
+# Uses Docker + Python huggingface_hub (always present in vLLM images).
+#   - "repo_id|/local/dir"  → downloads to a specific directory (for volume mounts)
+#   - "repo_id"             → downloads to the HF cache (~/.cache/huggingface)
+# If MODEL_DOWNLOADS is empty, defaults to caching ${MODEL} from HuggingFace.
+# ─────────────────────────────────────────────────────────────────────────────
+
+download_if_needed() {
+  local entry="$1"
+  local repo="${entry%%|*}"
+  local target_dir="${entry#*|}"
+
+  # If no | separator, target_dir equals repo → cache mode
+  if [[ "${target_dir}" == "${repo}" ]]; then
+    target_dir=""
+  fi
+
+  if [[ -n "${target_dir}" ]]; then
+    # ── Local directory download ──
+    if [[ ! -f "${target_dir}/config.json" && ! -f "${target_dir}/params.json" ]]; then
+      echo "📥 Downloading ${repo} → ${target_dir} ..."
+      mkdir -p "${target_dir}"
+      docker run --rm \
+        --entrypoint python3 \
+        -v "${target_dir}:${target_dir}" \
+        -e HF_TOKEN="${HUGGING_FACE_HUB_TOKEN}" \
+        "${VLLM_IMAGE}" \
+        -c "from huggingface_hub import snapshot_download; snapshot_download('${repo}', local_dir='${target_dir}')"
+      if [[ $? -ne 0 ]]; then
+        echo "❌ Failed to download ${repo}"
+        exit 1
+      fi
+    else
+      echo "✓  ${repo} → ${target_dir} (already present)"
+    fi
+  else
+    # ── HuggingFace cache download ──
+    local cache_name="models--$(echo "${repo}" | tr '/' '--')"
+    local cache_path="${HOME}/.cache/huggingface/hub/${cache_name}"
+    if [[ ! -d "${cache_path}/snapshots" ]]; then
+      echo "📥 Caching ${repo} ..."
+      docker run --rm \
+        --entrypoint python3 \
+        -v "${HOME}/.cache/huggingface:/root/.cache/huggingface" \
+        -e HF_TOKEN="${HUGGING_FACE_HUB_TOKEN}" \
+        "${VLLM_IMAGE}" \
+        -c "from huggingface_hub import snapshot_download; snapshot_download('${repo}')"
+      if [[ $? -ne 0 ]]; then
+        echo "❌ Failed to download ${repo}"
+        exit 1
+      fi
+    else
+      echo "✓  ${repo} (already cached)"
+    fi
+  fi
+}
+
+# Default: download the MODEL itself from HF if no explicit downloads defined
+if [[ ${#MODEL_DOWNLOADS[@]} -eq 0 ]]; then
+  MODEL_DOWNLOADS=("${MODEL}")
+fi
+
+for dl in "${MODEL_DOWNLOADS[@]}"; do
+  download_if_needed "${dl}"
+done
 
 # ─────────────────────────────────────────────────────────────────────────────
 

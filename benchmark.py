@@ -164,12 +164,13 @@ def run_single_request(
         "max_tokens": max_tokens,
         "temperature": temperature,
         "stream": True,
+        "stream_options": {"include_usage": True},
     }
 
     t_start = time.perf_counter()
     t_first_token = None
-    output_tokens = 0
-    full_response = ""
+    chunk_count = 0
+    usage_tokens = 0
 
     try:
         with requests.post(url, json=payload, stream=True, timeout=300) as resp:
@@ -185,26 +186,33 @@ def run_single_request(
                 except json.JSONDecodeError:
                     continue
 
+                # Capture usage from the final chunk (stream_options)
+                usage = chunk.get("usage")
+                if usage and "completion_tokens" in usage:
+                    usage_tokens = usage["completion_tokens"]
+
                 choices = chunk.get("choices", [])
                 if not choices:
                     continue
 
                 delta = choices[0].get("delta", {})
-                content = delta.get("content", "")
-                # Also count reasoning_content if present (Qwen3 thinking mode)
-                reasoning = delta.get("reasoning_content", "")
+                content = delta.get("content", "") or ""
+                # Check both field names: reasoning_content and reasoning
+                reasoning = delta.get("reasoning_content", "") or delta.get("reasoning", "") or ""
 
                 token_text = content or reasoning
                 if token_text:
                     if t_first_token is None:
                         t_first_token = time.perf_counter()
-                    output_tokens += 1
-                    full_response += token_text
+                    chunk_count += 1
 
         t_end = time.perf_counter()
 
         if t_first_token is None:
             t_first_token = t_end
+
+        # Prefer usage-reported token count, fall back to chunk count
+        output_tokens = usage_tokens if usage_tokens > 0 else chunk_count
 
         total_time = t_end - t_start
         ttft = t_first_token - t_start
