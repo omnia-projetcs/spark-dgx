@@ -18,8 +18,11 @@ This guide is designed to help researchers, developers, and data scientists get 
     - [Why vLLM on DGX Spark?](#why-vllm-on-dgx-spark)
     - [Docker-First Approach: Performance & Cleanliness](#docker-first-approach-performance--cleanliness)
     - [Running vLLM via Docker](#running-vllm-via-docker)
-4. [Useful Resources & External Links](#useful-resources--external-links)
-5. [Best Practices for DGX Spark (GB10)](#best-practices-for-dgx-spark-gb10)
+4. [Included Tools](#included-tools)
+    - [`mix-vllm.sh` — Multi-Model Launcher](#mix-vllmsh--multi-model-launcher)
+    - [`benchmark.py` — Performance Testing](#benchmarkpy--performance-testing)
+5. [Useful Resources & External Links](#useful-resources--external-links)
+6. [Best Practices for DGX Spark (GB10)](#best-practices-for-dgx-spark-gb10)
 
 ---
 
@@ -111,12 +114,106 @@ curl http://localhost:8000/v1/chat/completions \
 
 ---
 
+## Included Tools
+
+This repository ships with two ready-to-use scripts to deploy and benchmark models on your DGX Spark.
+
+### `mix-vllm.sh` — Multi-Model Launcher
+
+A turnkey Bash script that launches a fully configured, production-ready **vLLM Docker container** with optimized per-model settings. Simply uncomment the model you want to serve and run the script.
+
+#### Supported Models (pre-configured):
+
+| Model | Quantization | Context | Key Features |
+|---|---|---|---|
+| `rdtand/Qwen3.6-35B-A3B-PrismaQuant-4.75bit-vllm` | compressed-tensors 4.75bit | 256K | Speculative decoding (MTP ×3), FP8 KV-cache, Qwen3 reasoning |
+| `google/gemma-3-12b-it` | BF16 | 128K | FlashInfer, tool-call (pythonic parser) |
+| `bg-digitalservices/Gemma-4-26B-A4B-it-NVFP4` | NVFP4 | 262K | Tensor parallel ×4, FP8 KV-cache, Gemma4 tool+reasoning parser |
+| `Intel/Qwen3-Coder-Next-int4-AutoRound` | INT4 AutoRound | 1M | MoE FP8, YaRN RoPE scaling, 384 concurrent sequences |
+| `LiquidAI/LFM2.5-350M` | Auto | 32K | Ultra-lightweight, ideal for testing |
+
+#### Usage:
+```bash
+# 1. Edit mix-vllm.sh to uncomment the desired MODEL line
+# 2. Launch the container
+./mix-vllm.sh
+
+# Check server health
+curl http://localhost:8000/health
+
+# View live logs
+docker logs -f mix-vllm
+```
+
+Each model configuration includes optimized values for `--gpu-memory-utilization`, `--max-model-len`, `--max-num-batched-tokens`, attention backends, quantization settings, and tool-call parsers.
+
+---
+
+### `benchmark.py` — Performance Testing
+
+A standalone Python script that automatically benchmarks the currently running vLLM server across single-thread and multi-thread concurrency levels.
+
+#### Metrics Reported:
+
+| Metric | Description |
+|---|---|
+| **TTFT (ms)** | Time To First Token — initial response latency |
+| **Tokens/s (per request)** | Generation speed for individual requests |
+| **Tokens/s (aggregate)** | Total throughput across all concurrent requests |
+| **Tokens/response** | Average number of output tokens per response |
+| **Avg latency (s)** | Average total response time per request |
+
+#### Features:
+*   **Auto-detects** the served model name from the `/v1/models` endpoint
+*   **Streaming SSE** parsing for precise TTFT measurement
+*   **Handles `reasoning_content`** from Qwen3 thinking mode
+*   **Warmup phase** to avoid cold-start skew
+*   **Comparison table** across all concurrency levels
+*   **JSON export** of results to `benchmark_results.json`
+*   **Zero heavy dependencies** — only requires `requests`
+
+#### Usage:
+```bash
+# Install dependency
+pip install requests
+
+# Default: auto-detect model, test concurrency 1/2/4/8, 8 requests each
+python3 benchmark.py
+
+# Custom concurrency levels and more requests
+python3 benchmark.py --concurrency 1 4 16 --num-requests 16
+
+# Longer outputs for throughput testing
+python3 benchmark.py --max-tokens 1024
+
+# Use a custom prompt file (one prompt per line)
+python3 benchmark.py --prompt-file my_prompts.txt
+
+# Target a remote DGX Spark
+python3 benchmark.py --base-url http://192.168.1.100:8000
+```
+
+#### Example Output:
+```
+══════════════════════════════════════════════════════════════════════
+  📊 COMPARISON TABLE
+══════════════════════════════════════════════════════════════════════
+   Conc │   TTFT avg │   TTFT p95 │   Lat avg │  Tok/resp │  t/s (req) │  t/s (agg)
+  ──────────────────────────────────────────────────────────────────────
+      1 │    120.3ms │    145.2ms │    4.521s │     312.4 │      69.12 │      69.12
+      4 │    189.7ms │    234.1ms │    7.832s │     298.1 │      38.07 │     152.28
+      8 │    312.5ms │    489.3ms │   12.145s │     285.7 │      23.52 │     188.16
+```
+
+---
+
 ## Useful Resources & External Links
 
 To stay updated, ask questions, and troubleshoot bugs, utilize the following community hubs and official pages:
 
 ### 💬 Forums & Support
 *   **[NVIDIA DGX Spark GB10 Developer Forum](https://forums.developer.nvidia.com/c/accelerated-computing/dgx-spark-gb10/719)**: The official channel to report hardware, kernel driver, or system stability bugs.
+*   **[r/LocalLLaMA Reddit Community](https://www.reddit.com/r/LocalLLaMA/)**: The largest community for local LLM deployment, hardware setups, configurations, and benchmarks.
 *   **[spark-vllm-docker (eugr)](https://github.com/eugr/spark-vllm-docker)**: Highly-targeted, community-maintained Docker deployment resource for vLLM on DGX Spark.
 *   **[vllm-gb10-sm121 (saifgithub)](https://github.com/saifgithub/vllm-gb10-sm121)**: Community-maintained build recipes and optimized configurations specifically targeted for GB10 `sm_121`.
 *   **[vLLM GitHub Issues](https://github.com/vllm-project/vllm/issues)**: Best for library bugs, Triton errors, or unsupported model operators.

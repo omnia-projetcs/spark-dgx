@@ -1,0 +1,20 @@
+Explain the concept of quantum entanglement in simple terms, with a real-world analogy.
+Write a Python function to compute the Fibonacci sequence using dynamic programming with memoization. Include docstrings and type hints.
+Compare and contrast the economic policies of Keynesian economics and supply-side economics. Provide concrete historical examples.
+Describe the step-by-step process of how mRNA vaccines work, from injection to immune response.
+Write a short science fiction story (about 200 words) set on a space station orbiting Jupiter.
+What are the main differences between ARM and x86 CPU architectures? Explain the trade-offs for AI workloads.
+Explain how transformers and the attention mechanism work in large language models. Use analogies where possible.
+List and explain 5 best practices for securing a Docker container in production environments.
+You are a senior software architect. Design a microservices architecture for an e-commerce platform handling 10,000 orders per minute. Include service boundaries, communication patterns, and database choices.
+Explain the difference between TCP and UDP protocols. When should you use each one? Give examples of real applications.
+Write a comprehensive code review for the following Python snippet: `def f(x): return [i**2 for i in range(x) if i%2==0]`. Suggest improvements for readability, performance, and edge cases.
+What is the NVIDIA Grace Blackwell Superchip and how does its NVLink-C2C interconnect benefit AI inference workloads compared to traditional PCIe architectures?
+Explain the CAP theorem in distributed systems. For each pair of guarantees (CP, AP, CA), give a real-world database example and explain the trade-off.
+Write a Bash script that monitors disk usage on a Linux server and sends an alert when any partition exceeds 85% capacity.
+Summarize the key innovations introduced by the Transformer architecture (Vaswani et al., 2017) and explain why it replaced RNNs and LSTMs for most NLP tasks.
+Explain how KV-cache works in large language model inference. Why does it matter for throughput and latency?
+You are a cybersecurity expert. Describe a comprehensive incident response plan for a ransomware attack targeting a mid-size enterprise. Include detection, containment, eradication, and recovery phases.
+Compare FP32, FP16, FP8, and FP4 numerical precision formats for AI inference. What are the trade-offs in accuracy, speed, and memory usage?
+Write a detailed explanation of how PagedAttention (used in vLLM) improves memory efficiency for LLM serving compared to static memory allocation.
+Explain the concept of speculative decoding in LLM inference. How does it improve generation speed without sacrificing output quality?
