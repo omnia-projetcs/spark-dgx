@@ -78,8 +78,9 @@ To get the absolute best out of vLLM on ARM64 (`aarch64`) / Blackwell, **running
 
 ### Running vLLM via Docker
 
-Use the official pre-optimized ARM64 vLLM containers from NVIDIA NGC, or utilize the optimized community-built setup specifically configured for the Grace Blackwell GB10 (`sm_121`) architecture:
-👉 **[Optimized vLLM GB10 SM121 Repository](https://github.com/saifgithub/vllm-gb10-sm121)**
+Use the official pre-optimized ARM64 vLLM containers from NVIDIA NGC, or utilize optimized community-built setups specifically configured for the Grace Blackwell GB10:
+*   👉 **[eugr/spark-vllm-docker](https://github.com/eugr/spark-vllm-docker)**: Dedicated Docker setup for running vLLM on DGX Spark.
+*   👉 **[saifgithub/vllm-gb10-sm121](https://github.com/saifgithub/vllm-gb10-sm121)**: Optimized vLLM configurations for Grace Blackwell (`sm_121`) target.
 
 Launching the OpenAI-compatible API server takes only a single, sandboxed command:
 
@@ -116,7 +117,8 @@ To stay updated, ask questions, and troubleshoot bugs, utilize the following com
 
 ### 💬 Forums & Support
 *   **[NVIDIA DGX Spark GB10 Developer Forum](https://forums.developer.nvidia.com/c/accelerated-computing/dgx-spark-gb10/719)**: The official channel to report hardware, kernel driver, or system stability bugs.
-*   **[Optimized vLLM GB10 SM121 (saifgithub)](https://github.com/saifgithub/vllm-gb10-sm121)**: Community-maintained build recipes, Dockerfiles, and specific configurations for running vLLM on DGX Spark GB10 (`sm_121`).
+*   **[spark-vllm-docker (eugr)](https://github.com/eugr/spark-vllm-docker)**: Highly-targeted, community-maintained Docker deployment resource for vLLM on DGX Spark.
+*   **[vllm-gb10-sm121 (saifgithub)](https://github.com/saifgithub/vllm-gb10-sm121)**: Community-maintained build recipes and optimized configurations specifically targeted for GB10 `sm_121`.
 *   **[vLLM GitHub Issues](https://github.com/vllm-project/vllm/issues)**: Best for library bugs, Triton errors, or unsupported model operators.
 
 ### 📚 Official Documentation
