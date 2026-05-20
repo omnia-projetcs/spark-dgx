@@ -328,9 +328,10 @@ def print_summary(summary: dict):
     print(f"  Tokens/s (agg.)   : {summary['tps_aggregate']:.2f} t/s  ← total throughput")
 
 
-def print_comparison_table(all_summaries: List[dict]):
+def print_comparison_table(all_summaries: List[dict], model_name: str = ""):
     """Print a compact comparison table across concurrency levels."""
-    print_header("📊 COMPARISON TABLE")
+    title = f"📊 COMPARISON TABLE ({model_name})" if model_name else "📊 COMPARISON TABLE"
+    print_header(title)
     header = (
         f"  {'Conc':>5} │ {'TTFT avg':>10} │ {'TTFT p95':>10} │ "
         f"{'Lat avg':>9} │ {'Tok/resp':>9} │ {'t/s (req)':>10} │ {'t/s (agg)':>10}"
@@ -472,7 +473,7 @@ def main():
 
     # ── Final comparison ──
     if len(all_summaries) > 1:
-        print_comparison_table(all_summaries)
+        print_comparison_table(all_summaries, model_name=model)
 
     # ── Save JSON results ──
     results_file = "benchmark_results.json"
