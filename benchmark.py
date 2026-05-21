@@ -60,6 +60,7 @@ class BenchmarkResult:
     concurrency: int
     num_requests: int
     results: List[RequestResult] = field(default_factory=list)
+    wall_time: float = 0.0
 
     @property
     def successful(self) -> List[RequestResult]:
@@ -78,7 +79,8 @@ class BenchmarkResult:
         tps_list = [r.tokens_per_sec for r in ok]
         token_counts = [r.output_tokens for r in ok]
         total_tokens = sum(token_counts)
-        wall_time = max(latencies)  # approximate wall-clock for concurrent
+        # Use actual measured wall_time if available, otherwise fall back to max latency
+        elapsed = self.wall_time if self.wall_time > 0.0 else max(latencies)
         return {
             "concurrency": self.concurrency,
             "requests_total": self.num_requests,
@@ -92,7 +94,7 @@ class BenchmarkResult:
             "tokens_per_resp_avg": round(statistics.mean(token_counts), 1),
             "tokens_per_resp_total": total_tokens,
             "tps_per_request_avg": round(statistics.mean(tps_list), 2),
-            "tps_aggregate": round(total_tokens / wall_time, 2) if wall_time > 0 else 0,
+            "tps_aggregate": round(total_tokens / elapsed, 2) if elapsed > 0 else 0,
         }
 
 
@@ -259,6 +261,7 @@ def run_benchmark(
     request_prompts = [prompts[i % len(prompts)] for i in range(num_requests)]
 
     result = BenchmarkResult(concurrency=concurrency, num_requests=num_requests)
+    t_start = time.perf_counter()
 
     if concurrency == 1:
         # Sequential execution
@@ -300,6 +303,8 @@ def run_benchmark(
             for future in as_completed(futures):
                 result.results.append(future.result())
 
+    t_end = time.perf_counter()
+    result.wall_time = t_end - t_start
     return result
 
 
