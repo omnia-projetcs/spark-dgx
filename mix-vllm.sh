@@ -6,7 +6,7 @@
 #  Rank  Model                                         tok/s    Quant     Image
 #  ────  ──────────────────────────────────────────   ───────  ───────   ────────────
 #  #1    AEON-7/Qwen3.6-35B-heretic-NVFP4 + DFlash    88–117   NVFP4    aeon-7 v1.2
-#  #2    openai/gpt-oss-120b (MXFP4)                   ~60     MXFP4    eugr-mxfp4 *
+#  #2    openai/gpt-oss-120b (MXFP4)                   ~60     MXFP4    eugr-nightly
 #  #3    nvidia/Nemotron-3-Nano-30B-A3B-NVFP4          ~56     NVFP4    eugr-nightly
 #  #4    THUDM/glm-4.7-flash-awq                       ~35     AWQ      eugr-tf5
 #  #5    Qwen/Qwen3.6-35B-A3B-FP8                      ~30     FP8      cu130-nightly
@@ -18,8 +18,7 @@
 #  ──    Intel/Qwen3-Coder-Next-int4-AutoRound         ~30     INT4     vllm-latest
 #  ──    LiquidAI/LFM2.5-350M                         fast     BF16     vllm-latest
 #
-#  * gpt-oss MXFP4 needs image built with --exp-mxfp4 from eugr/spark-vllm-docker
-#    ./build-and-copy.sh --exp-mxfp4  → produces local image: vllm-node-mxfp4
+#  * gpt-oss MXFP4 uses eugr-nightly with CUTLASS backend (no local build needed)
 # ─────────────────────────────────────────────────────────────────────────────
 
 # ── HUGGING FACE TOKEN ────────────────────────────────────────────────────────
@@ -75,8 +74,8 @@ CONTAINER_NAME="mix-vllm"
 PORT=8000
 
 # ── MODEL SELECTION ───────────────────────────────────────────────────────────
-MODEL="AEON-7/Qwen3.6-35B-A3B-heretic-NVFP4"
-# MODEL="openai/gpt-oss-120b"
+# MODEL="AEON-7/Qwen3.6-35B-A3B-heretic-NVFP4"
+MODEL="openai/gpt-oss-120b"
 # MODEL="nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-NVFP4"
 # MODEL="THUDM/glm-4.7-flash-awq"
 # MODEL="Qwen/Qwen3.6-35B-A3B-FP8"
@@ -100,10 +99,9 @@ IMG_EUGR="ghcr.io/spark-arena/dgx-vllm-eugr-nightly:latest"
 IMG_EUGR_TF5="ghcr.io/spark-arena/dgx-vllm-eugr-nightly-tf5:latest"
 #         └─ Same as above + Transformers 5.0 — required for GLM-4.7
 
-IMG_EUGR_MXFP4="vllm-node-mxfp4"
-#         └─ Local image — must be built first:
-#            ./build-and-copy.sh --exp-mxfp4  (eugr/spark-vllm-docker)
-#            Optimised CUTLASS MXFP4 path for gpt-oss — NOT for other models
+IMG_EUGR_MXFP4="${IMG_EUGR}"
+#         └─ Uses eugr-nightly with CUTLASS MXFP4 backend
+#            No local build needed — MXFP4 kernels included in eugr-nightly
 
 IMG_NIGHTLY="vllm/vllm-openai:cu130-nightly"
 #         └─ Official nightly with CUDA 13.0 + SM121 kernel support
@@ -162,12 +160,12 @@ case "${MODEL}" in
     )
 
     EXTRA_ARGS=(
-      "--served-model-name"   "qwen36-fast"
+      "--served-model-name"   "qwen3.6-35b-aeon7"
       "--dtype"               "auto"
       "--quantization"        "compressed-tensors"
       "--tensor-parallel-size" "1"
       "--enable-auto-tool-choice"
-      "--tool-call-parser"    "qwen3_coder"
+      "--tool-call-parser"    "qwen3_xml"
       "--reasoning-parser"    "qwen3"
       "--speculative-config"  '{"method":"dflash","model":"/models/qwen36-dflash","num_speculative_tokens":15}'
     )
@@ -178,9 +176,7 @@ case "${MODEL}" in
   # ═══════════════════════════════════════════════════════════════════════════
   # #2 openai/gpt-oss-120b (MXFP4)   ~58–60 tok/s
   # ═══════════════════════════════════════════════════════════════════════════
-  # MXFP4-specific image required (local build from eugr/spark-vllm-docker):
-  #   ./build-and-copy.sh --exp-mxfp4
-  # Uses native CUTLASS MXFP4 path — do NOT use with other models.
+  # Uses eugr-nightly with CUTLASS MXFP4 backend — no local build needed.
   # ⚠️  SM121 Marlin MXFP4 bug (vllm#37030) causes null output on older builds.
   #     The CUTLASS path (--mxfp4-backend CUTLASS) avoids this.
   # ═══════════════════════════════════════════════════════════════════════════
@@ -193,6 +189,7 @@ case "${MODEL}" in
 
     ENV_ARGS=(
       -e VLLM_HTTP_TIMEOUT_KEEP_ALIVE=600
+      -e VLLM_USE_FLASHINFER_MOE_MXFP4_MXFP8=1
       -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
     )
 
@@ -205,7 +202,9 @@ case "${MODEL}" in
       "--attention-backend"   "FLASHINFER"
       "--kv-cache-dtype"      "fp8"
       "--load-format"         "fastsafetensors"
-      "--reasoning-parser"    "harmony"
+      "--enable-auto-tool-choice"
+      "--tool-call-parser"    "openai"
+      "--reasoning-parser"    "openai_gptoss"
     )
     ;;
 
@@ -214,9 +213,7 @@ case "${MODEL}" in
   # ═══════════════════════════════════════════════════════════════════════════
   # Best throughput among ready-to-run models (no pre-download needed).
   # MoE: 30B total / 3.5B active. Reasoning + tool-call capable.
-  # ⚠️  Requires mod 'nemotron-nano' (nano_v3_reasoning_parser.py).
-  #     Mount the plugin from eugr/spark-vllm-docker/mods/nemotron-nano/:
-  #       -v /path/to/nano_v3_reasoning_parser.py:/nano_v3_reasoning_parser.py:ro
+  # Uses built-in 'nemotron_v3' reasoning parser (no external plugin needed).
   # ═══════════════════════════════════════════════════════════════════════════
   "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-NVFP4")
     VLLM_IMAGE="${IMG_EUGR}"
@@ -239,9 +236,8 @@ case "${MODEL}" in
       "--kv-cache-dtype"      "fp8"
       "--tensor-parallel-size" "1"
       "--enable-auto-tool-choice"
-      "--tool-call-parser"    "qwen3_coder"
-      "--reasoning-parser-plugin" "/nano_v3_reasoning_parser.py"
-      "--reasoning-parser"    "nano_v3"
+      "--tool-call-parser"    "qwen3_xml"
+      "--reasoning-parser"    "nemotron_v3"
     )
     ;;
 
@@ -265,13 +261,14 @@ case "${MODEL}" in
     )
 
     EXTRA_ARGS=(
-      "--served-model-name"   "glm4-flash"
+      "--served-model-name"   "glm4.7-flash"
       "--dtype"               "auto"
       "--load-format"         "fastsafetensors"
       "--quantization"        "awq"
       "--kv-cache-dtype"      "fp8"
       "--enable-auto-tool-choice"
-      "--tool-call-parser"    "glm4_moe"
+      "--tool-call-parser"    "glm47"
+      "--reasoning-parser"    "glm45"
     )
     ;;
 
@@ -295,12 +292,12 @@ case "${MODEL}" in
     )
 
     EXTRA_ARGS=(
-      "--served-model-name"   "qwen3.6-35b"
+      "--served-model-name"   "qwen3.6-35b-fp8"
       "--dtype"               "auto"
       "--load-format"         "fastsafetensors"
       "--kv-cache-dtype"      "fp8"
       "--enable-auto-tool-choice"
-      "--tool-call-parser"    "qwen3_coder"
+      "--tool-call-parser"    "qwen3_xml"
       "--reasoning-parser"    "qwen3"
     )
     ;;
@@ -310,8 +307,7 @@ case "${MODEL}" in
   # ═══════════════════════════════════════════════════════════════════════════
   # Model ~70 GB + KV cache ~34 GB → fits in 128 GB.
   # Marlin dequant (FP4→BF16) — native FP4 compute not yet on SM121 in vLLM.
-  # ⚠️  Requires 'nemotron-super' mod (super_v3_reasoning_parser.py):
-  #       -v /path/to/super_v3_reasoning_parser.py:/super_v3_reasoning_parser.py:ro
+  # Uses built-in 'nemotron_v3' reasoning parser (no external plugin needed).
   # ═══════════════════════════════════════════════════════════════════════════
   "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4")
     VLLM_IMAGE="${IMG_EUGR}"
@@ -333,9 +329,8 @@ case "${MODEL}" in
       "--kv-cache-dtype"      "fp8"
       "--tensor-parallel-size" "1"
       "--enable-auto-tool-choice"
-      "--tool-call-parser"    "qwen3_coder"
-      "--reasoning-parser-plugin" "/super_v3_reasoning_parser.py"
-      "--reasoning-parser"    "super_v3"
+      "--tool-call-parser"    "qwen3_xml"
+      "--reasoning-parser"    "nemotron_v3"
     )
     ;;
 
@@ -365,7 +360,7 @@ case "${MODEL}" in
       "--attention-backend"   "flashinfer"
       "--kv-cache-dtype"      "fp8"
       "--enable-auto-tool-choice"
-      "--tool-call-parser"    "qwen3_coder"
+      "--tool-call-parser"    "qwen3_xml"
       "--reasoning-parser"    "qwen3"
     )
     ;;
@@ -416,8 +411,7 @@ case "${MODEL}" in
       "--dtype"                "auto"
       "--load-format"          "fastsafetensors"
       "--kv-cache-dtype"       "fp8"
-      "--tensor-parallel-size" "4"
-      "--async-scheduling"
+      "--tensor-parallel-size" "1"
       "--enable-auto-tool-choice"
       "--tool-call-parser"     "gemma4"
       "--reasoning-parser"     "gemma4"
@@ -451,7 +445,7 @@ case "${MODEL}" in
       "--kv-cache-dtype"      "fp8"
       "--reasoning-parser"    "qwen3"
       "--enable-auto-tool-choice"
-      "--tool-call-parser"    "qwen3_coder"
+      "--tool-call-parser"    "qwen3_xml"
       "--optimization-level"  "3"
       "--performance-mode"    "throughput"
       "--default-chat-template-kwargs" '{"preserve_thinking":true}'
@@ -477,11 +471,14 @@ case "${MODEL}" in
       -e VLLM_MEMORY_PROFILER_ESTIMATE_CUDAGRAPHS=1
       -e SAFETENSORS_FAST_GPU=1
       -e VLLM_USE_FLASHINFER_MOE_FP8=1
+      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
     )
 
     EXTRA_ARGS=(
+      "--served-model-name"   "qwen3-coder-next"
       "--enable-auto-tool-choice"
-      "--tool-call-parser"    "qwen3_coder"
+      "--tool-call-parser"    "qwen3_xml"
+      "--reasoning-parser"    "qwen3"
       "--load-format"         "fastsafetensors"
       "--language-model-only"
       "--kv-cache-dtype"      "fp8"
@@ -502,9 +499,13 @@ case "${MODEL}" in
     MAX_BATCHED_TOKENS=8192
     MAX_NUM_SEQS=4
 
-    ENV_ARGS=(-e VLLM_MARLIN_USE_ATOMIC_ADD=1)
+    ENV_ARGS=(
+      -e VLLM_MARLIN_USE_ATOMIC_ADD=1
+      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
+    )
 
     EXTRA_ARGS=(
+      "--served-model-name"   "lfm2.5-350m"
       "--language-model-only"
       "--load-format"         "fastsafetensors"
       "--attention-backend"   "flash_attn"
