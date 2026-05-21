@@ -74,18 +74,18 @@ CONTAINER_NAME="mix-vllm"
 PORT=8000
 
 # ── MODEL SELECTION ───────────────────────────────────────────────────────────
-# MODEL="AEON-7/Qwen3.6-35B-A3B-heretic-NVFP4"
-MODEL="openai/gpt-oss-120b"
-# MODEL="nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-NVFP4"
-# MODEL="QuantTrio/GLM-4.7-Flash-AWQ"
-# MODEL="Qwen/Qwen3.6-35B-A3B-FP8"
-# MODEL="nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4"
-# MODEL="RedHatAI/Qwen3.5-122B-A10B-NVFP4"
-# MODEL="google/gemma-3-12b-it"
-# MODEL="bg-digitalservices/Gemma-4-26B-A4B-it-NVFP4"
-# MODEL="rdtand/Qwen3.6-35B-A3B-PrismaQuant-4.75bit-vllm"
-# MODEL="Intel/Qwen3-Coder-Next-int4-AutoRound"
-# MODEL="LiquidAI/LFM2.5-350M"
+# MODEL="AEON-7/Qwen3.6-35B-A3B-heretic-NVFP4"          # https://huggingface.co/AEON-7/Qwen3.6-35B-A3B-heretic-NVFP4
+MODEL="openai/gpt-oss-120b"                            # https://huggingface.co/openai/gpt-oss-120b
+# MODEL="nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-NVFP4"   # https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-NVFP4
+# MODEL="QuantTrio/GLM-4.7-Flash-AWQ"                 # https://huggingface.co/QuantTrio/GLM-4.7-Flash-AWQ
+# MODEL="Qwen/Qwen3.6-35B-A3B-FP8"                    # https://huggingface.co/Qwen/Qwen3.6-35B-A3B-FP8
+# MODEL="nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4" # https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4
+# MODEL="RedHatAI/Qwen3.5-122B-A10B-NVFP4"            # https://huggingface.co/RedHatAI/Qwen3.5-122B-A10B-NVFP4
+# MODEL="google/gemma-3-12b-it"                        # ⚠️ [GATED] https://huggingface.co/google/gemma-3-12b-it
+# MODEL="bg-digitalservices/Gemma-4-26B-A4B-it-NVFP4"   # https://huggingface.co/bg-digitalservices/Gemma-4-26B-A4B-it-NVFP4
+# MODEL="rdtand/Qwen3.6-35B-A3B-PrismaQuant-4.75bit-vllm" # https://huggingface.co/rdtand/Qwen3.6-35B-A3B-PrismaQuant-4.75bit-vllm
+# MODEL="Intel/Qwen3-Coder-Next-int4-AutoRound"        # https://huggingface.co/Intel/Qwen3-Coder-Next-int4-AutoRound
+# MODEL="LiquidAI/LFM2.5-350M"                         # https://huggingface.co/LiquidAI/LFM2.5-350M
 # ─────────────────────────────────────────────────────────────────────────────
 
 # ── KNOWN IMAGES ─────────────────────────────────────────────────────────────
@@ -553,6 +553,8 @@ download_if_needed() {
         -c "from huggingface_hub import snapshot_download; snapshot_download('${repo}', local_dir='${target_dir}')"
       if [[ $? -ne 0 ]]; then
         echo "❌ Failed to download ${repo}"
+        echo "💡 If this is a gated model (like Gemma 3), ensure you accepted the license terms on Hugging Face:"
+        echo "   👉 https://huggingface.co/${repo}"
         exit 1
       fi
     else
@@ -572,6 +574,8 @@ download_if_needed() {
         -c "from huggingface_hub import snapshot_download; snapshot_download('${repo}')"
       if [[ $? -ne 0 ]]; then
         echo "❌ Failed to download ${repo}"
+        echo "💡 If this is a gated model (like Gemma 3), ensure you accepted the license terms on Hugging Face:"
+        echo "   👉 https://huggingface.co/${repo}"
         exit 1
       fi
     else
