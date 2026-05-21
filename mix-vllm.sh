@@ -39,6 +39,8 @@
 HUGGING_FACE_HUB_TOKEN="${HUGGING_FACE_HUB_TOKEN:-hf_...}"
 
 # ── TOKEN VALIDATION ──────────────────────────────────────────────────────────
+# Check if the token is set. If not, print a prominent warning but do NOT exit.
+# We will only exit later if a download actually fails due to lack of a token.
 if [[ -z "${HUGGING_FACE_HUB_TOKEN}" || "${HUGGING_FACE_HUB_TOKEN}" == "hf_..." ]]; then
   echo ""
   echo "╔══════════════════════════════════════════════════════════════════════╗"
@@ -47,6 +49,9 @@ if [[ -z "${HUGGING_FACE_HUB_TOKEN}" || "${HUGGING_FACE_HUB_TOKEN}" == "hf_..." 
   echo "║                                                                    ║"
   echo "║  Most models require a valid Hugging Face token to download.       ║"
   echo "║  Without it, gated models (Llama, Gemma, etc.) will FAIL.          ║"
+  echo "║                                                                    ║"
+  echo "║  Note: If you are running a public model (e.g. LiquidAI) or have   ║"
+  echo "║  already cached the model locally, you can ignore this warning.    ║"
   echo "║                                                                    ║"
   echo "║  How to get your token:                                            ║"
   echo "║                                                                    ║"
@@ -66,26 +71,54 @@ if [[ -z "${HUGGING_FACE_HUB_TOKEN}" || "${HUGGING_FACE_HUB_TOKEN}" == "hf_..." 
   echo "║                                                                    ║"
   echo "╚══════════════════════════════════════════════════════════════════════╝"
   echo ""
-  exit 1
 fi
 # ─────────────────────────────────────────────────────────────────────────────
 
 CONTAINER_NAME="mix-vllm"
-PORT=8000
+PORT="${PORT:-8000}"
+WAIT_FOR_HEALTH=true
+
+# ── ARGUMENT PARSING ──────────────────────────────────────────────────────────
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --no-wait)
+      WAIT_FOR_HEALTH=false
+      shift
+      ;;
+    --port)
+      PORT="$2"
+      shift 2
+      ;;
+    --model)
+      MODEL="$2"
+      shift 2
+      ;;
+    *)
+      echo "Unknown option: $1"
+      echo "Usage: $0 [--no-wait] [--port <port>] [--model <model>]"
+      exit 1
+      ;;
+  esac
+done
 
 # ── MODEL SELECTION ───────────────────────────────────────────────────────────
-# MODEL="AEON-7/Qwen3.6-35B-A3B-heretic-NVFP4"          # https://huggingface.co/AEON-7/Qwen3.6-35B-A3B-heretic-NVFP4
-MODEL="openai/gpt-oss-120b"                            # https://huggingface.co/openai/gpt-oss-120b
-# MODEL="nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-NVFP4"   # https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-NVFP4
-# MODEL="QuantTrio/GLM-4.7-Flash-AWQ"                 # https://huggingface.co/QuantTrio/GLM-4.7-Flash-AWQ
-# MODEL="Qwen/Qwen3.6-35B-A3B-FP8"                    # https://huggingface.co/Qwen/Qwen3.6-35B-A3B-FP8
-# MODEL="nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4" # https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4
-# MODEL="RedHatAI/Qwen3.5-122B-A10B-NVFP4"            # https://huggingface.co/RedHatAI/Qwen3.5-122B-A10B-NVFP4
-# MODEL="google/gemma-3-12b-it"                        # ⚠️ [GATED] https://huggingface.co/google/gemma-3-12b-it
-# MODEL="bg-digitalservices/Gemma-4-26B-A4B-it-NVFP4"   # https://huggingface.co/bg-digitalservices/Gemma-4-26B-A4B-it-NVFP4
-# MODEL="rdtand/Qwen3.6-35B-A3B-PrismaQuant-4.75bit-vllm" # https://huggingface.co/rdtand/Qwen3.6-35B-A3B-PrismaQuant-4.75bit-vllm
-# MODEL="Intel/Qwen3-Coder-Next-int4-AutoRound"        # https://huggingface.co/Intel/Qwen3-Coder-Next-int4-AutoRound
-# MODEL="LiquidAI/LFM2.5-350M"                         # https://huggingface.co/LiquidAI/LFM2.5-350M
+# Select the default model to launch. If the MODEL environment variable or the
+# --model command-line option is set, it will take precedence.
+# To change the default, uncomment ONE of the DEFAULT_MODEL lines below:
+DEFAULT_MODEL="AEON-7/Qwen3.6-35B-A3B-heretic-NVFP4"          # https://huggingface.co/AEON-7/Qwen3.6-35B-A3B-heretic-NVFP4
+# DEFAULT_MODEL="openai/gpt-oss-120b"                            # https://huggingface.co/openai/gpt-oss-120b
+# DEFAULT_MODEL="nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-NVFP4"   # https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-NVFP4
+# DEFAULT_MODEL="QuantTrio/GLM-4.7-Flash-AWQ"                 # https://huggingface.co/QuantTrio/GLM-4.7-Flash-AWQ
+# DEFAULT_MODEL="Qwen/Qwen3.6-35B-A3B-FP8"                    # https://huggingface.co/Qwen/Qwen3.6-35B-A3B-FP8
+# DEFAULT_MODEL="nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4" # https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4
+# DEFAULT_MODEL="RedHatAI/Qwen3.5-122B-A10B-NVFP4"            # https://huggingface.co/RedHatAI/Qwen3.5-122B-A10B-NVFP4
+# DEFAULT_MODEL="google/gemma-3-12b-it"                        # ⚠️ [GATED] https://huggingface.co/google/gemma-3-12b-it
+# DEFAULT_MODEL="bg-digitalservices/Gemma-4-26B-A4B-it-NVFP4"   # https://huggingface.co/bg-digitalservices/Gemma-4-26B-A4B-it-NVFP4
+# DEFAULT_MODEL="rdtand/Qwen3.6-35B-A3B-PrismaQuant-4.75bit-vllm" # https://huggingface.co/rdtand/Qwen3.6-35B-A3B-PrismaQuant-4.75bit-vllm
+# DEFAULT_MODEL="Intel/Qwen3-Coder-Next-int4-AutoRound"        # https://huggingface.co/Intel/Qwen3-Coder-Next-int4-AutoRound
+# DEFAULT_MODEL="LiquidAI/LFM2.5-350M"                         # https://huggingface.co/LiquidAI/LFM2.5-350M
+
+MODEL="${MODEL:-${DEFAULT_MODEL}}"
 # ─────────────────────────────────────────────────────────────────────────────
 
 # ── KNOWN IMAGES ─────────────────────────────────────────────────────────────
@@ -589,6 +622,10 @@ if [[ ${#MODEL_DOWNLOADS[@]} -eq 0 ]]; then
   MODEL_DOWNLOADS=("${MODEL}")
 fi
 
+# Ensure the local HuggingFace cache folder exists so it belongs to the current user,
+# avoiding Docker creating it as root and causing permission issues.
+mkdir -p "${HOME}/.cache/huggingface"
+
 for dl in "${MODEL_DOWNLOADS[@]}"; do
   download_if_needed "${dl}"
 done
@@ -599,35 +636,82 @@ echo "🔥 ${MODEL}"
 echo "   image  : ${VLLM_IMAGE}"
 echo "   ctx    : ${MAX_MODEL_LEN}   mem: ${GPU_MEM_UTIL}   seqs: ${MAX_NUM_SEQS}"
 
-docker stop ${CONTAINER_NAME} 2>/dev/null
-docker rm   ${CONTAINER_NAME} 2>/dev/null
+docker stop "${CONTAINER_NAME}" 2>/dev/null
+docker rm   "${CONTAINER_NAME}" 2>/dev/null
 
 docker run -d \
-  --name    ${CONTAINER_NAME} \
+  --name    "${CONTAINER_NAME}" \
   --gpus    all \
   --ipc     host \
   --ulimit  memlock=-1 \
   --ulimit  stack=67108864 \
   --shm-size 32g \
-  -p ${PORT}:8000 \
+  -p "${PORT}:8000" \
   -v ~/.cache/huggingface:/root/.cache/huggingface \
   "${VOLUME_ARGS[@]}" \
   --restart unless-stopped \
   --entrypoint vllm \
   "${ENV_ARGS[@]}" \
-  ${VLLM_IMAGE} \
-  serve ${MODEL} \
+  "${VLLM_IMAGE}" \
+  serve "${MODEL}" \
     --host 0.0.0.0 \
     --port 8000 \
-    --max-model-len          ${MAX_MODEL_LEN} \
-    --max-num-batched-tokens ${MAX_BATCHED_TOKENS} \
-    --max-num-seqs           ${MAX_NUM_SEQS} \
-    --gpu-memory-utilization ${GPU_MEM_UTIL} \
+    --max-model-len          "${MAX_MODEL_LEN}" \
+    --max-num-batched-tokens "${MAX_BATCHED_TOKENS}" \
+    --max-num-seqs           "${MAX_NUM_SEQS}" \
+    --gpu-memory-utilization "${GPU_MEM_UTIL}" \
     --enable-prefix-caching \
     --enable-chunked-prefill \
     --trust-remote-code \
     "${EXTRA_ARGS[@]}"
 
+if [[ "${WAIT_FOR_HEALTH}" == "true" ]]; then
+  echo "⏳ Waiting for vLLM server to start and become healthy..."
+  echo "   (This can take a few minutes for larger models to load and compile kernels)"
+  
+  timeout=300
+  interval=5
+  elapsed=0
+  healthy=false
+  
+  while [[ $elapsed -lt $timeout ]]; do
+    # Check if the container is still running
+    if ! docker ps --filter "name=${CONTAINER_NAME}" --filter "status=running" | grep -q "${CONTAINER_NAME}"; then
+      echo ""
+      echo "❌ ERROR: Container ${CONTAINER_NAME} stopped running!"
+      echo "📋 Showing last 20 lines of container logs to diagnose:"
+      echo "──────────────────────────────────────────────────────────────────────────────"
+      docker logs --tail 20 "${CONTAINER_NAME}"
+      echo "──────────────────────────────────────────────────────────────────────────────"
+      exit 1
+    fi
+    
+    # Check vLLM health endpoint
+    if curl -s "http://localhost:${PORT}/health" | grep -q "ok" || curl -s -o /dev/null -w "%{http_code}" "http://localhost:${PORT}/health" | grep -q "200"; then
+      healthy=true
+      break
+    fi
+    
+    # Print progress dot and sleep
+    printf "."
+    sleep $interval
+    elapsed=$((elapsed + interval))
+  done
+  
+  echo ""
+  if [[ "${healthy}" == "true" ]]; then
+    echo "🚀 Server is HEALTHY and ready to serve requests!"
+  else
+    echo "❌ TIMEOUT: Server did not become healthy within ${timeout} seconds."
+    echo "📋 Showing last 20 lines of container logs to diagnose:"
+    echo "──────────────────────────────────────────────────────────────────────────────"
+    docker logs --tail 20 "${CONTAINER_NAME}"
+    echo "──────────────────────────────────────────────────────────────────────────────"
+    exit 1
+  fi
+fi
+
 echo "✅ ${CONTAINER_NAME} → http://localhost:${PORT}"
 echo "📋 Logs   : docker logs -f ${CONTAINER_NAME}"
 echo "🔍 Health : curl http://localhost:${PORT}/health"
+echo "📊 Test   : python3 benchmark.py --base-url http://localhost:${PORT}"

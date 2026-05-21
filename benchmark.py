@@ -34,9 +34,37 @@ from typing import List, Optional
 
 try:
     import requests
+    from requests.adapters import HTTPAdapter
 except ImportError:
     print("❌ Missing dependency: pip install requests")
     sys.exit(1)
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# HTTP Session Pool for Optimized TTFT Measurement
+# ═══════════════════════════════════════════════════════════════════════
+
+_SESSION = None
+_SESSION_LOCK = threading.Lock()
+
+def get_session(concurrency: int = 128) -> requests.Session:
+    """Get or initialize a thread-safe pooled requests.Session."""
+    global _SESSION
+    if _SESSION is None:
+        with _SESSION_LOCK:
+            if _SESSION is None:
+                s = requests.Session()
+                # Set pool size to accommodate concurrency plus extra margin
+                pool_size = max(concurrency + 16, 128)
+                adapter = HTTPAdapter(
+                    pool_connections=pool_size,
+                    pool_maxsize=pool_size,
+                    max_retries=3
+                )
+                s.mount("http://", adapter)
+                s.mount("https://", adapter)
+                _SESSION = s
+    return _SESSION
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -88,7 +116,7 @@ class BenchmarkResult:
             "requests_failed": self.failed_count,
             "ttft_avg_ms": round(statistics.mean(ttfts) * 1000, 1),
             "ttft_median_ms": round(statistics.median(ttfts) * 1000, 1),
-            "ttft_p95_ms": round(sorted(ttfts)[int(len(ttfts) * 0.95)] * 1000, 1),
+            "ttft_p95_ms": round(sorted(ttfts)[min(len(ttfts) - 1, int(len(ttfts) * 0.95))] * 1000, 1),
             "latency_avg_s": round(statistics.mean(latencies), 3),
             "latency_median_s": round(statistics.median(latencies), 3),
             "tokens_per_resp_avg": round(statistics.mean(token_counts), 1),
@@ -122,7 +150,7 @@ def detect_model(base_url: str) -> str:
     """Auto-detect the served model name from the vLLM /v1/models endpoint."""
     url = f"{base_url}/v1/models"
     try:
-        resp = requests.get(url, timeout=10)
+        resp = get_session().get(url, timeout=10)
         resp.raise_for_status()
         data = resp.json()
         models = data.get("data", [])
@@ -139,7 +167,7 @@ def detect_model(base_url: str) -> str:
 def check_server_health(base_url: str) -> bool:
     """Check if the vLLM server is healthy and ready."""
     try:
-        resp = requests.get(f"{base_url}/health", timeout=10)
+        resp = get_session().get(f"{base_url}/health", timeout=10)
         return resp.status_code == 200
     except Exception:
         return False
@@ -175,7 +203,8 @@ def run_single_request(
     usage_tokens = 0
 
     try:
-        with requests.post(url, json=payload, stream=True, timeout=300) as resp:
+        session = get_session()
+        with session.post(url, json=payload, stream=True, timeout=300) as resp:
             resp.raise_for_status()
             for line in resp.iter_lines(decode_unicode=True):
                 if not line or not line.startswith("data: "):
@@ -422,8 +451,17 @@ def main():
         default=1,
         help="Number of warmup requests before benchmark (default: 1)",
     )
+    parser.add_argument(
+        "--output", "-o",
+        default=None,
+        help="Path to save the JSON results file (default: benchmark_results_{model}_{timestamp}.json)",
+    )
 
     args = parser.parse_args()
+
+    # Initialize the global HTTP session pool with the maximum tested concurrency to optimize TTFT
+    max_conc = max(args.concurrency) if args.concurrency else 128
+    get_session(max_conc)
 
     # ── Server health check ──
     print_header("🔍 SERVER CHECK")
@@ -489,7 +527,14 @@ def main():
         print_comparison_table(all_summaries, model_name=model)
 
     # ── Save JSON results ──
-    results_file = "benchmark_results.json"
+    if args.output:
+        results_file = args.output
+    else:
+        # Generate safe model name (replace slash and other characters)
+        safe_model_name = model.replace("/", "--").replace(" ", "_")
+        timestamp = time.strftime("%Y%m%d_%H%M%S")
+        results_file = f"benchmark_results_{safe_model_name}_{timestamp}.json"
+
     output = {
         "server": args.base_url,
         "model": model,
