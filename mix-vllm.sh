@@ -8,7 +8,7 @@
 #  #1    AEON-7/Qwen3.6-35B-heretic-NVFP4 + DFlash    88–117   NVFP4    aeon-7 v1.2
 #  #2    openai/gpt-oss-120b (MXFP4)                   ~60     MXFP4    eugr-nightly
 #  #3    nvidia/Nemotron-3-Nano-30B-A3B-NVFP4          ~56     NVFP4    eugr-nightly
-#  #4    THUDM/glm-4.7-flash-awq                       ~35     AWQ      eugr-tf5
+#  #4    QuantTrio/GLM-4.7-Flash-AWQ                   ~35     AWQ      eugr-tf5
 #  #5    Qwen/Qwen3.6-35B-A3B-FP8                      ~30     FP8      cu130-nightly
 #  #6    nvidia/Nemotron-3-Super-120B-A12B-NVFP4       ~22     NVFP4    eugr-nightly
 #  #7    RedHatAI/Qwen3.5-122B-A10B-NVFP4              ~17     NVFP4    eugr-nightly  ← best quality
@@ -77,7 +77,7 @@ PORT=8000
 # MODEL="AEON-7/Qwen3.6-35B-A3B-heretic-NVFP4"
 MODEL="openai/gpt-oss-120b"
 # MODEL="nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-NVFP4"
-# MODEL="THUDM/glm-4.7-flash-awq"
+# MODEL="QuantTrio/GLM-4.7-Flash-AWQ"
 # MODEL="Qwen/Qwen3.6-35B-A3B-FP8"
 # MODEL="nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4"
 # MODEL="RedHatAI/Qwen3.5-122B-A10B-NVFP4"
@@ -242,13 +242,13 @@ case "${MODEL}" in
     ;;
 
   # ═══════════════════════════════════════════════════════════════════════════
-  # #4 THUDM/glm-4.7-flash-awq   ~35 tok/s
+  # #4 QuantTrio/GLM-4.7-Flash-AWQ   ~35 tok/s
   # ═══════════════════════════════════════════════════════════════════════════
   # Fast AWQ MoE by Tsinghua. Single-node capable (~50 GB AWQ).
   # Requires Transformers 5.0 → use eugr-nightly-tf5 image.
   # ⚠️  fix-glm-4.7-flash-AWQ mod applied in this image by default.
   # ═══════════════════════════════════════════════════════════════════════════
-  "THUDM/glm-4.7-flash-awq")
+  "QuantTrio/GLM-4.7-Flash-AWQ")
     VLLM_IMAGE="${IMG_EUGR_TF5}"
     GPU_MEM_UTIL=0.80
     MAX_MODEL_LEN=131072
