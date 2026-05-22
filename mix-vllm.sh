@@ -148,10 +148,7 @@ done
 
 
 # ── TO TEST ───────────────────────────────────────────────────────────
-DEFAULT_MODEL="nvidia/Nemotron-3-Nano-Omni-30B-A3B-Reasoning-NVFP4" # https://huggingface.co/nvidia/Nemotron-3-Nano-Omni-30B-A3B-Reasoning-NVFP4
-
-
-#DEFAULT_MODEL="AEON-7/Gemma-4-E4B-DECKARD-HERETIC-NVFP4"        # https://huggingface.co/AEON-7/Gemma-4-E4B-DECKARD-HERETIC-NVFP4
+DEFAULT_MODEL="AEON-7/Gemma-4-E4B-DECKARD-HERETIC-NVFP4"        # https://huggingface.co/AEON-7/Gemma-4-E4B-DECKARD-HERETIC-NVFP4
 #DEFAULT_MODEL="rdtand/Mistral-Medium-3.5-128B-PrismaQuant-4.75-vllm" # https://huggingface.co/rdtand/Mistral-Medium-3.5-128B-PrismaQuant-4.75-vllm
 #DEFAULT_MODEL="rdtand/MiniMax-M2.7-PrismaQuant-3.20bit-vllm"    # https://huggingface.co/rdtand/MiniMax-M2.7-PrismaQuant-3.20bit-vllm
 #DEFAULT_MODEL="rdtand/Gemma4-31B-IT-PrismaQuant-5.5bit-vllm"    # https://huggingface.co/rdtand/Gemma4-31B-IT-PrismaQuant-5.5bit-vllm
