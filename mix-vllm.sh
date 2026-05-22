@@ -117,48 +117,53 @@ done
 # --model command-line option is set, it will take precedence.
 # To change the default, uncomment ONE of the DEFAULT_MODEL lines below:
 
-# ── OK ────────────────────────────────────────────────────────────────
-# DEFAULT_MODEL="AEON-7/Qwen3.6-35B-A3B-heretic-NVFP4"          # https://huggingface.co/AEON-7/Qwen3.6-35B-A3B-heretic-NVFP4
+# ── OK x1 GB1─ ────────────────────────────────────────────────────────────────
+# DEFAULT_MODEL="AEON-7/Qwen3.6-35B-A3B-heretic-NVFP4"            # https://huggingface.co/AEON-7/Qwen3.6-35B-A3B-heretic-NVFP4
 # DEFAULT_MODEL="rdtand/Qwen3.6-35B-A3B-PrismaQuant-4.75bit-vllm" # https://huggingface.co/rdtand/Qwen3.6-35B-A3B-PrismaQuant-4.75bit-vllm
+# DEFAULT_MODEL="Intel/Qwen3-Coder-Next-int4-AutoRound"        # https://huggingface.co/Intel/Qwen3-Coder-Next-int4-AutoRound
 
-# DEFAULT_MODEL="nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-NVFP4"   # https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-NVFP4
-# DEFAULT_MODEL="nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4" # https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4
+# DEFAULT_MODEL="nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-NVFP4"     # https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-NVFP4
+# DEFAULT_MODEL="nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4"  # https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4
 
-# DEFAULT_MODEL="bg-digitalservices/Gemma-4-26B-A4B-it-NVFP4"   # https://huggingface.co/bg-digitalservices/Gemma-4-26B-A4B-it-NVFP4
+# DEFAULT_MODEL="bg-digitalservices/Gemma-4-26B-A4B-it-NVFP4"     # https://huggingface.co/bg-digitalservices/Gemma-4-26B-A4B-it-NVFP4
 
-# DEFAULT_MODEL="LiquidAI/LFM2.5-350M"                         # https://huggingface.co/LiquidAI/LFM2.5-350M
-# DEFAULT_MODEL="Qwen/Qwen3.5-0.8B"                            # https://huggingface.co/Qwen/Qwen3.5-0.8B
+# DEFAULT_MODEL="LiquidAI/LFM2.5-350M"                            # https://huggingface.co/LiquidAI/LFM2.5-350M
+# DEFAULT_MODEL="Qwen/Qwen3.5-0.8B"                               # https://huggingface.co/Qwen/Qwen3.5-0.8B
 
-## DUAL GB10 256gb
-# DEFAULT_MODEL="RedHatAI/Qwen3.5-122B-A10B-NVFP4"            # https://huggingface.co/RedHatAI/Qwen3.5-122B-A10B-NVFP4
 
+# ── x2 GB10 = 256gb
+#DEFAULT_MODEL="RedHatAI/Qwen3.5-122B-A10B-NVFP4"                 # https://huggingface.co/RedHatAI/Qwen3.5-122B-A10B-NVFP4
+#DEFAULT_MODEL="cyankiwi/MiniMax-M2.7-AWQ-4bit"                   # https://huggingface.co/cyankiwi/MiniMax-M2.7-AWQ-4bit
+#DEFAULT_MODEL="deepseek-ai/DeepSeek-V4-Flash"                    # https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash
+
+
+# ── x4 GB10 = 512gb
+#DEFAULT_MODEL="dervig/m51Lab-MiniMax-M2.7-REAP-139B-A10B-NVFP4-GB10" # https://huggingface.co/dervig/m51Lab-MiniMax-M2.7-REAP-139B-A10B-NVFP4-GB10
+#DEFAULT_MODEL="nvidia/MiniMax-M2.7-NVFP4"                        # https://huggingface.co/nvidia/MiniMax-M2.7-NVFP4
+#DEFAULT_MODEL="cyankiwi/MiniMax-M2.5-AWQ-4bit"                   # https://huggingface.co/cyankiwi/MiniMax-M2.5-AWQ-4bit
+#DEFAULT_MODEL="scottgl/MiniMax-M2.7-REAP-172B-A10B-NVFP4-GB10"   # https://huggingface.co/scottgl/MiniMax-M2.7-REAP-172B-A10B-NVFP4-GB10
+
+
+# ── x8 GB10 = 1024gb
+#DEFAULT_MODEL="zai-org/GLM-5.1-FP8"                              # https://huggingface.co/zai-org/GLM-5.1-FP8
+#DEFAULT_MODEL="nvidia/Kimi-K2.6-NVFP4"                           # https://huggingface.co/nvidia/Kimi-K2.6-NVFP4
 
 
 # ── TO TEST ───────────────────────────────────────────────────────────
 
-
-DEFAULT_MODEL="Intel/Qwen3-Coder-Next-int4-AutoRound"        # https://huggingface.co/Intel/Qwen3-Coder-Next-int4-AutoRound
-
-#DEFAULT_MODEL="casperhansen/deepseek-r1-distill-qwen-32b-awq" # https://huggingface.co/casperhansen/deepseek-r1-distill-qwen-32b-awq
-#DEFAULT_MODEL="nm-testing/DeepSeek-R1-Distill-Qwen-32B-NVFP4" # https://huggingface.co/nm-testing/DeepSeek-R1-Distill-Qwen-32B-NVFP4
+DEFAULT_MODEL="nm-testing/DeepSeek-R1-Distill-Qwen-32B-NVFP4" # https://huggingface.co/nm-testing/DeepSeek-R1-Distill-Qwen-32B-NVFP4
 #DEFAULT_MODEL="neuralmagic/DeepSeek-R1-Distill-Qwen-14B-FP8"   # https://huggingface.co/neuralmagic/DeepSeek-R1-Distill-Qwen-14B-FP8
-#DEFAULT_MODEL="casperhansen/deepseek-r1-distill-qwen-14b-awq" # https://huggingface.co/casperhansen/deepseek-r1-distill-qwen-14b-awq
 #DEFAULT_MODEL="neuralmagic/DeepSeek-R1-Distill-Llama-8B-FP8"   # https://huggingface.co/neuralmagic/DeepSeek-R1-Distill-Llama-8B-FP8
-#DEFAULT_MODEL="casperhansen/deepseek-r1-distill-llama-8b-awq" # https://huggingface.co/casperhansen/deepseek-r1-distill-llama-8b-awq
 #DEFAULT_MODEL="nvidia/Nemotron-3-Nano-Omni-30B-A3B-Reasoning-NVFP4" # https://huggingface.co/nvidia/Nemotron-3-Nano-Omni-30B-A3B-Reasoning-NVFP4
-#DEFAULT_MODEL="zai-org/GLM-5.1-FP8"                            # https://huggingface.co/zai-org/GLM-5.1-FP8
-#DEFAULT_MODEL="nvidia/MiniMax-M2.7-NVFP4"                      # https://huggingface.co/nvidia/MiniMax-M2.7-NVFP4
-#DEFAULT_MODEL="cyankiwi/MiniMax-M2.5-AWQ-4bit"                  # https://huggingface.co/cyankiwi/MiniMax-M2.5-AWQ-4bit
-#DEFAULT_MODEL="cyankiwi/MiniMax-M2.7-AWQ-4bit"                  # https://huggingface.co/cyankiwi/MiniMax-M2.7-AWQ-4bit
-#DEFAULT_MODEL="nvidia/Kimi-K2.6-NVFP4"                          # https://huggingface.co/nvidia/Kimi-K2.6-NVFP4
-#DEFAULT_MODEL="deepseek-ai/DeepSeek-V4-Flash"                   # https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash
+
+
 #DEFAULT_MODEL="AEON-7/Gemma-4-E4B-DECKARD-HERETIC-NVFP4"        # https://huggingface.co/AEON-7/Gemma-4-E4B-DECKARD-HERETIC-NVFP4
 #DEFAULT_MODEL="rdtand/Mistral-Medium-3.5-128B-PrismaQuant-4.75-vllm" # https://huggingface.co/rdtand/Mistral-Medium-3.5-128B-PrismaQuant-4.75-vllm
 #DEFAULT_MODEL="rdtand/MiniMax-M2.7-PrismaQuant-3.20bit-vllm"    # https://huggingface.co/rdtand/MiniMax-M2.7-PrismaQuant-3.20bit-vllm
 #DEFAULT_MODEL="rdtand/Gemma4-31B-IT-PrismaQuant-5.5bit-vllm"    # https://huggingface.co/rdtand/Gemma4-31B-IT-PrismaQuant-5.5bit-vllm
-#DEFAULT_MODEL="scottgl/MiniMax-M2.7-REAP-172B-A10B-NVFP4-GB10"   # https://huggingface.co/scottgl/MiniMax-M2.7-REAP-172B-A10B-NVFP4-GB10
+
 #DEFAULT_MODEL="cybermotaz/nemotron3-nano-nvfp4-w4a16"           # https://huggingface.co/cybermotaz/nemotron3-nano-nvfp4-w4a16
-#DEFAULT_MODEL="dervig/m51Lab-MiniMax-M2.7-REAP-139B-A10B-NVFP4-GB10" # https://huggingface.co/dervig/m51Lab-MiniMax-M2.7-REAP-139B-A10B-NVFP4-GB10
+
 
 MODEL="${MODEL:-${DEFAULT_MODEL}}"
 
@@ -619,35 +624,6 @@ case "${MODEL}" in
     )
     ;;
 
-
-
-  # ═══════════════════════════════════════════════════════════════════════════
-  # DeepSeek R1 Distill Qwen 32B AWQ — 32B reasoning model, AWQ, fast on consumer GPUs
-  # ═══════════════════════════════════════════════════════════════════════════
-  "casperhansen/deepseek-r1-distill-qwen-32b-awq")
-    VLLM_IMAGE="${IMG_NIGHTLY}"
-    GPU_MEM_UTIL=0.85
-    MAX_MODEL_LEN=32768
-    MAX_BATCHED_TOKENS=8192
-    MAX_NUM_SEQS=8
-
-    ENV_ARGS=(
-      -e VLLM_HTTP_TIMEOUT_KEEP_ALIVE=600
-      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
-    )
-
-    EXTRA_ARGS=(
-      "--served-model-name"   "deepseek-r1-qwen-32b-awq"
-      "--dtype"               "float16"
-      "--load-format"         "fastsafetensors"
-      "--quantization"        "awq"
-      "--kv-cache-dtype"      "fp8"
-      "--enable-auto-tool-choice"
-      "--tool-call-parser"    "qwen3_xml"
-      "--reasoning-parser"    "qwen3"
-    )
-    ;;
-
   # ═══════════════════════════════════════════════════════════════════════════
   # Llama 3.3 70B Instruct FP8 — 70B frontier model, FP8, excellent balance of quality/speed
   # ═══════════════════════════════════════════════════════════════════════════
@@ -781,32 +757,6 @@ case "${MODEL}" in
     )
     ;;
 
-  # ═══════════════════════════════════════════════════════════════════════════
-  # DeepSeek R1 Distill Qwen 14B AWQ — 14B reasoning model, AWQ, blazing fast on 12GB VRAM
-  # ═══════════════════════════════════════════════════════════════════════════
-  "casperhansen/deepseek-r1-distill-qwen-14b-awq")
-    VLLM_IMAGE="${IMG_NIGHTLY}"
-    GPU_MEM_UTIL=0.85
-    MAX_MODEL_LEN=32768
-    MAX_BATCHED_TOKENS=8192
-    MAX_NUM_SEQS=8
-
-    ENV_ARGS=(
-      -e VLLM_HTTP_TIMEOUT_KEEP_ALIVE=600
-      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
-    )
-
-    EXTRA_ARGS=(
-      "--served-model-name"   "deepseek-r1-qwen-14b-awq"
-      "--dtype"               "float16"
-      "--load-format"         "fastsafetensors"
-      "--quantization"        "awq"
-      "--kv-cache-dtype"      "fp8"
-      "--enable-auto-tool-choice"
-      "--tool-call-parser"    "qwen3_xml"
-      "--reasoning-parser"    "qwen3"
-    )
-    ;;
 
   # ═══════════════════════════════════════════════════════════════════════════
   # DeepSeek R1 Distill Llama 8B FP8 — 8B reasoning model, FP8, ultra-fast on RTX 4080 (12GB)
@@ -834,31 +784,6 @@ case "${MODEL}" in
     )
     ;;
 
-  # ═══════════════════════════════════════════════════════════════════════════
-  # DeepSeek R1 Distill Llama 8B AWQ — 8B reasoning model, AWQ, lightweight and high speed
-  # ═══════════════════════════════════════════════════════════════════════════
-  "casperhansen/deepseek-r1-distill-llama-8b-awq")
-    VLLM_IMAGE="${IMG_NIGHTLY}"
-    GPU_MEM_UTIL=0.80
-    MAX_MODEL_LEN=32768
-    MAX_BATCHED_TOKENS=8192
-    MAX_NUM_SEQS=16
-
-    ENV_ARGS=(
-      -e VLLM_HTTP_TIMEOUT_KEEP_ALIVE=600
-      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
-    )
-
-    EXTRA_ARGS=(
-      "--served-model-name"   "deepseek-r1-llama-8b-awq"
-      "--dtype"               "float16"
-      "--load-format"         "fastsafetensors"
-      "--quantization"        "awq"
-      "--kv-cache-dtype"      "fp8"
-      "--enable-auto-tool-choice"
-      "--tool-call-parser"    "llama3"
-    )
-    ;;
 
   # ═══════════════════════════════════════════════════════════════════════════
   # Nemotron-3-Nano-Omni-30B-A3B-Reasoning-NVFP4 on a single GB10
