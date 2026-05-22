@@ -148,8 +148,7 @@ done
 
 
 # ── TO TEST ───────────────────────────────────────────────────────────
-DEFAULT_MODEL="AEON-7/Gemma-4-E4B-DECKARD-HERETIC-NVFP4"        # https://huggingface.co/AEON-7/Gemma-4-E4B-DECKARD-HERETIC-NVFP4
-#DEFAULT_MODEL="rdtand/Mistral-Medium-3.5-128B-PrismaQuant-4.75-vllm" # https://huggingface.co/rdtand/Mistral-Medium-3.5-128B-PrismaQuant-4.75-vllm
+DEFAULT_MODEL="rdtand/Mistral-Medium-3.5-128B-PrismaQuant-4.75-vllm" # https://huggingface.co/rdtand/Mistral-Medium-3.5-128B-PrismaQuant-4.75-vllm
 #DEFAULT_MODEL="rdtand/MiniMax-M2.7-PrismaQuant-3.20bit-vllm"    # https://huggingface.co/rdtand/MiniMax-M2.7-PrismaQuant-3.20bit-vllm
 #DEFAULT_MODEL="rdtand/Gemma4-31B-IT-PrismaQuant-5.5bit-vllm"    # https://huggingface.co/rdtand/Gemma4-31B-IT-PrismaQuant-5.5bit-vllm
 
@@ -1018,34 +1017,7 @@ case "${MODEL}" in
     )
     ;;
 
-  # ═══════════════════════════════════════════════════════════════════════════
-  # Gemma-4-E4B-DECKARD-HERETIC-NVFP4 (AEON-7), 262K context, NVFP4 Quant
-  # ═══════════════════════════════════════════════════════════════════════════
-  "AEON-7/Gemma-4-E4B-DECKARD-HERETIC-NVFP4")
-    VLLM_IMAGE="${IMG_EUGR}"
-    GPU_MEM_UTIL=0.85
-    MAX_MODEL_LEN=262144
-    MAX_BATCHED_TOKENS=8192
-    MAX_NUM_SEQS=8
 
-    ENV_ARGS=(
-      -e VLLM_ALLOW_LONG_MAX_MODEL_LEN=1
-      -e VLLM_HTTP_TIMEOUT_KEEP_ALIVE=600
-      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
-    )
-
-    EXTRA_ARGS=(
-      "--served-model-name"    "gemma4-deckard"
-      "--dtype"                "auto"
-      "--load-format"          "fastsafetensors"
-      "--quantization"         "compressed-tensors"
-      "--kv-cache-dtype"       "fp8"
-      "--tensor-parallel-size" "1"
-      "--enable-auto-tool-choice"
-      "--tool-call-parser"     "gemma4"
-      "--reasoning-parser"     "gemma4"
-    )
-    ;;
 
   # ═══════════════════════════════════════════════════════════════════════════
   # Mistral-Medium-3.5-128B-PrismaQuant-4.75-vllm (rdtand), 128K context, 4.75bit
