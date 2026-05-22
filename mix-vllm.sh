@@ -1303,6 +1303,11 @@ case "${MODEL}" in
     ;;
 esac
 
+# Force disable the unstable experimental V1 engine unless explicitly enabled by AEON-7
+if [[ "${MODEL}" != "AEON-7/Qwen3.6-35B-A3B-heretic-NVFP4" ]]; then
+  ENV_ARGS+=(-e VLLM_USE_V1=0)
+fi
+
 # ── AUTO-DOWNLOAD MODELS ─────────────────────────────────────────────────────
 # Downloads models that are not yet present locally.
 # Uses Docker + Python huggingface_hub (always present in vLLM images).
@@ -1397,6 +1402,21 @@ if [[ "${MODEL}" == "zai-org/GLM-5.1-FP8" || "${MODEL}" == "nvidia/Kimi-K2.6-NVF
   else
     echo "   Note: Could not drop caches (insufficient permissions), proceeding..."
   fi
+fi
+
+# ── ENGINE VERSION SELECTION ──────────────────────────────────────────────────
+# Recent vLLM nightlies enable the experimental V1 engine by default.
+# However, many of our quantized or custom configurations require the stable V0 engine.
+# We default to VLLM_USE_V1=0 unless explicitly requested by the model config.
+has_v1_env=false
+for env_arg in "${ENV_ARGS[@]}"; do
+  if [[ "${env_arg}" == *"VLLM_USE_V1"* ]]; then
+    has_v1_env=true
+    break
+  fi
+done
+if [[ "${has_v1_env}" == "false" ]]; then
+  ENV_ARGS+=(-e VLLM_USE_V1=0)
 fi
 
 docker stop "${CONTAINER_NAME}" 2>/dev/null
