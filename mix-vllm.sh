@@ -141,7 +141,6 @@ done
 #DEFAULT_MODEL="nvidia/MiniMax-M2.7-NVFP4"                        # https://huggingface.co/nvidia/MiniMax-M2.7-NVFP4
 #DEFAULT_MODEL="scottgl/MiniMax-M2.7-REAP-172B-A10B-NVFP4-GB10"   # https://huggingface.co/scottgl/MiniMax-M2.7-REAP-172B-A10B-NVFP4-GB10
 
-
 # ── x8 GB10 = 1024gb
 #DEFAULT_MODEL="zai-org/GLM-5.1-FP8"                              # https://huggingface.co/zai-org/GLM-5.1-FP8
 #DEFAULT_MODEL="nvidia/Kimi-K2.6-NVFP4"                           # https://huggingface.co/nvidia/Kimi-K2.6-NVFP4
@@ -1041,6 +1040,7 @@ case "${MODEL}" in
       "--quantization"         "compressed-tensors"
       "--kv-cache-dtype"       "fp8"
       "--tensor-parallel-size" "1"
+      "--tokenizer"            "mistralai/Mistral-Medium-3.5-128B"
       "--tokenizer-mode"       "mistral"
       "--enable-auto-tool-choice"
       "--tool-call-parser"     "mistral"
