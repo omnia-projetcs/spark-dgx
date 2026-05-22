@@ -398,7 +398,7 @@ case "${MODEL}" in
       "--served-model-name"   "glm-4.7-flash"
       "--dtype"               "float16"
       "--load-format"         "fastsafetensors"
-      "--quantization"        "awq"
+      "--quantization"        "awq_marlin"
       "--kv-cache-dtype"      "fp8"
       "--enable-auto-tool-choice"
       "--tool-call-parser"    "glm47"
