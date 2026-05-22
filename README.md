@@ -129,10 +129,9 @@ A turnkey Bash script that launches a fully configured, production-ready **vLLM 
 | ★1 | `AEON-7/Qwen3.6-35B-A3B-heretic-NVFP4` | 88–117 | NVFP4 | 128K | 💬 🔧 🧠 | DFlash spec-decode, CUTLASS NVFP4, custom aeon-7 image, FP8 KV-cache |
 | #2 | `openai/gpt-oss-120b` | ~60 | MXFP4 | 64K | 💬 🧠 | CUTLASS MXFP4 path, FlashInfer, requires local image build |
 | #3 | `nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-NVFP4` | ~56 | NVFP4 | 256K | 💬 🔧 🧠 | MoE 30B/3.5B active, FlashInfer FP4 |
-| #4 | `cyankiwi/GLM-4.7-Flash-AWQ-4bit` | ~35 | compressed-tensors | 200K | 💬 🔧 | Transformers 5.0 image, GLM-4 MoE tool parser |
-| #5 | `Qwen/Qwen3.6-35B-A3B-FP8` | ~30 | FP8 | 256K | 💬 🔧 🧠 | 156 tok/s aggregate (c=32), cu130-nightly |
-| #6 | `nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4` | ~22 | NVFP4 | 128K | 💬 🔧 🧠 | MoE 120B/12B active, Marlin dequant |
-| #7 | `RedHatAI/Qwen3.5-122B-A10B-NVFP4` | ~17 | NVFP4 | 64K | 💬 🔧 🧠 | **Best quality** — RedHat calibration ≈ FP16, FlashInfer |
+| #4 | `Qwen/Qwen3.6-35B-A3B-FP8` | ~30 | FP8 | 256K | 💬 🔧 🧠 | 156 tok/s aggregate (c=32), cu130-nightly |
+| #5 | `nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4` | ~22 | NVFP4 | 128K | 💬 🔧 🧠 | MoE 120B/12B active, Marlin dequant |
+| #6 | `RedHatAI/Qwen3.5-122B-A10B-NVFP4` | ~17 | NVFP4 | 64K | 💬 🔧 🧠 | **Best quality** — RedHat calibration ≈ FP16, FlashInfer |
 | — | `nvidia/MiniMax-M2.7-NVFP4` | fast | NVFP4 | 196K | 💬 🔧 🧠 | MiniMax M2.7, TP×4, instanttensor format, FP8 KV-cache |
 | — | `cyankiwi/MiniMax-M2.5-AWQ-4bit` | cluster | AWQ | 128K | 💬 🔧 🧠 | MiniMax M2.5, TP×4, Ray distributed backend |
 | — | `cyankiwi/MiniMax-M2.7-AWQ-4bit` | cluster | AWQ | 128K | 💬 🔧 🧠 | MiniMax M2.7, TP×2, Ray distributed backend |

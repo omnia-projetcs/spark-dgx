@@ -8,10 +8,9 @@
 #  #1    AEON-7/Qwen3.6-35B-heretic-NVFP4 + DFlash    88–117   NVFP4    aeon-7 v1.2
 #  #2    openai/gpt-oss-120b (MXFP4)                   ~60     MXFP4    eugr-nightly
 #  #3    nvidia/Nemotron-3-Nano-30B-A3B-NVFP4          ~56     NVFP4    eugr-nightly
-#  #4    cyankiwi/GLM-4.7-Flash-AWQ-4bit               ~35     AWQ      eugr-tf5
-#  #5    Qwen/Qwen3.6-35B-A3B-FP8                      ~30     FP8      cu130-nightly
-#  #6    nvidia/Nemotron-3-Super-120B-A12B-NVFP4       ~22     NVFP4    eugr-nightly
-#  #7    RedHatAI/Qwen3.5-122B-A10B-NVFP4              ~17     NVFP4    eugr-nightly  ← best quality
+#  #4    Qwen/Qwen3.6-35B-A3B-FP8                      ~30     FP8      cu130-nightly
+#  #5    nvidia/Nemotron-3-Super-120B-A12B-NVFP4       ~22     NVFP4    eugr-nightly
+#  #6    RedHatAI/Qwen3.5-122B-A10B-NVFP4              ~17     NVFP4    eugr-nightly  ← best quality
 #  ──    bg-digitalservices/Gemma-4-26B-A4B-it-NVFP4   ~20     NVFP4    eugr-nightly
 #  ──    rdtand/Qwen3.6-35B-A3B-PrismaQuant            ~40     4.75bit  vllm-latest
 #  ──    Intel/Qwen3-Coder-Next-int4-AutoRound         ~30     INT4     vllm-latest
@@ -110,10 +109,9 @@ done
 # Select the default model to launch. If the MODEL environment variable or the
 # --model command-line option is set, it will take precedence.
 # To change the default, uncomment ONE of the DEFAULT_MODEL lines below:
-# DEFAULT_MODEL="AEON-7/Qwen3.6-35B-A3B-heretic-NVFP4"          # https://huggingface.co/AEON-7/Qwen3.6-35B-A3B-heretic-NVFP4
+#DEFAULT_MODEL="AEON-7/Qwen3.6-35B-A3B-heretic-NVFP4"          # https://huggingface.co/AEON-7/Qwen3.6-35B-A3B-heretic-NVFP4
 #DEFAULT_MODEL="openai/gpt-oss-120b"                            # https://huggingface.co/openai/gpt-oss-120b
 # DEFAULT_MODEL="nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-NVFP4"   # https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-NVFP4
-DEFAULT_MODEL="cyankiwi/GLM-4.7-Flash-AWQ-4bit"                 # https://huggingface.co/cyankiwi/GLM-4.7-Flash-AWQ-4bit
 #DEFAULT_MODEL="nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4" # https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4
 #DEFAULT_MODEL="RedHatAI/Qwen3.5-122B-A10B-NVFP4"            # https://huggingface.co/RedHatAI/Qwen3.5-122B-A10B-NVFP4
 # DEFAULT_MODEL="bg-digitalservices/Gemma-4-26B-A4B-it-NVFP4"   # https://huggingface.co/bg-digitalservices/Gemma-4-26B-A4B-it-NVFP4
@@ -229,8 +227,6 @@ IMG_AEON7="ghcr.io/aeon-7/vllm-spark-omni-q36:v1.2"
 IMG_EUGR="ghcr.io/spark-arena/dgx-vllm-eugr-nightly:latest"
 #         └─ Standard Spark Arena image — NVFP4/FP8/AWQ, Nemotron, Qwen3.5/3.6
 
-IMG_EUGR_TF5="ghcr.io/spark-arena/dgx-vllm-eugr-nightly-tf5:latest"
-#         └─ Same as above + Transformers 5.0 — required for GLM-4.7
 
 IMG_EUGR_MXFP4="${IMG_EUGR}"
 #         └─ Uses eugr-nightly with CUTLASS MXFP4 backend
@@ -389,36 +385,6 @@ case "${MODEL}" in
     )
     ;;
 
-  # ═══════════════════════════════════════════════════════════════════════════
-  # #4 cyankiwi/GLM-4.7-Flash-AWQ-4bit   ~35 tok/s
-  # ═══════════════════════════════════════════════════════════════════════════
-  # Fast AWQ MoE by Tsinghua. Single-node capable (~50 GB AWQ).
-  # Requires Transformers 5.0 → use eugr-nightly-tf5 image.
-  # ⚠️  fix-glm-4.7-flash-AWQ mod applied in this image by default.
-  # ═══════════════════════════════════════════════════════════════════════════
-  "cyankiwi/GLM-4.7-Flash-AWQ-4bit")
-    VLLM_IMAGE="${IMG_EUGR_TF5}"
-    GPU_MEM_UTIL=0.70
-    MAX_MODEL_LEN=202752
-    MAX_BATCHED_TOKENS=4096
-    MAX_NUM_SEQS=64
-
-    ENV_ARGS=(
-      -e VLLM_HTTP_TIMEOUT_KEEP_ALIVE=600
-      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
-    )
-
-    EXTRA_ARGS=(
-      "--served-model-name"   "glm-4.7-flash"
-      "--dtype"               "float16"
-      "--load-format"         "fastsafetensors"
-      "--quantization"        "compressed-tensors"
-      "--kv-cache-dtype"      "fp8"
-      "--enable-auto-tool-choice"
-      "--tool-call-parser"    "glm47"
-      "--reasoning-parser"    "glm45"
-    )
-    ;;
 
   # ═══════════════════════════════════════════════════════════════════════════
   # #5 Qwen/Qwen3.6-35B-A3B-FP8   ~28–30 tok/s single / 156 tok/s aggregate
