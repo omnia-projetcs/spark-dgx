@@ -129,6 +129,9 @@ DEFAULT_MODEL="AEON-7/Qwen3.6-35B-A3B-heretic-NVFP4"            # https://huggin
 # DEFAULT_MODEL="Qwen/Qwen3.5-0.8B"                               # https://huggingface.co/Qwen/Qwen3.5-0.8B
 
 # ── TO TEST ───────────────────────────────────────────────────────────
+#DEFAULT_MODEL="shieldstar/Qwen3.5-122B-A10B-int4-AutoRound-EC"   # https://huggingface.co/shieldstar/Qwen3.5-122B-A10B-int4-AutoRound-EC
+
+
 # ── x2 GB10 = 256gb
 #DEFAULT_MODEL="RedHatAI/Qwen3.5-122B-A10B-NVFP4"                 # https://huggingface.co/RedHatAI/Qwen3.5-122B-A10B-NVFP4
 #DEFAULT_MODEL="nm-testing/DeepSeek-R1-Distill-Qwen-32B-NVFP4"    # https://huggingface.co/nm-testing/DeepSeek-R1-Distill-Qwen-32B-NVFP4
@@ -259,6 +262,9 @@ IMG_VLLM_NODE="vllm-node"
 
 IMG_DSV4="vllm-node-dsv4"
 #         └─ Local image for DeepSeek V4 Flash with PR 41834 SM12x support
+
+IMG_TF5="vllm-node-tf5"
+#         └─ Local image for Qwen3.5-122B-A10B-int4-Autoround-EC (built with --tf5)
 # ─────────────────────────────────────────────────────────────────────────────
 
 # Defaults (overridden per model)
@@ -449,6 +455,49 @@ case "${MODEL}" in
       "--tool-call-parser"    "qwen3_xml"
       "--reasoning-parser"    "qwen3"
     )
+    ;;
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Qwen3.5-122B-A10B-int4-AutoRound-EC + z-lab DFlash, 196K context, 16K prefill
+  # ═══════════════════════════════════════════════════════════════════════════
+  "shieldstar/Qwen3.5-122B-A10B-int4-AutoRound-EC" | "Qwen3.5-122B-A10B-int4-Autoround-EC-DFLASH-FLashQLA-SlidingWindowAttention")
+    VLLM_IMAGE="${IMG_TF5}"
+    GPU_MEM_UTIL=0.82
+    MAX_MODEL_LEN=196608
+    MAX_BATCHED_TOKENS=16384
+    MAX_NUM_SEQS=8
+
+    MODEL_DOWNLOADS=(
+      "shieldstar/Qwen3.5-122B-A10B-int4-AutoRound-EC"
+      "z-lab/Qwen3.5-122B-A10B-DFlash"
+    )
+
+    ENV_ARGS=(
+      -e VLLM_ENABLE_CUDAGRAPH_GC=1
+      -e FLASHINFER_DISABLE_VERSION_CHECK=1
+      -e VLLM_USE_FLASHINFER_SAMPLER=1
+      -e VLLM_MARLIN_USE_ATOMIC_ADD=1
+      -e TZ=Europe/Vienna
+      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
+    )
+
+    EXTRA_ARGS=(
+      "--served-model-name"           "qwen"
+      "--dtype"                       "bfloat16"
+      "--load-format"                 "fastsafetensors"
+      "--attention-backend"           "flash_attn"
+      "--speculative-config"          '{"method":"dflash","model":"z-lab/Qwen3.5-122B-A10B-DFlash","num_speculative_tokens":5}'
+      "--enable-prompt-tokens-details"
+      "--enable-auto-tool-choice"
+      "--tool-call-parser"            "qwen3_coder"
+      "--chat-template"               "/qwen3.5-enhanced.jinja"
+      "--reasoning-parser"            "qwen3"
+      "--generation-config"           "auto"
+      "--override-generation-config"  '{"temperature":1.0,"top_p":0.95,"top_k":20,"min_p":0.0,"presence_penalty":1.5,"repetition_penalty":1.0}'
+    )
+
+    # Override MODEL for docker run command if full name was used
+    MODEL="shieldstar/Qwen3.5-122B-A10B-int4-AutoRound-EC"
     ;;
 
 

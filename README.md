@@ -134,6 +134,7 @@ A turnkey Bash script that launches a fully configured, production-ready **vLLM 
 | #6 | `rdtand/MiniMax-M2.7-PrismaQuant-3.20bit-vllm` | ~25 | 3.20bit | 196K | 💬 🔧 🧠 | MiniMax M2.7, PrismaQuant 3.20bit, standard eugr image |
 | #7 | `Intel/Qwen3-Coder-Next-int4-AutoRound` | ~17 | INT4 | 1M | 💬 🔧 | MoE FP8, YaRN RoPE scaling, 384 concurrent sequences |
 | #8 | `RedHatAI/Qwen3.5-122B-A10B-NVFP4` | ~17 | NVFP4 | 64K | 💬 🔧 🧠 | **Best quality** — RedHat calibration ≈ FP16, FlashInfer |
+| — | `shieldstar/Qwen3.5-122B-A10B-int4-AutoRound-EC` | — | INT4 | 196K | 💬 🔧 | AutoRound INT4, z-lab DFlash speculative decoding, custom vllm-node-tf5 image |
 | #9 | `nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4` | ~15 | NVFP4 | 128K | 💬 🔧 🧠 | MoE 120B/12B active, Marlin dequant |
 | — | `LiquidAI/LFM2.5-350M` | ~212 | BF16 | 32K | 💬 | Ultra-lightweight 350M, ideal for testing/development |
 | — | `Qwen/Qwen3.5-0.8B` | ~103 | BF16 | 102K | 💬 🔧 | Lightweight 800M dense model, extremely fast, 102k context |
