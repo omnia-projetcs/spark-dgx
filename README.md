@@ -233,7 +233,11 @@ python3 benchmark.py --base-url http://192.168.1.100:8000
 
 The following benchmark runs represent verified performance metrics across different concurrency levels (1, 2, 4, and 8 simultaneous streams) on a single **NVIDIA DGX Spark** deskside supercomputer (GB10 Grace Blackwell, 128GB unified memory).
 
-````carousel
+Click on any model below to expand its detailed concurrency comparison table:
+
+<details>
+<summary><b>1. AEON-7/Qwen3.6-35B-A3B-heretic-NVFP4</b></summary>
+
 ```
 ══════════════════════════════════════════════════════════════════════
   📊 COMPARISON TABLE (AEON-7/Qwen3.6-35B-A3B-heretic-NVFP4)
@@ -245,7 +249,12 @@ The following benchmark runs represent verified performance metrics across diffe
       4 │   8069.4ms │  12001.9ms │   18.381s │     512.0 │     50.33 │    173.43
       8 │  15521.6ms │  31851.4ms │   25.757s │     512.0 │     50.84 │     98.34
 ```
-<!-- slide -->
+
+</details>
+
+<details>
+<summary><b>2. rdtand/Qwen3.6-35B-A3B-PrismaQuant-4.75bit-vllm</b></summary>
+
 ```
 ══════════════════════════════════════════════════════════════════════
   📊 COMPARISON TABLE (rdtand/Qwen3.6-35B-A3B-PrismaQuant-4.75bit-vllm)
@@ -257,7 +266,12 @@ The following benchmark runs represent verified performance metrics across diffe
       4 │   1104.7ms │   3806.2ms │   14.220s │     512.0 │     40.09 │    243.52
       8 │   5347.8ms │  10481.9ms │   10.482s │      77.6 │      7.56 │     59.23
 ```
-<!-- slide -->
+
+</details>
+
+<details>
+<summary><b>3. nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-NVFP4</b></summary>
+
 ```
 ══════════════════════════════════════════════════════════════════════
   📊 COMPARISON TABLE (nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-NVFP4)
@@ -269,7 +283,12 @@ The following benchmark runs represent verified performance metrics across diffe
       4 │    244.4ms │    322.4ms │   13.601s │     493.1 │     36.92 │    277.35
       8 │    206.6ms │    210.2ms │   20.820s │     512.0 │     24.84 │    196.65
 ```
-<!-- slide -->
+
+</details>
+
+<details>
+<summary><b>4. bg-digitalservices/Gemma-4-26B-A4B-it-NVFP4</b></summary>
+
 ```
 ══════════════════════════════════════════════════════════════════════
   📊 COMPARISON TABLE (bg-digitalservices/Gemma-4-26B-A4B-it-NVFP4)
@@ -281,7 +300,12 @@ The following benchmark runs represent verified performance metrics across diffe
       4 │     78.2ms │    114.1ms │   13.586s │     480.8 │     35.64 │    263.44
       8 │    101.5ms │    109.6ms │   17.817s │     478.9 │     27.09 │    200.71
 ```
-<!-- slide -->
+
+</details>
+
+<details>
+<summary><b>5. minimax-m2.7-prisma (rdtand/MiniMax-M2.7-PrismaQuant-3.20bit-vllm)</b></summary>
+
 ```
 ══════════════════════════════════════════════════════════════════════
   📊 COMPARISON TABLE (minimax-m2.7-prisma)
@@ -293,7 +317,12 @@ The following benchmark runs represent verified performance metrics across diffe
       4 │    348.1ms │    384.9ms │   46.086s │     512.0 │     11.19 │     44.41
       8 │   1011.4ms │   1129.8ms │   72.989s │     512.0 │      7.11 │     56.08
 ```
-<!-- slide -->
+
+</details>
+
+<details>
+<summary><b>6. Intel/Qwen3-Coder-Next-int4-AutoRound</b></summary>
+
 ```
 ══════════════════════════════════════════════════════════════════════
   📊 COMPARISON TABLE (Intel/Qwen3-Coder-Next-int4-AutoRound)
@@ -305,7 +334,12 @@ The following benchmark runs represent verified performance metrics across diffe
       4 │     62.0ms │     78.1ms │    1.979s │     129.9 │     61.04 │    133.49
       8 │     99.4ms │    136.4ms │    1.089s │      65.6 │     38.97 │     66.51
 ```
-<!-- slide -->
+
+</details>
+
+<details>
+<summary><b>7. nemotron-super-120b (nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4)</b></summary>
+
 ```
 ══════════════════════════════════════════════════════════════════════
   📊 COMPARISON TABLE (nemotron-super-120b)
@@ -317,7 +351,12 @@ The following benchmark runs represent verified performance metrics across diffe
       4 │    627.4ms │    699.2ms │   54.939s │     512.0 │      9.43 │     37.27
       8 │  28040.7ms │  55555.8ms │   82.570s │     512.0 │      9.39 │     37.23
 ```
-<!-- slide -->
+
+</details>
+
+<details>
+<summary><b>8. LiquidAI/LFM2.5-350M</b></summary>
+
 ```
 ══════════════════════════════════════════════════════════════════════
   📊 COMPARISON TABLE (LiquidAI/LFM2.5-350M)
@@ -329,7 +368,12 @@ The following benchmark runs represent verified performance metrics across diffe
       4 │     21.6ms │     24.2ms │    1.508s │     376.9 │    255.10 │   1358.30
       8 │    749.5ms │   2027.5ms │    2.233s │     379.4 │    255.98 │    934.11
 ```
-<!-- slide -->
+
+</details>
+
+<details>
+<summary><b>9. Qwen/Qwen3.5-0.8B</b></summary>
+
 ```
 ══════════════════════════════════════════════════════════════════════
   📊 COMPARISON TABLE (Qwen/Qwen3.5-0.8B)
@@ -341,7 +385,8 @@ The following benchmark runs represent verified performance metrics across diffe
       4 │    110.9ms │    178.0ms │    4.561s │     486.1 │    109.22 │    405.49
       8 │   2247.8ms │   4804.8ms │    6.474s │     462.0 │    109.24 │    392.19
 ```
-````
+
+</details>
 
 ---
 
