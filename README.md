@@ -138,6 +138,7 @@ A turnkey Bash script that launches a fully configured, production-ready **vLLM 
 | — | `rdtand/Qwen3.6-35B-A3B-PrismaQuant-4.75bit-vllm` | ~40 | 4.75bit | 256K | 💬 🔧 🧠 | Speculative decoding (MTP ×3), FP8 KV-cache |
 | — | `Intel/Qwen3-Coder-Next-int4-AutoRound` | ~30 | INT4 | 1M | 💬 🔧 | MoE FP8, YaRN RoPE scaling, 384 concurrent sequences |
 | — | `LiquidAI/LFM2.5-350M` | fast | BF16 | 32K | 💬 | Ultra-lightweight 350M, ideal for testing/development |
+| — | `zai-org/GLM-5.1-FP8` | cluster | FP8 | 24K | 💬 🔧 🧠 | 754B MoE, TP×8 Ray cluster, shared cache, drop-caches mod |
 
 > 💬 Text &nbsp; 🖼️ Image &nbsp; 🎥 Video &nbsp; 🔊 Audio &nbsp; 🔧 Tool-call (MCP-compatible) &nbsp; 🧠 Reasoning/thinking
 

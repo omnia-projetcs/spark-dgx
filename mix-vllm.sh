@@ -113,7 +113,7 @@ done
 # DEFAULT_MODEL="AEON-7/Qwen3.6-35B-A3B-heretic-NVFP4"          # https://huggingface.co/AEON-7/Qwen3.6-35B-A3B-heretic-NVFP4
 #DEFAULT_MODEL="openai/gpt-oss-120b"                            # https://huggingface.co/openai/gpt-oss-120b
 # DEFAULT_MODEL="nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-NVFP4"   # https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-NVFP4
-#DEFAULT_MODEL="QuantTrio/GLM-4.7-Flash-AWQ"                 # https://huggingface.co/QuantTrio/GLM-4.7-Flash-AWQ
+DEFAULT_MODEL="QuantTrio/GLM-4.7-Flash-AWQ"                 # https://huggingface.co/QuantTrio/GLM-4.7-Flash-AWQ
 #DEFAULT_MODEL="nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4" # https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4
 #DEFAULT_MODEL="RedHatAI/Qwen3.5-122B-A10B-NVFP4"            # https://huggingface.co/RedHatAI/Qwen3.5-122B-A10B-NVFP4
 # DEFAULT_MODEL="bg-digitalservices/Gemma-4-26B-A4B-it-NVFP4"   # https://huggingface.co/bg-digitalservices/Gemma-4-26B-A4B-it-NVFP4
@@ -128,6 +128,7 @@ done
 #DEFAULT_MODEL="neuralmagic/DeepSeek-R1-Distill-Llama-8B-FP8"   # https://huggingface.co/neuralmagic/DeepSeek-R1-Distill-Llama-8B-FP8
 #DEFAULT_MODEL="casperhansen/deepseek-r1-distill-llama-8b-awq" # https://huggingface.co/casperhansen/deepseek-r1-distill-llama-8b-awq
 #DEFAULT_MODEL="nvidia/Nemotron-3-Nano-Omni-30B-A3B-Reasoning-NVFP4" # https://huggingface.co/nvidia/Nemotron-3-Nano-Omni-30B-A3B-Reasoning-NVFP4
+#DEFAULT_MODEL="zai-org/GLM-5.1-FP8"                            # https://huggingface.co/zai-org/GLM-5.1-FP8
 
 MODEL="${MODEL:-${DEFAULT_MODEL}}"
 
@@ -239,6 +240,9 @@ IMG_STOCK="vllm/vllm-openai:latest"
 
 IMG_NEMOTRON_OMNI="vllm/vllm-openai:v0.20.0-aarch64-cu130-ubuntu2404"
 #         └─ Custom Nemotron-3-Nano-Omni-30B-A3B-Reasoning-NVFP4 optimized image
+
+IMG_GLM51="vllm-glm51-cu130"
+#         └─ Z.AI GLM-5.1-FP8 optimized image with CUDA 13.0 (8-node Ray cluster)
 # ─────────────────────────────────────────────────────────────────────────────
 
 # Defaults (overridden per model)
@@ -396,6 +400,7 @@ case "${MODEL}" in
       "--load-format"         "fastsafetensors"
       "--quantization"        "awq"
       "--kv-cache-dtype"      "fp8"
+      "--enforce-eager"
       "--enable-auto-tool-choice"
       "--tool-call-parser"    "glm47"
       "--reasoning-parser"    "glm45"
@@ -927,6 +932,49 @@ case "${MODEL}" in
     )
     ;;
 
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Z.AI GLM-5.1-FP8 754B MoE on 8 DGX Spark nodes
+  # ═══════════════════════════════════════════════════════════════════════════
+  "zai-org/GLM-5.1-FP8")
+    VLLM_IMAGE="${IMG_GLM51}"
+    GPU_MEM_UTIL=0.84
+    MAX_MODEL_LEN=24576
+    MAX_BATCHED_TOKENS=8192
+    MAX_NUM_SEQS=8
+    MODEL_DOWNLOADS=("none")
+
+    VOLUME_ARGS=(
+      -v /mnt/glm51-hf-cache:/root/.cache/huggingface
+      -v /mnt/glm51-hf-cache:/mnt/glm51-hf-cache
+    )
+
+    ENV_ARGS=(
+      -e HF_HUB_OFFLINE=1
+      -e TRANSFORMERS_OFFLINE=1
+      -e HF_HOME=/mnt/glm51-hf-cache
+      -e VLLM_USE_DEEP_GEMM=0
+      -e VLLM_MOE_USE_DEEP_GEMM=0
+      -e VLLM_USE_DEEP_GEMM_E8M0=0
+      -e VLLM_MLA_DISABLE=1
+      -e VLLM_DISABLED_KERNELS=CutlassFP8ScaledMMLinearKernel
+      -e VLLM_USE_FLASHINFER_SAMPLER=0
+      -e OMP_NUM_THREADS=4
+      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
+    )
+
+    EXTRA_ARGS=(
+      "--tensor-parallel-size"        "8"
+      "--distributed-executor-backend" "ray"
+      "--enforce-eager"
+      "--kv-cache-dtype"              "fp8"
+      "--tool-call-parser"            "glm47"
+      "--reasoning-parser"            "glm45"
+      "--enable-auto-tool-choice"
+      "--chat-template-content-format" "string"
+      "--served-model-name"           "glm-5.1-fp8"
+    )
+    ;;
+
   *)
     VLLM_IMAGE="${IMG_STOCK}"
     GPU_MEM_UTIL=0.80
@@ -1008,6 +1056,9 @@ fi
 mkdir -p "${HOME}/.cache/huggingface"
 
 for dl in "${MODEL_DOWNLOADS[@]}"; do
+  if [[ "${dl}" == "none" ]]; then
+    continue
+  fi
   download_if_needed "${dl}"
 done
 
@@ -1016,6 +1067,18 @@ done
 echo "🔥 ${MODEL}"
 echo "   image  : ${VLLM_IMAGE}"
 echo "   ctx    : ${MAX_MODEL_LEN}   mem: ${GPU_MEM_UTIL}   seqs: ${MAX_NUM_SEQS}"
+
+# ── MOD: DROP CACHES ──────────────────────────────────────────────────────────
+# If selected model includes drop-caches mod, drop system caches to reclaim RAM
+if [[ "${MODEL}" == "zai-org/GLM-5.1-FP8" ]]; then
+  echo "🧹 Applying mod: mods/drop-caches..."
+  if [[ -w /proc/sys/vm/drop_caches ]]; then
+    echo "   Writing to /proc/sys/vm/drop_caches..."
+    sync; echo 3 > /proc/sys/vm/drop_caches 2>/dev/null || true
+  else
+    echo "   Note: Could not drop caches (insufficient permissions), proceeding..."
+  fi
+fi
 
 docker stop "${CONTAINER_NAME}" 2>/dev/null
 docker rm   "${CONTAINER_NAME}" 2>/dev/null
