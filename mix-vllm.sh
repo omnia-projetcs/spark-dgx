@@ -133,7 +133,6 @@ done
 # ── TO TEST ───────────────────────────────────────────────────────────
 # ── x2 GB10 = 256gb
 #DEFAULT_MODEL="RedHatAI/Qwen3.5-122B-A10B-NVFP4"                 # https://huggingface.co/RedHatAI/Qwen3.5-122B-A10B-NVFP4
-#DEFAULT_MODEL="deepseek-ai/DeepSeek-V4-Flash"                    # https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash
 #DEFAULT_MODEL="nm-testing/DeepSeek-R1-Distill-Qwen-32B-NVFP4"    # https://huggingface.co/nm-testing/DeepSeek-R1-Distill-Qwen-32B-NVFP4
 
 # ── x4 GB10 = 512gb
@@ -147,8 +146,8 @@ done
 
 
 # ── TO TEST ───────────────────────────────────────────────────────────
-DEFAULT_MODEL="rdtand/Mistral-Medium-3.5-128B-PrismaQuant-4.75-vllm" # https://huggingface.co/rdtand/Mistral-Medium-3.5-128B-PrismaQuant-4.75-vllm
-#DEFAULT_MODEL="rdtand/MiniMax-M2.7-PrismaQuant-3.20bit-vllm"     # https://huggingface.co/rdtand/MiniMax-M2.7-PrismaQuant-3.20bit-vllm
+#DEFAULT_MODEL="deepseek-ai/DeepSeek-V4-Flash"                    # https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash
+DEFAULT_MODEL="rdtand/MiniMax-M2.7-PrismaQuant-3.20bit-vllm"     # https://huggingface.co/rdtand/MiniMax-M2.7-PrismaQuant-3.20bit-vllm
 #DEFAULT_MODEL="rdtand/Gemma4-31B-IT-PrismaQuant-5.5bit-vllm"     # https://huggingface.co/rdtand/Gemma4-31B-IT-PrismaQuant-5.5bit-vllm
 
 
@@ -293,7 +292,7 @@ case "${MODEL}" in
   "AEON-7/Qwen3.6-35B-A3B-heretic-NVFP4")
     VLLM_IMAGE="${IMG_AEON7}"
     GPU_MEM_UTIL=0.50
-    MAX_MODEL_LEN=131072
+    MAX_MODEL_LEN=102400
     MAX_BATCHED_TOKENS=4096
     MAX_NUM_SEQS=2
 
@@ -343,7 +342,7 @@ case "${MODEL}" in
   "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-NVFP4")
     VLLM_IMAGE="${IMG_EUGR}"
     GPU_MEM_UTIL=0.70
-    MAX_MODEL_LEN=262144
+    MAX_MODEL_LEN=102400
     MAX_BATCHED_TOKENS=32768
     MAX_NUM_SEQS=8
 
@@ -377,7 +376,7 @@ case "${MODEL}" in
   "Qwen/Qwen3.6-35B-A3B-FP8")
     VLLM_IMAGE="${IMG_NIGHTLY}"
     GPU_MEM_UTIL=0.85
-    MAX_MODEL_LEN=262144
+    MAX_MODEL_LEN=102400
     MAX_BATCHED_TOKENS=32768
     MAX_NUM_SEQS=64
 
@@ -407,7 +406,7 @@ case "${MODEL}" in
   "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4")
     VLLM_IMAGE="${IMG_EUGR}"
     GPU_MEM_UTIL=0.75
-    MAX_MODEL_LEN=131072
+    MAX_MODEL_LEN=102400
     MAX_BATCHED_TOKENS=16384
     MAX_NUM_SEQS=4
 
@@ -469,7 +468,7 @@ case "${MODEL}" in
   "bg-digitalservices/Gemma-4-26B-A4B-it-NVFP4")
     VLLM_IMAGE="${IMG_EUGR}"
     GPU_MEM_UTIL=0.80
-    MAX_MODEL_LEN=262144
+    MAX_MODEL_LEN=102400
     MAX_BATCHED_TOKENS=8192
     MAX_NUM_SEQS=8
 
@@ -496,7 +495,7 @@ case "${MODEL}" in
   "rdtand/Qwen3.6-35B-A3B-PrismaQuant-4.75bit-vllm")
     VLLM_IMAGE="${IMG_STOCK}"
     GPU_MEM_UTIL=0.60
-    MAX_MODEL_LEN=262144
+    MAX_MODEL_LEN=102400
     MAX_BATCHED_TOKENS=32768
     MAX_NUM_SEQS=4
 
@@ -532,7 +531,7 @@ case "${MODEL}" in
   "Intel/Qwen3-Coder-Next-int4-AutoRound")
     VLLM_IMAGE="${IMG_STOCK}"
     GPU_MEM_UTIL=0.70
-    MAX_MODEL_LEN=1048576
+    MAX_MODEL_LEN=102400
     MAX_BATCHED_TOKENS=49152
     MAX_NUM_SEQS=384
 
@@ -591,7 +590,7 @@ case "${MODEL}" in
   "Qwen/Qwen3.5-0.8B")
     VLLM_IMAGE="${IMG_STOCK}"
     GPU_MEM_UTIL=0.80
-    MAX_MODEL_LEN=262144
+    MAX_MODEL_LEN=102400
     MAX_BATCHED_TOKENS=8192
     MAX_NUM_SEQS=4
 
@@ -779,7 +778,7 @@ case "${MODEL}" in
   "nvidia/Nemotron-3-Nano-Omni-30B-A3B-Reasoning-NVFP4")
     VLLM_IMAGE="${IMG_NEMOTRON_OMNI}"
     GPU_MEM_UTIL=0.80
-    MAX_MODEL_LEN=131072
+    MAX_MODEL_LEN=102400
     MAX_BATCHED_TOKENS=32768
     MAX_NUM_SEQS=8
 
@@ -861,7 +860,7 @@ case "${MODEL}" in
   "nvidia/MiniMax-M2.7-NVFP4")
     VLLM_IMAGE="${IMG_MINIMAX_NVFP4}"
     GPU_MEM_UTIL=0.85
-    MAX_MODEL_LEN=196608
+    MAX_MODEL_LEN=102400
     MAX_BATCHED_TOKENS=32768
     MAX_NUM_SEQS=8
 
@@ -888,7 +887,7 @@ case "${MODEL}" in
   "cyankiwi/MiniMax-M2.5-AWQ-4bit")
     VLLM_IMAGE="${IMG_VLLM_NODE}"
     GPU_MEM_UTIL=0.7
-    MAX_MODEL_LEN=128000
+    MAX_MODEL_LEN=102400
     MAX_BATCHED_TOKENS=32768
     MAX_NUM_SEQS=8
 
@@ -913,7 +912,7 @@ case "${MODEL}" in
   "cyankiwi/MiniMax-M2.7-AWQ-4bit")
     VLLM_IMAGE="${IMG_VLLM_NODE}"
     GPU_MEM_UTIL=0.7
-    MAX_MODEL_LEN=128000
+    MAX_MODEL_LEN=102400
     MAX_BATCHED_TOKENS=32768
     MAX_NUM_SEQS=8
 
@@ -978,7 +977,7 @@ case "${MODEL}" in
   "deepseek-ai/DeepSeek-V4-Flash")
     VLLM_IMAGE="${IMG_DSV4}"
     GPU_MEM_UTIL=0.9
-    MAX_MODEL_LEN=200000
+    MAX_MODEL_LEN=102400
     MAX_BATCHED_TOKENS=4192
     MAX_NUM_SEQS=20
 
@@ -1055,7 +1054,7 @@ case "${MODEL}" in
   "rdtand/MiniMax-M2.7-PrismaQuant-3.20bit-vllm")
     VLLM_IMAGE="${IMG_EUGR}"
     GPU_MEM_UTIL=0.85
-    MAX_MODEL_LEN=196608
+    MAX_MODEL_LEN=102400
     MAX_BATCHED_TOKENS=32768
     MAX_NUM_SEQS=8
 
@@ -1083,7 +1082,7 @@ case "${MODEL}" in
   "rdtand/Gemma4-31B-IT-PrismaQuant-5.5bit-vllm")
     VLLM_IMAGE="${IMG_EUGR}"
     GPU_MEM_UTIL=0.80
-    MAX_MODEL_LEN=262144
+    MAX_MODEL_LEN=102400
     MAX_BATCHED_TOKENS=8192
     MAX_NUM_SEQS=8
 
@@ -1111,7 +1110,7 @@ case "${MODEL}" in
   "scottgl/MiniMax-M2.7-REAP-172B-A10B-NVFP4-GB10")
     VLLM_IMAGE="${IMG_MINIMAX_NVFP4}"
     GPU_MEM_UTIL=0.90
-    MAX_MODEL_LEN=196608
+    MAX_MODEL_LEN=102400
     MAX_BATCHED_TOKENS=32768
     MAX_NUM_SEQS=8
 
@@ -1138,7 +1137,7 @@ case "${MODEL}" in
   "cybermotaz/nemotron3-nano-nvfp4-w4a16")
     VLLM_IMAGE="${IMG_EUGR}"
     GPU_MEM_UTIL=0.70
-    MAX_MODEL_LEN=262144
+    MAX_MODEL_LEN=102400
     MAX_BATCHED_TOKENS=32768
     MAX_NUM_SEQS=8
 
@@ -1167,7 +1166,7 @@ case "${MODEL}" in
   "dervig/m51Lab-MiniMax-M2.7-REAP-139B-A10B-NVFP4-GB10")
     VLLM_IMAGE="${IMG_MINIMAX_NVFP4}"
     GPU_MEM_UTIL=0.85
-    MAX_MODEL_LEN=196608
+    MAX_MODEL_LEN=102400
     MAX_BATCHED_TOKENS=32768
     MAX_NUM_SEQS=8
 
