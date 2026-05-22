@@ -1045,6 +1045,7 @@ case "${MODEL}" in
       "--enable-auto-tool-choice"
       "--tool-call-parser"     "mistral"
       "--reasoning-parser"     "mistral"
+      "--language-model-only"
     )
     ;;
 
