@@ -115,10 +115,12 @@ DEFAULT_MODEL="AEON-7/Qwen3.6-35B-A3B-heretic-NVFP4"          # https://huggingf
 # DEFAULT_MODEL="google/gemma-3-12b-it"                        # ⚠️ [GATED] https://huggingface.co/google/gemma-3-12b-it
 # DEFAULT_MODEL="yepthatsjason/gemma-3-12b-it-nvfp4"            # ⚠️ [GATED] https://huggingface.co/yepthatsjason/gemma-3-12b-it-nvfp4
 # DEFAULT_MODEL="pytorch/gemma-3-12b-it-FP8"                    # ⚠️ [GATED] https://huggingface.co/pytorch/gemma-3-12b-it-FP8
+# DEFAULT_MODEL="gaunernst/gemma-3-12b-it-int4-awq"            # ⚠️ [GATED] https://huggingface.co/gaunernst/gemma-3-12b-it-int4-awq
 # DEFAULT_MODEL="bg-digitalservices/Gemma-4-26B-A4B-it-NVFP4"   # https://huggingface.co/bg-digitalservices/Gemma-4-26B-A4B-it-NVFP4
 # DEFAULT_MODEL="rdtand/Qwen3.6-35B-A3B-PrismaQuant-4.75bit-vllm" # https://huggingface.co/rdtand/Qwen3.6-35B-A3B-PrismaQuant-4.75bit-vllm
 # DEFAULT_MODEL="Intel/Qwen3-Coder-Next-int4-AutoRound"        # https://huggingface.co/Intel/Qwen3-Coder-Next-int4-AutoRound
 # DEFAULT_MODEL="LiquidAI/LFM2.5-350M"                         # https://huggingface.co/LiquidAI/LFM2.5-350M
+# DEFAULT_MODEL="Qwen/Qwen3.5-0.8B"                            # https://huggingface.co/Qwen/Qwen3.5-0.8B
 
 MODEL="${MODEL:-${DEFAULT_MODEL}}"
 # ─────────────────────────────────────────────────────────────────────────────
@@ -480,6 +482,32 @@ case "${MODEL}" in
     ;;
 
   # ═══════════════════════════════════════════════════════════════════════════
+  # Gemma 3 12B INT4 AWQ — AWQ (Google QAT), ~8 GB VRAM, 128k context, extremely fast (Ada Lovelace / Hopper / Blackwell accelerated)
+  # ═══════════════════════════════════════════════════════════════════════════
+  "gaunernst/gemma-3-12b-it-int4-awq")
+    VLLM_IMAGE="${IMG_NIGHTLY}"
+    GPU_MEM_UTIL=0.85
+    MAX_MODEL_LEN=32768
+    MAX_BATCHED_TOKENS=8192
+    MAX_NUM_SEQS=8
+
+    ENV_ARGS=(
+      -e VLLM_HTTP_TIMEOUT_KEEP_ALIVE=600
+      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
+    )
+
+    EXTRA_ARGS=(
+      "--served-model-name"   "gemma3-12b-awq"
+      "--dtype"               "auto"
+      "--load-format"         "fastsafetensors"
+      "--quantization"        "awq"
+      "--kv-cache-dtype"      "fp8"
+      "--enable-auto-tool-choice"
+      "--tool-call-parser"    "pythonic"
+    )
+    ;;
+
+  # ═══════════════════════════════════════════════════════════════════════════
   # Gemma 4 26B A4B — NVFP4 (bg-digitalservices), TP=4, 262k context
   # ⚠️  Requires fix-gemma4-tool-parser — present in IMG_EUGR (recent builds)
   # ═══════════════════════════════════════════════════════════════════════════
@@ -599,6 +627,33 @@ case "${MODEL}" in
       "--load-format"         "fastsafetensors"
       "--attention-backend"   "flash_attn"
       "--dtype"               "auto"
+    )
+    ;;
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Qwen 3.5 0.8B — Lightweight dense model, extremely fast, 262k context
+  # ═══════════════════════════════════════════════════════════════════════════
+  "Qwen/Qwen3.5-0.8B")
+    VLLM_IMAGE="${IMG_STOCK}"
+    GPU_MEM_UTIL=0.80
+    MAX_MODEL_LEN=262144
+    MAX_BATCHED_TOKENS=8192
+    MAX_NUM_SEQS=4
+
+    ENV_ARGS=(
+      -e VLLM_MARLIN_USE_ATOMIC_ADD=1
+      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
+    )
+
+    EXTRA_ARGS=(
+      "--served-model-name"   "qwen3.5-0.8b"
+      "--language-model-only"
+      "--load-format"         "fastsafetensors"
+      "--attention-backend"   "flash_attn"
+      "--dtype"               "auto"
+      "--reasoning-parser"    "qwen3"
+      "--enable-auto-tool-choice"
+      "--tool-call-parser"    "qwen3_coder"
     )
     ;;
 
