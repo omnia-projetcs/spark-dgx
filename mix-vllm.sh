@@ -1023,7 +1023,7 @@ case "${MODEL}" in
   "rdtand/Mistral-Medium-3.5-128B-PrismaQuant-4.75-vllm")
     VLLM_IMAGE="${IMG_STOCK}"
     GPU_MEM_UTIL=0.90
-    MAX_MODEL_LEN=131072
+    MAX_MODEL_LEN=32768
     MAX_BATCHED_TOKENS=16384
     MAX_NUM_SEQS=4
 
@@ -1036,7 +1036,7 @@ case "${MODEL}" in
     EXTRA_ARGS=(
       "--served-model-name"    "mistral-medium-prisma"
       "--dtype"                "auto"
-      "--load-format"          "fastsafetensors"
+      "--load-format"          "safetensors"
       "--quantization"         "compressed-tensors"
       "--kv-cache-dtype"       "fp8"
       "--tensor-parallel-size" "1"
