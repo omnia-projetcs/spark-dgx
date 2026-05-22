@@ -1053,8 +1053,8 @@ case "${MODEL}" in
   # ═══════════════════════════════════════════════════════════════════════════
   "rdtand/MiniMax-M2.7-PrismaQuant-3.20bit-vllm")
     VLLM_IMAGE="${IMG_EUGR}"
-    GPU_MEM_UTIL=0.85
-    MAX_MODEL_LEN=102400
+    GPU_MEM_UTIL=0.90
+    MAX_MODEL_LEN=32768
     MAX_BATCHED_TOKENS=32768
     MAX_NUM_SEQS=8
 
@@ -1066,7 +1066,7 @@ case "${MODEL}" in
     EXTRA_ARGS=(
       "--served-model-name"    "minimax-m2.7-prisma"
       "--dtype"                "auto"
-      "--load-format"          "fastsafetensors"
+      "--load-format"          "safetensors"
       "--quantization"         "compressed-tensors"
       "--kv-cache-dtype"       "fp8"
       "--tensor-parallel-size" "1"
