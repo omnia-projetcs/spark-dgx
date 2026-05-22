@@ -113,6 +113,8 @@ DEFAULT_MODEL="AEON-7/Qwen3.6-35B-A3B-heretic-NVFP4"          # https://huggingf
 # DEFAULT_MODEL="nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4" # https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4
 # DEFAULT_MODEL="RedHatAI/Qwen3.5-122B-A10B-NVFP4"            # https://huggingface.co/RedHatAI/Qwen3.5-122B-A10B-NVFP4
 # DEFAULT_MODEL="google/gemma-3-12b-it"                        # ⚠️ [GATED] https://huggingface.co/google/gemma-3-12b-it
+# DEFAULT_MODEL="yepthatsjason/gemma-3-12b-it-nvfp4"            # ⚠️ [GATED] https://huggingface.co/yepthatsjason/gemma-3-12b-it-nvfp4
+# DEFAULT_MODEL="pytorch/gemma-3-12b-it-FP8"                    # ⚠️ [GATED] https://huggingface.co/pytorch/gemma-3-12b-it-FP8
 # DEFAULT_MODEL="bg-digitalservices/Gemma-4-26B-A4B-it-NVFP4"   # https://huggingface.co/bg-digitalservices/Gemma-4-26B-A4B-it-NVFP4
 # DEFAULT_MODEL="rdtand/Qwen3.6-35B-A3B-PrismaQuant-4.75bit-vllm" # https://huggingface.co/rdtand/Qwen3.6-35B-A3B-PrismaQuant-4.75bit-vllm
 # DEFAULT_MODEL="Intel/Qwen3-Coder-Next-int4-AutoRound"        # https://huggingface.co/Intel/Qwen3-Coder-Next-int4-AutoRound
@@ -418,6 +420,60 @@ case "${MODEL}" in
       "--dtype"               "bfloat16"
       "--load-format"         "fastsafetensors"
       "--attention-backend"   "flashinfer"
+      "--enable-auto-tool-choice"
+      "--tool-call-parser"    "pythonic"
+    )
+    ;;
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Gemma 3 12B NVFP4 — NVFP4, ~15 GB, 128k context, extremely fast (Blackwell optimized)
+  # ═══════════════════════════════════════════════════════════════════════════
+  "yepthatsjason/gemma-3-12b-it-nvfp4")
+    VLLM_IMAGE="${IMG_EUGR}"
+    GPU_MEM_UTIL=0.50
+    MAX_MODEL_LEN=131072
+    MAX_BATCHED_TOKENS=16384
+    MAX_NUM_SEQS=16
+
+    ENV_ARGS=(
+      -e VLLM_HTTP_TIMEOUT_KEEP_ALIVE=600
+      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
+    )
+
+    EXTRA_ARGS=(
+      "--served-model-name"   "gemma3-12b-nvfp4"
+      "--dtype"               "auto"
+      "--load-format"         "fastsafetensors"
+      "--quantization"        "compressed-tensors"
+      "--attention-backend"   "flashinfer"
+      "--kv-cache-dtype"      "fp8"
+      "--enable-auto-tool-choice"
+      "--tool-call-parser"    "pythonic"
+    )
+    ;;
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Gemma 3 12B FP8 — FP8, ~15 GB, 128k context, extremely fast (Blackwell accelerated)
+  # ═══════════════════════════════════════════════════════════════════════════
+  "pytorch/gemma-3-12b-it-FP8")
+    VLLM_IMAGE="${IMG_NIGHTLY}"
+    GPU_MEM_UTIL=0.50
+    MAX_MODEL_LEN=131072
+    MAX_BATCHED_TOKENS=16384
+    MAX_NUM_SEQS=16
+
+    ENV_ARGS=(
+      -e VLLM_HTTP_TIMEOUT_KEEP_ALIVE=600
+      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
+    )
+
+    EXTRA_ARGS=(
+      "--served-model-name"   "gemma3-12b-fp8"
+      "--dtype"               "auto"
+      "--load-format"         "fastsafetensors"
+      "--quantization"        "fp8"
+      "--attention-backend"   "flashinfer"
+      "--kv-cache-dtype"      "fp8"
       "--enable-auto-tool-choice"
       "--tool-call-parser"    "pythonic"
     )
