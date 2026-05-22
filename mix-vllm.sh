@@ -78,6 +78,8 @@ CONTAINER_NAME="mix-vllm"
 PORT="${PORT:-8000}"
 WAIT_FOR_HEALTH=true
 
+ARENA_MODE=false
+
 # ── ARGUMENT PARSING ──────────────────────────────────────────────────────────
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -93,9 +95,13 @@ while [[ $# -gt 0 ]]; do
       MODEL="$2"
       shift 2
       ;;
+    --arena)
+      ARENA_MODE=true
+      shift
+      ;;
     *)
       echo "Unknown option: $1"
-      echo "Usage: $0 [--no-wait] [--port <port>] [--model <model>]"
+      echo "Usage: $0 [--no-wait] [--port <port>] [--model <model>] [--arena]"
       exit 1
       ;;
   esac
@@ -131,8 +137,92 @@ DEFAULT_MODEL="AEON-7/Qwen3.6-35B-A3B-heretic-NVFP4"          # https://huggingf
 # DEFAULT_MODEL="casperhansen/deepseek-r1-distill-qwen-14b-awq" # https://huggingface.co/casperhansen/deepseek-r1-distill-qwen-14b-awq
 # DEFAULT_MODEL="neuralmagic/DeepSeek-R1-Distill-Llama-8B-FP8"   # https://huggingface.co/neuralmagic/DeepSeek-R1-Distill-Llama-8B-FP8
 # DEFAULT_MODEL="casperhansen/deepseek-r1-distill-llama-8b-awq" # https://huggingface.co/casperhansen/deepseek-r1-distill-llama-8b-awq
+# DEFAULT_MODEL="nvidia/Nemotron-3-Nano-Omni-30B-A3B-Reasoning-NVFP4" # https://huggingface.co/nvidia/Nemotron-3-Nano-Omni-30B-A3B-Reasoning-NVFP4
 
 MODEL="${MODEL:-${DEFAULT_MODEL}}"
+
+# ── ARENA MODE SUITE RUNNER ───────────────────────────────────────────────────
+if [[ "${ARENA_MODE}" == "true" ]]; then
+  echo "======================================================================"
+  echo "🏆              STARTING SPARK ARENA BENCHMARK SUITE                  "
+  echo "======================================================================"
+  echo "Testing the following models sequentially:"
+  
+  ARENA_MODELS=(
+    "LiquidAI/LFM2.5-350M"
+    "Qwen/Qwen3.5-0.8B"
+    "neuralmagic/DeepSeek-R1-Distill-Llama-8B-FP8"
+    "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-NVFP4"
+    "nvidia/Nemotron-3-Nano-Omni-30B-A3B-Reasoning-NVFP4"
+    "AEON-7/Qwen3.6-35B-A3B-heretic-NVFP4"
+  )
+  
+  for am in "${ARENA_MODELS[@]}"; do
+    echo "  - ${am}"
+  done
+  echo "======================================================================"
+  echo ""
+
+  RESULTS_FILE="arena_benchmark_results.md"
+  echo "# 🏆 Spark Arena Benchmark Results" > "${RESULTS_FILE}"
+  echo "Generated on $(date)" >> "${RESULTS_FILE}"
+  echo "" >> "${RESULTS_FILE}"
+  echo "| Model | TTFT Avg | Tokens/s (Req) | Tokens/s (Agg) | Status |" >> "${RESULTS_FILE}"
+  echo "| :--- | :---: | :---: | :---: | :---: |" >> "${RESULTS_FILE}"
+
+  for am in "${ARENA_MODELS[@]}"; do
+    echo "----------------------------------------------------------------------"
+    echo "🚀 Starting arena run for model: ${am}"
+    echo "----------------------------------------------------------------------"
+    
+    # Run mix-vllm.sh child command synchronously to boot and wait for health
+    ./mix-vllm.sh --port "${PORT}" --model "${am}"
+    
+    if [[ $? -ne 0 ]]; then
+      echo "❌ Failed to start/healthcheck ${am}, skipping..."
+      echo "| ${am} | N/A | N/A | N/A | ❌ FAILED |" >> "${RESULTS_FILE}"
+      continue
+    fi
+    
+    echo "📊 Running benchmark for ${am}..."
+    rm -f arena_temp.json
+    python3 benchmark.py --base-url "http://localhost:${PORT}" --num-requests 4 --concurrency 1 -o "arena_temp.json"
+    
+    if [[ -f "arena_temp.json" ]]; then
+      stats=$(python3 -c "
+import json
+try:
+    with open('arena_temp.json') as f:
+        data = json.load(f)
+    results = data.get('results', [])
+    if results:
+        res = results[0]
+        print(f'{res.get(\"ttft_avg_ms\", 0):.1f}ms|{res.get(\"tps_per_request_avg\", 0):.2f} t/s|{res.get(\"tps_aggregate\", 0):.2f} t/s')
+    else:
+        print('N/A|N/A|N/A')
+except Exception as e:
+    print('N/A|N/A|N/A')
+")
+      IFS='|' read -r r_ttft r_req r_agg <<< "${stats}"
+      echo "| ${am} | ${r_ttft} | ${r_req} | ${r_agg} | ✅ SUCCESS |" >> "${RESULTS_FILE}"
+      rm -f arena_temp.json
+    else
+      echo "| ${am} | N/A | N/A | N/A | ⚠️ NO RESULTS |" >> "${RESULTS_FILE}"
+    fi
+
+    echo "🛑 Stopping container for ${am}..."
+    docker stop "${CONTAINER_NAME}" >/dev/null 2>/dev/null
+    docker rm "${CONTAINER_NAME}" >/dev/null 2>/dev/null
+    echo ""
+  done
+
+  echo "======================================================================"
+  echo "🏆              ALL ARENA BENCHMARKS COMPLETED!                       "
+  echo "======================================================================"
+  cat "${RESULTS_FILE}"
+  exit 0
+fi
+
 # ─────────────────────────────────────────────────────────────────────────────
 
 # ── KNOWN IMAGES ─────────────────────────────────────────────────────────────
@@ -156,6 +246,9 @@ IMG_NIGHTLY="vllm/vllm-openai:cu130-nightly"
 
 IMG_STOCK="vllm/vllm-openai:latest"
 #         └─ Standard stable image — BF16/FP8, no NVFP4 SM121 patches
+
+IMG_NEMOTRON_OMNI="vllm/vllm-openai:v0.20.0-aarch64-cu130-ubuntu2404"
+#         └─ Custom Nemotron-3-Nano-Omni-30B-A3B-Reasoning-NVFP4 optimized image
 # ─────────────────────────────────────────────────────────────────────────────
 
 # Defaults (overridden per model)
@@ -930,6 +1023,45 @@ case "${MODEL}" in
       "--kv-cache-dtype"      "fp8"
       "--enable-auto-tool-choice"
       "--tool-call-parser"    "llama3"
+    )
+    ;;
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Nemotron-3-Nano-Omni-30B-A3B-Reasoning-NVFP4 on a single GB10
+  # ═══════════════════════════════════════════════════════════════════════════
+  "nvidia/Nemotron-3-Nano-Omni-30B-A3B-Reasoning-NVFP4")
+    VLLM_IMAGE="${IMG_NEMOTRON_OMNI}"
+    GPU_MEM_UTIL=0.80
+    MAX_MODEL_LEN=131072
+    MAX_BATCHED_TOKENS=32768
+    MAX_NUM_SEQS=8
+
+    ENV_ARGS=(
+      -e VLLM_NVFP4_GEMM_BACKEND=marlin
+      -e VLLM_MARLIN_USE_ATOMIC_ADD=1
+      -e VLLM_USE_FLASHINFER_MOE_FP4=0
+      -e VLLM_ALLOW_LONG_MAX_MODEL_LEN=1
+      -e CUDA_MANAGED_FORCE_DEVICE_ALLOC=1
+      -e PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+      -e OMP_NUM_THREADS=4
+      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
+    )
+
+    EXTRA_ARGS=(
+      "--served-model-name"         "nvidia/Nemotron-3-Nano-Omni-30B-A3B-Reasoning-NVFP4"
+      "--served-model-name"         "nemotron-3-nano-omni"
+      "--quantization"              "fp4"
+      "--moe-backend"               "marlin"
+      "--kv-cache-dtype"            "fp8"
+      "--mamba-ssm-cache-dtype"     "float32"
+      "--reasoning-parser"          "nemotron_v3"
+      "--enable-auto-tool-choice"
+      "--tool-call-parser"          "qwen3_coder"
+      "--video-pruning-rate"        "0.5"
+      "--limit-mm-per-prompt"       '{"video":1,"image":1,"audio":1}'
+      "--media-io-kwargs"           '{"video":{"fps":2,"num_frames":256}}'
+      "--allowed-local-media-path"  "/"
+      "--trust-remote-code"
     )
     ;;
 
