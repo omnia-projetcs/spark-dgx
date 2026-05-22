@@ -14,6 +14,14 @@
 #  ──    rdtand/Qwen3.6-35B-A3B-PrismaQuant            ~40     4.75bit  vllm-latest
 #  ──    Intel/Qwen3-Coder-Next-int4-AutoRound         ~30     INT4     vllm-latest
 #  ──    LiquidAI/LFM2.5-350M                         fast     BF16     vllm-latest
+#  ──    AEON-7/Gemma-4-E4B-DECKARD-HERETIC-NVFP4      fast     NVFP4    eugr-nightly
+#  ──    rdtand/Mistral-Medium-3.5-128B-PrismaQuant    ~25     4.75bit  vllm-latest
+#  ──    nvidia/Nemotron-3-Nano-Omni-30B-A3B-Reasoning ~56     NVFP4    eugr-nightly
+#  ──    rdtand/MiniMax-M2.7-PrismaQuant-3.20bit       fast     3.20bit  eugr-nightly
+#  ──    rdtand/Gemma4-31B-IT-PrismaQuant-5.5bit       ~22     5.5bit   eugr-nightly
+#  ──    scottgl/MiniMax-M2.7-REAP-172B-A10B-NVFP4-GB10 fast    NVFP4    eugr-nightly
+#  ──    cybermotaz/nemotron3-nano-nvfp4-w4a16         ~56      NVFP4    eugr-nightly
+#  ──    dervig/m51Lab-MiniMax-M2.7-REAP-139B-A10B-NVFP4 fast   NVFP4    eugr-nightly
 #
 #  * gpt-oss MXFP4 uses eugr-nightly with CUTLASS backend (no local build needed)
 # ─────────────────────────────────────────────────────────────────────────────
@@ -108,15 +116,25 @@ done
 # Select the default model to launch. If the MODEL environment variable or the
 # --model command-line option is set, it will take precedence.
 # To change the default, uncomment ONE of the DEFAULT_MODEL lines below:
+
+# ── OK ────────────────────────────────────────────────────────────────
 # DEFAULT_MODEL="AEON-7/Qwen3.6-35B-A3B-heretic-NVFP4"          # https://huggingface.co/AEON-7/Qwen3.6-35B-A3B-heretic-NVFP4
-# DEFAULT_MODEL="nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-NVFP4"   # https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-NVFP4
-DEFAULT_MODEL="nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4" # https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4
-#DEFAULT_MODEL="RedHatAI/Qwen3.5-122B-A10B-NVFP4"            # https://huggingface.co/RedHatAI/Qwen3.5-122B-A10B-NVFP4
-# DEFAULT_MODEL="bg-digitalservices/Gemma-4-26B-A4B-it-NVFP4"   # https://huggingface.co/bg-digitalservices/Gemma-4-26B-A4B-it-NVFP4
 # DEFAULT_MODEL="rdtand/Qwen3.6-35B-A3B-PrismaQuant-4.75bit-vllm" # https://huggingface.co/rdtand/Qwen3.6-35B-A3B-PrismaQuant-4.75bit-vllm
-# DEFAULT_MODEL="Intel/Qwen3-Coder-Next-int4-AutoRound"        # https://huggingface.co/Intel/Qwen3-Coder-Next-int4-AutoRound
+
+# DEFAULT_MODEL="nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-NVFP4"   # https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-NVFP4
+# DEFAULT_MODEL="nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4" # https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4
+
+# DEFAULT_MODEL="bg-digitalservices/Gemma-4-26B-A4B-it-NVFP4"   # https://huggingface.co/bg-digitalservices/Gemma-4-26B-A4B-it-NVFP4
+
 # DEFAULT_MODEL="LiquidAI/LFM2.5-350M"                         # https://huggingface.co/LiquidAI/LFM2.5-350M
 # DEFAULT_MODEL="Qwen/Qwen3.5-0.8B"                            # https://huggingface.co/Qwen/Qwen3.5-0.8B
+
+
+# ── TO TEST ───────────────────────────────────────────────────────────
+#DEFAULT_MODEL="RedHatAI/Qwen3.5-122B-A10B-NVFP4"            # https://huggingface.co/RedHatAI/Qwen3.5-122B-A10B-NVFP4
+
+# DEFAULT_MODEL="Intel/Qwen3-Coder-Next-int4-AutoRound"        # https://huggingface.co/Intel/Qwen3-Coder-Next-int4-AutoRound
+
 #DEFAULT_MODEL="casperhansen/deepseek-r1-distill-qwen-32b-awq" # https://huggingface.co/casperhansen/deepseek-r1-distill-qwen-32b-awq
 #DEFAULT_MODEL="nm-testing/DeepSeek-R1-Distill-Qwen-32B-NVFP4" # https://huggingface.co/nm-testing/DeepSeek-R1-Distill-Qwen-32B-NVFP4
 #DEFAULT_MODEL="neuralmagic/DeepSeek-R1-Distill-Qwen-14B-FP8"   # https://huggingface.co/neuralmagic/DeepSeek-R1-Distill-Qwen-14B-FP8
@@ -130,6 +148,13 @@ DEFAULT_MODEL="nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4" # https://hugging
 #DEFAULT_MODEL="cyankiwi/MiniMax-M2.7-AWQ-4bit"                  # https://huggingface.co/cyankiwi/MiniMax-M2.7-AWQ-4bit
 #DEFAULT_MODEL="nvidia/Kimi-K2.6-NVFP4"                          # https://huggingface.co/nvidia/Kimi-K2.6-NVFP4
 #DEFAULT_MODEL="deepseek-ai/DeepSeek-V4-Flash"                   # https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash
+#DEFAULT_MODEL="AEON-7/Gemma-4-E4B-DECKARD-HERETIC-NVFP4"        # https://huggingface.co/AEON-7/Gemma-4-E4B-DECKARD-HERETIC-NVFP4
+#DEFAULT_MODEL="rdtand/Mistral-Medium-3.5-128B-PrismaQuant-4.75-vllm" # https://huggingface.co/rdtand/Mistral-Medium-3.5-128B-PrismaQuant-4.75-vllm
+#DEFAULT_MODEL="rdtand/MiniMax-M2.7-PrismaQuant-3.20bit-vllm"    # https://huggingface.co/rdtand/MiniMax-M2.7-PrismaQuant-3.20bit-vllm
+#DEFAULT_MODEL="rdtand/Gemma4-31B-IT-PrismaQuant-5.5bit-vllm"    # https://huggingface.co/rdtand/Gemma4-31B-IT-PrismaQuant-5.5bit-vllm
+#DEFAULT_MODEL="scottgl/MiniMax-M2.7-REAP-172B-A10B-NVFP4-GB10"   # https://huggingface.co/scottgl/MiniMax-M2.7-REAP-172B-A10B-NVFP4-GB10
+#DEFAULT_MODEL="cybermotaz/nemotron3-nano-nvfp4-w4a16"           # https://huggingface.co/cybermotaz/nemotron3-nano-nvfp4-w4a16
+#DEFAULT_MODEL="dervig/m51Lab-MiniMax-M2.7-REAP-139B-A10B-NVFP4-GB10" # https://huggingface.co/dervig/m51Lab-MiniMax-M2.7-REAP-139B-A10B-NVFP4-GB10
 
 MODEL="${MODEL:-${DEFAULT_MODEL}}"
 
@@ -224,8 +249,6 @@ IMG_AEON7="ghcr.io/aeon-7/vllm-spark-omni-q36:v1.2"
 
 IMG_EUGR="ghcr.io/spark-arena/dgx-vllm-eugr-nightly:latest"
 #         └─ Standard Spark Arena image — NVFP4/FP8/AWQ, Nemotron, Qwen3.5/3.6
-
-
 
 IMG_NIGHTLY="vllm/vllm-openai:cu130-nightly"
 #         └─ Official nightly with CUDA 13.0 + SM121 kernel support
@@ -1072,6 +1095,202 @@ case "${MODEL}" in
       "--reasoning-config"             '{"reasoning_parser":"deepseek_v4","reasoning_start_str":"<think>","reasoning_end_str":"</think>"}'
       "--default-chat-template-kwargs" '{"thinking":true}'
       "--load-format"                  "safetensors"
+    )
+    ;;
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Gemma-4-E4B-DECKARD-HERETIC-NVFP4 (AEON-7), 262K context, NVFP4 Quant
+  # ═══════════════════════════════════════════════════════════════════════════
+  "AEON-7/Gemma-4-E4B-DECKARD-HERETIC-NVFP4")
+    VLLM_IMAGE="${IMG_EUGR}"
+    GPU_MEM_UTIL=0.85
+    MAX_MODEL_LEN=262144
+    MAX_BATCHED_TOKENS=8192
+    MAX_NUM_SEQS=8
+
+    ENV_ARGS=(
+      -e VLLM_HTTP_TIMEOUT_KEEP_ALIVE=600
+      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
+    )
+
+    EXTRA_ARGS=(
+      "--served-model-name"    "gemma4-deckard"
+      "--dtype"                "auto"
+      "--load-format"          "fastsafetensors"
+      "--quantization"         "compressed-tensors"
+      "--kv-cache-dtype"       "fp8"
+      "--tensor-parallel-size" "1"
+      "--enable-auto-tool-choice"
+      "--tool-call-parser"     "gemma4"
+      "--reasoning-parser"     "gemma4"
+    )
+    ;;
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Mistral-Medium-3.5-128B-PrismaQuant-4.75-vllm (rdtand), 128K context, 4.75bit
+  # ═══════════════════════════════════════════════════════════════════════════
+  "rdtand/Mistral-Medium-3.5-128B-PrismaQuant-4.75-vllm")
+    VLLM_IMAGE="${IMG_STOCK}"
+    GPU_MEM_UTIL=0.90
+    MAX_MODEL_LEN=131072
+    MAX_BATCHED_TOKENS=16384
+    MAX_NUM_SEQS=4
+
+    ENV_ARGS=(
+      -e VLLM_MARLIN_USE_ATOMIC_ADD=1
+      -e VLLM_HTTP_TIMEOUT_KEEP_ALIVE=600
+      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
+    )
+
+    EXTRA_ARGS=(
+      "--served-model-name"    "mistral-medium-prisma"
+      "--dtype"                "auto"
+      "--load-format"          "fastsafetensors"
+      "--quantization"         "compressed-tensors"
+      "--kv-cache-dtype"       "fp8"
+      "--tensor-parallel-size" "1"
+      "--enable-auto-tool-choice"
+      "--tool-call-parser"     "mistral"
+      "--reasoning-parser"     "mistral"
+    )
+    ;;
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # MiniMax-M2.7-PrismaQuant-3.20bit-vllm (rdtand), 196K context, 3.20bit
+  # ═══════════════════════════════════════════════════════════════════════════
+  "rdtand/MiniMax-M2.7-PrismaQuant-3.20bit-vllm")
+    VLLM_IMAGE="${IMG_EUGR}"
+    GPU_MEM_UTIL=0.85
+    MAX_MODEL_LEN=196608
+    MAX_BATCHED_TOKENS=32768
+    MAX_NUM_SEQS=8
+
+    ENV_ARGS=(
+      -e VLLM_HTTP_TIMEOUT_KEEP_ALIVE=600
+      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
+    )
+
+    EXTRA_ARGS=(
+      "--served-model-name"    "minimax-m2.7-prisma"
+      "--dtype"                "auto"
+      "--load-format"          "fastsafetensors"
+      "--quantization"         "compressed-tensors"
+      "--kv-cache-dtype"       "fp8"
+      "--tensor-parallel-size" "1"
+      "--enable-auto-tool-choice"
+      "--tool-call-parser"     "minimax_m2"
+      "--reasoning-parser"     "minimax_m2"
+    )
+    ;;
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Gemma4-31B-IT-PrismaQuant-5.5bit-vllm (rdtand), 262K context, 5.5bit
+  # ═══════════════════════════════════════════════════════════════════════════
+  "rdtand/Gemma4-31B-IT-PrismaQuant-5.5bit-vllm")
+    VLLM_IMAGE="${IMG_EUGR}"
+    GPU_MEM_UTIL=0.80
+    MAX_MODEL_LEN=262144
+    MAX_BATCHED_TOKENS=8192
+    MAX_NUM_SEQS=8
+
+    ENV_ARGS=(
+      -e VLLM_HTTP_TIMEOUT_KEEP_ALIVE=600
+      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
+    )
+
+    EXTRA_ARGS=(
+      "--served-model-name"    "gemma4-31b-prisma"
+      "--dtype"                "auto"
+      "--load-format"          "fastsafetensors"
+      "--quantization"         "compressed-tensors"
+      "--kv-cache-dtype"       "fp8"
+      "--tensor-parallel-size" "1"
+      "--enable-auto-tool-choice"
+      "--tool-call-parser"     "gemma4"
+      "--reasoning-parser"     "gemma4"
+    )
+    ;;
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # scottgl/MiniMax-M2.7-REAP-172B-A10B-NVFP4-GB10, TP=4, NVFP4 Quant, GB10 REAP
+  # ═══════════════════════════════════════════════════════════════════════════
+  "scottgl/MiniMax-M2.7-REAP-172B-A10B-NVFP4-GB10")
+    VLLM_IMAGE="${IMG_MINIMAX_NVFP4}"
+    GPU_MEM_UTIL=0.90
+    MAX_MODEL_LEN=196608
+    MAX_BATCHED_TOKENS=32768
+    MAX_NUM_SEQS=8
+
+    ENV_ARGS=(
+      -e VLLM_MARLIN_USE_ATOMIC_ADD=1
+      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
+    )
+
+    EXTRA_ARGS=(
+      "--served-model-name"           "minimax-m2.7-reap-172b"
+      "-tp"                           "4"
+      "-pp"                           "1"
+      "--load-format"                 "instanttensor"
+      "--enable-auto-tool-choice"
+      "--tool-call-parser"            "minimax_m2"
+      "--reasoning-parser"            "minimax_m2"
+      "--kv-cache-dtype"              "fp8"
+    )
+    ;;
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # cybermotaz/nemotron3-nano-nvfp4-w4a16, TP=1, NVFP4 Quant, w4a16
+  # ═══════════════════════════════════════════════════════════════════════════
+  "cybermotaz/nemotron3-nano-nvfp4-w4a16")
+    VLLM_IMAGE="${IMG_EUGR}"
+    GPU_MEM_UTIL=0.70
+    MAX_MODEL_LEN=262144
+    MAX_BATCHED_TOKENS=32768
+    MAX_NUM_SEQS=8
+
+    ENV_ARGS=(
+      -e VLLM_USE_FLASHINFER_MOE_FP4=1
+      -e VLLM_FLASHINFER_MOE_BACKEND=throughput
+      -e VLLM_HTTP_TIMEOUT_KEEP_ALIVE=600
+      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
+    )
+
+    EXTRA_ARGS=(
+      "--served-model-name"   "nemotron-nano-nvfp4-w4a16"
+      "--dtype"               "auto"
+      "--load-format"         "fastsafetensors"
+      "--kv-cache-dtype"      "fp8"
+      "--tensor-parallel-size" "1"
+      "--enable-auto-tool-choice"
+      "--tool-call-parser"    "qwen3_xml"
+      "--reasoning-parser"    "nemotron_v3"
+    )
+    ;;
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # dervig/m51Lab-MiniMax-M2.7-REAP-139B-A10B-NVFP4-GB10, TP=4, NVFP4 Quant, GB10
+  # ═══════════════════════════════════════════════════════════════════════════
+  "dervig/m51Lab-MiniMax-M2.7-REAP-139B-A10B-NVFP4-GB10")
+    VLLM_IMAGE="${IMG_MINIMAX_NVFP4}"
+    GPU_MEM_UTIL=0.85
+    MAX_MODEL_LEN=196608
+    MAX_BATCHED_TOKENS=32768
+    MAX_NUM_SEQS=8
+
+    ENV_ARGS=(
+      -e VLLM_MARLIN_USE_ATOMIC_ADD=1
+      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
+    )
+
+    EXTRA_ARGS=(
+      "--served-model-name"           "minimax-m2.7-reap-139b"
+      "-tp"                           "4"
+      "-pp"                           "1"
+      "--load-format"                 "instanttensor"
+      "--enable-auto-tool-choice"
+      "--tool-call-parser"            "minimax_m2"
+      "--reasoning-parser"            "minimax_m2"
+      "--kv-cache-dtype"              "fp8"
     )
     ;;
 

@@ -142,6 +142,14 @@ A turnkey Bash script that launches a fully configured, production-ready **vLLM 
 | — | `Intel/Qwen3-Coder-Next-int4-AutoRound` | ~30 | INT4 | 1M | 💬 🔧 | MoE FP8, YaRN RoPE scaling, 384 concurrent sequences |
 | — | `LiquidAI/LFM2.5-350M` | fast | BF16 | 32K | 💬 | Ultra-lightweight 350M, ideal for testing/development |
 | — | `zai-org/GLM-5.1-FP8` | cluster | FP8 | 24K | 💬 🔧 🧠 | 754B MoE, TP×8 Ray cluster, shared cache, drop-caches mod |
+| — | `AEON-7/Gemma-4-E4B-DECKARD-HERETIC-NVFP4` | fast | NVFP4 | 262K | 💬 🔧 🧠 | Gemma-4 NVFP4, DECKARD Heretic calibration, custom aeon-7/eugr image |
+| — | `rdtand/Mistral-Medium-3.5-128B-PrismaQuant-4.75-vllm` | ~25 | 4.75bit | 128K | 💬 🔧 🧠 | Mistral Medium 3.5, PrismaQuant 4.75bit, stock vLLM image |
+| — | `nvidia/Nemotron-3-Nano-Omni-30B-A3B-Reasoning-NVFP4` | ~56 | NVFP4 | 131K | 💬 🔧 🧠 | Nemotron Omni 30B, custom reasoning optimized image, video pruning |
+| — | `rdtand/MiniMax-M2.7-PrismaQuant-3.20bit-vllm` | fast | 3.20bit | 196K | 💬 🔧 🧠 | MiniMax M2.7, PrismaQuant 3.20bit, standard eugr image |
+| — | `rdtand/Gemma4-31B-IT-PrismaQuant-5.5bit-vllm` | ~22 | 5.5bit | 262K | 💬 🔧 🧠 | Gemma-4 31B IT, PrismaQuant 5.5bit, standard eugr image |
+| — | `scottgl/MiniMax-M2.7-REAP-172B-A10B-NVFP4-GB10` | fast | NVFP4 | 196K | 💬 🔧 🧠 | MiniMax M2.7 REAP 172B, TP×4, instanttensor format, GB10 optimized |
+| — | `cybermotaz/nemotron3-nano-nvfp4-w4a16` | ~56 | NVFP4 | 262K | 💬 🔧 🧠 | Nemotron-3 Nano NVFP4, w4a16 quantization path, reasoning parser |
+| — | `dervig/m51Lab-MiniMax-M2.7-REAP-139B-A10B-NVFP4-GB10` | fast | NVFP4 | 196K | 💬 🔧 🧠 | MiniMax M2.7 REAP 139B, TP×4, instanttensor format, GB10 optimized |
 
 > 💬 Text &nbsp; 🖼️ Image &nbsp; 🎥 Video &nbsp; 🔊 Audio &nbsp; 🔧 Tool-call (MCP-compatible) &nbsp; 🧠 Reasoning/thinking
 
@@ -283,7 +291,4 @@ The Blackwell architecture has specialized hardware support for **FP4** and **FP
 
 ### 3. Multi-Node Scaling
 Using two DGX Spark units via their ConnectX-7 high-speed interfaces enables seamless model partitioning.
-*   Run vLLM with Ray or PyTorch Distributed to scale up to **Tensor Parallelism (TP) = 2** or **Pipeline Parallelism (PP) = 2** to run massive models up to 405B parameters.
-
----
-*Contributions to this guide are welcome! If you find any optimized compilation flags or pre-built ARM64 Docker configurations for new models, please open a PR.*
+*   Run vLLM with Ray or PyTorch Distributed to scale up to **Tensor Parallelism (TP) = 2** or **Pipeline Parallelism (PP) = 2** to run massive models up to 405B
