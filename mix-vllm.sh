@@ -148,7 +148,6 @@ done
 # ── TO TEST ───────────────────────────────────────────────────────────
 #DEFAULT_MODEL="deepseek-ai/DeepSeek-V4-Flash"                    # https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash
 DEFAULT_MODEL="rdtand/MiniMax-M2.7-PrismaQuant-3.20bit-vllm"     # https://huggingface.co/rdtand/MiniMax-M2.7-PrismaQuant-3.20bit-vllm
-#DEFAULT_MODEL="rdtand/Gemma4-31B-IT-PrismaQuant-5.5bit-vllm"     # https://huggingface.co/rdtand/Gemma4-31B-IT-PrismaQuant-5.5bit-vllm
 
 
 
