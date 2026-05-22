@@ -133,6 +133,11 @@ A turnkey Bash script that launches a fully configured, production-ready **vLLM 
 | #5 | `Qwen/Qwen3.6-35B-A3B-FP8` | ~30 | FP8 | 256K | 💬 🔧 🧠 | 156 tok/s aggregate (c=32), cu130-nightly |
 | #6 | `nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4` | ~22 | NVFP4 | 128K | 💬 🔧 🧠 | MoE 120B/12B active, Marlin dequant |
 | #7 | `RedHatAI/Qwen3.5-122B-A10B-NVFP4` | ~17 | NVFP4 | 64K | 💬 🔧 🧠 | **Best quality** — RedHat calibration ≈ FP16, FlashInfer |
+| — | `nvidia/MiniMax-M2.7-NVFP4` | fast | NVFP4 | 196K | 💬 🔧 🧠 | MiniMax M2.7, TP×4, instanttensor format, FP8 KV-cache |
+| — | `cyankiwi/MiniMax-M2.5-AWQ-4bit` | cluster | AWQ | 128K | 💬 🔧 🧠 | MiniMax M2.5, TP×4, Ray distributed backend |
+| — | `cyankiwi/MiniMax-M2.7-AWQ-4bit` | cluster | AWQ | 128K | 💬 🔧 🧠 | MiniMax M2.7, TP×2, Ray distributed backend |
+| — | `nvidia/Kimi-K2.6-NVFP4` | cluster | NVFP4 | 32K | 💬 🔧 🧠 | Kimi K2.6 MoE, TP×8 Ray cluster, shared HF cache, drop-caches mod |
+| — | `deepseek-ai/DeepSeek-V4-Flash` | cluster | FP8 | 200K | 💬 🔧 🧠 | DeepSeek V4 Flash FP8, TP=2 MP, custom vllm-node-dsv4 image |
 | — | `google/gemma-3-12b-it` | fast | BF16 | 128K | 💬 🖼️ 🔧 | Multimodal, pythonic tool parser, 24 GB |
 | — | `bg-digitalservices/Gemma-4-26B-A4B-it-NVFP4` | ~20 | NVFP4 | 262K | 💬 🖼️ 🎥 🔊 🔧 🧠 | Multimodal, TP×4, FP8 KV-cache |
 | — | `rdtand/Qwen3.6-35B-A3B-PrismaQuant-4.75bit-vllm` | ~40 | 4.75bit | 256K | 💬 🔧 🧠 | Speculative decoding (MTP ×3), FP8 KV-cache |

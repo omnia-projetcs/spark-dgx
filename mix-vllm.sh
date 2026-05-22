@@ -129,6 +129,11 @@ DEFAULT_MODEL="cyankiwi/GLM-4.7-Flash-AWQ-4bit"                 # https://huggin
 #DEFAULT_MODEL="casperhansen/deepseek-r1-distill-llama-8b-awq" # https://huggingface.co/casperhansen/deepseek-r1-distill-llama-8b-awq
 #DEFAULT_MODEL="nvidia/Nemotron-3-Nano-Omni-30B-A3B-Reasoning-NVFP4" # https://huggingface.co/nvidia/Nemotron-3-Nano-Omni-30B-A3B-Reasoning-NVFP4
 #DEFAULT_MODEL="zai-org/GLM-5.1-FP8"                            # https://huggingface.co/zai-org/GLM-5.1-FP8
+#DEFAULT_MODEL="nvidia/MiniMax-M2.7-NVFP4"                      # https://huggingface.co/nvidia/MiniMax-M2.7-NVFP4
+#DEFAULT_MODEL="cyankiwi/MiniMax-M2.5-AWQ-4bit"                  # https://huggingface.co/cyankiwi/MiniMax-M2.5-AWQ-4bit
+#DEFAULT_MODEL="cyankiwi/MiniMax-M2.7-AWQ-4bit"                  # https://huggingface.co/cyankiwi/MiniMax-M2.7-AWQ-4bit
+#DEFAULT_MODEL="nvidia/Kimi-K2.6-NVFP4"                          # https://huggingface.co/nvidia/Kimi-K2.6-NVFP4
+#DEFAULT_MODEL="deepseek-ai/DeepSeek-V4-Flash"                   # https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash
 
 MODEL="${MODEL:-${DEFAULT_MODEL}}"
 
@@ -243,6 +248,15 @@ IMG_NEMOTRON_OMNI="vllm/vllm-openai:v0.20.0-aarch64-cu130-ubuntu2404"
 
 IMG_GLM51="vllm-glm51-cu130"
 #         └─ Z.AI GLM-5.1-FP8 optimized image with CUDA 13.0 (8-node Ray cluster)
+
+IMG_MINIMAX_NVFP4="ghcr.io/spark-arena/dgx-vllm-eugr-nightly:2026050601"
+#         └─ Custom nightly for MiniMax-M2.7-NVFP4
+
+IMG_VLLM_NODE="vllm-node"
+#         └─ Local image for Ray distributed multi-node serving
+
+IMG_DSV4="vllm-node-dsv4"
+#         └─ Local image for DeepSeek V4 Flash with PR 41834 SM12x support
 # ─────────────────────────────────────────────────────────────────────────────
 
 # Defaults (overridden per model)
@@ -974,6 +988,166 @@ case "${MODEL}" in
     )
     ;;
 
+  # ═══════════════════════════════════════════════════════════════════════════
+  # nvidia/MiniMax-M2.7-NVFP4
+  # ═══════════════════════════════════════════════════════════════════════════
+  "nvidia/MiniMax-M2.7-NVFP4")
+    VLLM_IMAGE="${IMG_MINIMAX_NVFP4}"
+    GPU_MEM_UTIL=0.85
+    MAX_MODEL_LEN=196608
+    MAX_BATCHED_TOKENS=32768
+    MAX_NUM_SEQS=8
+
+    ENV_ARGS=(
+      -e VLLM_MARLIN_USE_ATOMIC_ADD=1
+      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
+    )
+
+    EXTRA_ARGS=(
+      "--served-model-name"           "minimax-m2.7-nvfp4"
+      "-tp"                           "4"
+      "-pp"                           "1"
+      "--load-format"                 "instanttensor"
+      "--enable-auto-tool-choice"
+      "--tool-call-parser"            "minimax_m2"
+      "--reasoning-parser"            "minimax_m2"
+      "--kv-cache-dtype"              "fp8"
+    )
+    ;;
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # cyankiwi/MiniMax-M2.5-AWQ-4bit
+  # ═══════════════════════════════════════════════════════════════════════════
+  "cyankiwi/MiniMax-M2.5-AWQ-4bit")
+    VLLM_IMAGE="${IMG_VLLM_NODE}"
+    GPU_MEM_UTIL=0.7
+    MAX_MODEL_LEN=128000
+    MAX_BATCHED_TOKENS=32768
+    MAX_NUM_SEQS=8
+
+    ENV_ARGS=(
+      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
+    )
+
+    EXTRA_ARGS=(
+      "--served-model-name"            "minimax-m2.5-awq"
+      "-tp"                            "4"
+      "--distributed-executor-backend" "ray"
+      "--load-format"                  "fastsafetensors"
+      "--enable-auto-tool-choice"
+      "--tool-call-parser"             "minimax_m2"
+      "--reasoning-parser"             "minimax_m2"
+    )
+    ;;
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # cyankiwi/MiniMax-M2.7-AWQ-4bit
+  # ═══════════════════════════════════════════════════════════════════════════
+  "cyankiwi/MiniMax-M2.7-AWQ-4bit")
+    VLLM_IMAGE="${IMG_VLLM_NODE}"
+    GPU_MEM_UTIL=0.7
+    MAX_MODEL_LEN=128000
+    MAX_BATCHED_TOKENS=32768
+    MAX_NUM_SEQS=8
+
+    ENV_ARGS=(
+      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
+    )
+
+    EXTRA_ARGS=(
+      "--served-model-name"            "minimax-m2.7-awq"
+      "-tp"                            "2"
+      "--distributed-executor-backend" "ray"
+      "--load-format"                  "fastsafetensors"
+      "--enable-auto-tool-choice"
+      "--tool-call-parser"             "minimax_m2"
+      "--reasoning-parser"             "minimax_m2"
+    )
+    ;;
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # nvidia/Kimi-K2.6-NVFP4 on 8 DGX Spark nodes
+  # ═══════════════════════════════════════════════════════════════════════════
+  "nvidia/Kimi-K2.6-NVFP4")
+    VLLM_IMAGE="${IMG_VLLM_NODE}"
+    GPU_MEM_UTIL=0.72
+    MAX_MODEL_LEN=32768
+    MAX_BATCHED_TOKENS=2048
+    MAX_NUM_SEQS=1
+    MODEL_DOWNLOADS=("none")
+
+    VOLUME_ARGS=(
+      -v /mnt/glm51-hf-cache:/root/.cache/huggingface
+      -v /mnt/glm51-hf-cache:/mnt/glm51-hf-cache
+    )
+
+    ENV_ARGS=(
+      -e HF_HUB_OFFLINE=1
+      -e TRANSFORMERS_OFFLINE=1
+      -e HF_HOME=/mnt/glm51-hf-cache
+      -e VLLM_DISTRIBUTED_EXECUTOR_CONFIG='{"placement_group_options":{"strategy":"SPREAD"}}'
+      -e VLLM_MARLIN_USE_ATOMIC_ADD=1
+      -e VLLM_USE_FLASHINFER_SAMPLER=0
+      -e OMP_NUM_THREADS=4
+    )
+
+    EXTRA_ARGS=(
+      "--tensor-parallel-size"         "8"
+      "--distributed-executor-backend" "ray"
+      "--enforce-eager"
+      "--kv-cache-dtype"              "fp8"
+      "--mm-processor-cache-gb"       "0"
+      "--tool-call-parser"            "kimi_k2"
+      "--reasoning-parser"            "kimi_k2"
+      "--enable-auto-tool-choice"
+      "--served-model-name"           "kimi-k2.6-nvfp4"
+      "--no-async-scheduling"
+    )
+    ;;
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # deepseek-ai/DeepSeek-V4-Flash on dual DGX Spark TP=2
+  # ═══════════════════════════════════════════════════════════════════════════
+  "deepseek-ai/DeepSeek-V4-Flash")
+    VLLM_IMAGE="${IMG_DSV4}"
+    GPU_MEM_UTIL=0.9
+    MAX_MODEL_LEN=200000
+    MAX_BATCHED_TOKENS=4192
+    MAX_NUM_SEQS=20
+
+    ENV_ARGS=(
+      -e TORCH_CUDA_ARCH_LIST=12.1a
+      -e VLLM_ALLOW_LONG_MAX_MODEL_LEN=1
+      -e VLLM_TRITON_MLA_SPARSE=1
+      -e FLASHINFER_DISABLE_VERSION_CHECK=1
+      -e TILELANG_CLEANUP_TEMP_FILES=1
+      -e DG_JIT_USE_NVRTC=0
+      -e DG_JIT_NVCC_COMPILER=/usr/local/cuda/bin/nvcc
+      -e DG_JIT_PRINT_COMPILER_COMMAND=1
+      -e NCCL_IB_DISABLE=0
+      -e NCCL_DEBUG=WARN
+      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
+    )
+
+    EXTRA_ARGS=(
+      "--served-model-name"            "deepseek-v4-flash"
+      "-tp"                            "2"
+      "-pp"                            "1"
+      "--kv-cache-dtype"               "fp8"
+      "--block-size"                   "256"
+      "--distributed-executor-backend" "mp"
+      "--compilation-config"           '{"cudagraph_mode":"FULL_AND_PIECEWISE","custom_ops":["all"]}'
+      "--speculative-config"           '{"method":"mtp","num_speculative_tokens":2}'
+      "--tokenizer-mode"               "deepseek_v4"
+      "--tool-call-parser"             "deepseek_v4"
+      "--enable-auto-tool-choice"
+      "--reasoning-parser"             "deepseek_v4"
+      "--reasoning-config"             '{"reasoning_parser":"deepseek_v4","reasoning_start_str":"<think>","reasoning_end_str":"</think>"}'
+      "--default-chat-template-kwargs" '{"thinking":true}'
+      "--load-format"                  "safetensors"
+    )
+    ;;
+
   *)
     VLLM_IMAGE="${IMG_STOCK}"
     GPU_MEM_UTIL=0.80
@@ -1069,7 +1243,7 @@ echo "   ctx    : ${MAX_MODEL_LEN}   mem: ${GPU_MEM_UTIL}   seqs: ${MAX_NUM_SEQS
 
 # ── MOD: DROP CACHES ──────────────────────────────────────────────────────────
 # If selected model includes drop-caches mod, drop system caches to reclaim RAM
-if [[ "${MODEL}" == "zai-org/GLM-5.1-FP8" ]]; then
+if [[ "${MODEL}" == "zai-org/GLM-5.1-FP8" || "${MODEL}" == "nvidia/Kimi-K2.6-NVFP4" ]]; then
   echo "🧹 Applying mod: mods/drop-caches..."
   if [[ -w /proc/sys/vm/drop_caches ]]; then
     echo "   Writing to /proc/sys/vm/drop_caches..."
