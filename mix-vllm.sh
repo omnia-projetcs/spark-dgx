@@ -5,7 +5,7 @@
 #
 #  Rank  Model                                         tok/s    Quant     Image
 #  ────  ──────────────────────────────────────────   ───────  ───────   ────────────
-#  #1    AEON-7/Qwen3.6-35B-heretic-NVFP4 + DFlash    88–117   NVFP4    aeon-7 v1.2
+#  #1    AEON-7/Qwen3.6-35B-heretic-NVFP4 + DFlash    88–117   NVFP4    aeon-7 v1.2  ← best performance
 #  #2    nvidia/Nemotron-3-Nano-30B-A3B-NVFP4          ~56     NVFP4    eugr-nightly
 #  #3    Qwen/Qwen3.6-35B-A3B-FP8                      ~30     FP8      cu130-nightly
 #  #4    nvidia/Nemotron-3-Super-120B-A12B-NVFP4       ~22     NVFP4    eugr-nightly
@@ -14,14 +14,14 @@
 #  ──    rdtand/Qwen3.6-35B-A3B-PrismaQuant            ~40     4.75bit  vllm-latest
 #  ──    Intel/Qwen3-Coder-Next-int4-AutoRound         ~30     INT4     vllm-latest
 #  ──    LiquidAI/LFM2.5-350M                         fast     BF16     vllm-latest
-#  ──    AEON-7/Gemma-4-E4B-DECKARD-HERETIC-NVFP4      fast     NVFP4    eugr-nightly
+#  ──    AEON-7/Gemma-4-E4B-DECKARD-HERETIC-NVFP4      fast    NVFP4    eugr-nightly
 #  ──    rdtand/Mistral-Medium-3.5-128B-PrismaQuant    ~25     4.75bit  vllm-latest
 #  ──    nvidia/Nemotron-3-Nano-Omni-30B-A3B-Reasoning ~56     NVFP4    eugr-nightly
-#  ──    rdtand/MiniMax-M2.7-PrismaQuant-3.20bit       fast     3.20bit  eugr-nightly
+#  ──    rdtand/MiniMax-M2.7-PrismaQuant-3.20bit       fast    3.20bit  eugr-nightly
 #  ──    rdtand/Gemma4-31B-IT-PrismaQuant-5.5bit       ~22     5.5bit   eugr-nightly
-#  ──    scottgl/MiniMax-M2.7-REAP-172B-A10B-NVFP4-GB10 fast    NVFP4    eugr-nightly
-#  ──    cybermotaz/nemotron3-nano-nvfp4-w4a16         ~56      NVFP4    eugr-nightly
-#  ──    dervig/m51Lab-MiniMax-M2.7-REAP-139B-A10B-NVFP4 fast   NVFP4    eugr-nightly
+#  ──    scottgl/MiniMax-M2.7-REAP-172B-A10B-NVFP4-GB10 fast   NVFP4    eugr-nightly
+#  ──    cybermotaz/nemotron3-nano-nvfp4-w4a16         ~56     NVFP4    eugr-nightly
+#  ──    dervig/m51Lab-MiniMax-M2.7-REAP-139B-A10B-NVFP4 fast  NVFP4    eugr-nightly
 #
 #  * gpt-oss MXFP4 uses eugr-nightly with CUTLASS backend (no local build needed)
 # ─────────────────────────────────────────────────────────────────────────────
@@ -49,31 +49,31 @@ HUGGING_FACE_HUB_TOKEN="${HUGGING_FACE_HUB_TOKEN:-hf_...}"
 if [[ -z "${HUGGING_FACE_HUB_TOKEN}" || "${HUGGING_FACE_HUB_TOKEN}" == "hf_..." ]]; then
   echo ""
   echo "╔══════════════════════════════════════════════════════════════════════╗"
-  echo "║  ⚠️  WARNING — Hugging Face token is NOT configured!               ║"
+  echo "║  ⚠️  WARNING — Hugging Face token is NOT configured!                 ║"
   echo "╠══════════════════════════════════════════════════════════════════════╣"
-  echo "║                                                                    ║"
-  echo "║  Most models require a valid Hugging Face token to download.       ║"
-  echo "║  Without it, gated models (Llama, Gemma, etc.) will FAIL.          ║"
-  echo "║                                                                    ║"
-  echo "║  Note: If you are running a public model (e.g. LiquidAI) or have   ║"
-  echo "║  already cached the model locally, you can ignore this warning.    ║"
-  echo "║                                                                    ║"
-  echo "║  How to get your token:                                            ║"
-  echo "║                                                                    ║"
-  echo "║   1. Create an account  → https://huggingface.co/join              ║"
-  echo "║   2. Go to Settings → Access Tokens:                               ║"
-  echo "║      → https://huggingface.co/settings/tokens                      ║"
-  echo "║   3. Click 'Create new token'                                      ║"
-  echo "║   4. Name: e.g. 'dgx-spark' — Permission: 'Read'                  ║"
-  echo "║   5. Copy the token (starts with hf_...)                           ║"
-  echo "║   6. Paste it in this script at line ~40:                          ║"
+  echo "║                                                                      ║"
+  echo "║  Most models require a valid Hugging Face token to download.         ║"
+  echo "║  Without it, gated models (Llama, Gemma, etc.) will FAIL.            ║"
+  echo "║                                                                      ║"
+  echo "║  Note: If you are running a public model (e.g. LiquidAI) or have     ║"
+  echo "║  already cached the model locally, you can ignore this warning.      ║"
+  echo "║                                                                      ║"
+  echo "║  How to get your token:                                              ║"
+  echo "║                                                                      ║"
+  echo "║   1. Create an account  → https://huggingface.co/join                ║"
+  echo "║   2. Go to Settings → Access Tokens:                                 ║"
+  echo "║      → https://huggingface.co/settings/tokens                        ║"
+  echo "║   3. Click 'Create new token'                                        ║"
+  echo "║   4. Name: e.g. 'dgx-spark' — Permission: 'Read'                     ║"
+  echo "║   5. Copy the token (starts with hf_...)                             ║"
+  echo "║   6. Paste it in this script at line ~40:                            ║"
   echo "║      HUGGING_FACE_HUB_TOKEN=\"hf_YourTokenHere\"                     ║"
-  echo "║                                                                    ║"
-  echo "║  Or set it as an environment variable before running:              ║"
+  echo "║                                                                      ║"
+  echo "║  Or set it as an environment variable before running:                ║"
   echo "║      export HUGGING_FACE_HUB_TOKEN=\"hf_YourTokenHere\"              ║"
-  echo "║                                                                    ║"
-  echo "║  📖 Doc: https://huggingface.co/docs/hub/en/security-tokens        ║"
-  echo "║                                                                    ║"
+  echo "║                                                                      ║"
+  echo "║  📖 Doc: https://huggingface.co/docs/hub/en/security-tokens          ║"
+  echo "║                                                                      ║"
   echo "╚══════════════════════════════════════════════════════════════════════╝"
   echo ""
 fi
@@ -133,14 +133,12 @@ done
 
 # ── x2 GB10 = 256gb
 #DEFAULT_MODEL="RedHatAI/Qwen3.5-122B-A10B-NVFP4"                 # https://huggingface.co/RedHatAI/Qwen3.5-122B-A10B-NVFP4
-#DEFAULT_MODEL="cyankiwi/MiniMax-M2.7-AWQ-4bit"                   # https://huggingface.co/cyankiwi/MiniMax-M2.7-AWQ-4bit
 #DEFAULT_MODEL="deepseek-ai/DeepSeek-V4-Flash"                    # https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash
-
+#DEFAULT_MODEL="nm-testing/DeepSeek-R1-Distill-Qwen-32B-NVFP4" # https://huggingface.co/nm-testing/DeepSeek-R1-Distill-Qwen-32B-NVFP4
 
 # ── x4 GB10 = 512gb
 #DEFAULT_MODEL="dervig/m51Lab-MiniMax-M2.7-REAP-139B-A10B-NVFP4-GB10" # https://huggingface.co/dervig/m51Lab-MiniMax-M2.7-REAP-139B-A10B-NVFP4-GB10
 #DEFAULT_MODEL="nvidia/MiniMax-M2.7-NVFP4"                        # https://huggingface.co/nvidia/MiniMax-M2.7-NVFP4
-#DEFAULT_MODEL="cyankiwi/MiniMax-M2.5-AWQ-4bit"                   # https://huggingface.co/cyankiwi/MiniMax-M2.5-AWQ-4bit
 #DEFAULT_MODEL="scottgl/MiniMax-M2.7-REAP-172B-A10B-NVFP4-GB10"   # https://huggingface.co/scottgl/MiniMax-M2.7-REAP-172B-A10B-NVFP4-GB10
 
 
@@ -151,8 +149,7 @@ done
 
 # ── TO TEST ───────────────────────────────────────────────────────────
 
-DEFAULT_MODEL="nm-testing/DeepSeek-R1-Distill-Qwen-32B-NVFP4" # https://huggingface.co/nm-testing/DeepSeek-R1-Distill-Qwen-32B-NVFP4
-#DEFAULT_MODEL="neuralmagic/DeepSeek-R1-Distill-Qwen-14B-FP8"   # https://huggingface.co/neuralmagic/DeepSeek-R1-Distill-Qwen-14B-FP8
+DEFAULT_MODEL="neuralmagic/DeepSeek-R1-Distill-Qwen-14B-FP8"   # https://huggingface.co/neuralmagic/DeepSeek-R1-Distill-Qwen-14B-FP8
 #DEFAULT_MODEL="neuralmagic/DeepSeek-R1-Distill-Llama-8B-FP8"   # https://huggingface.co/neuralmagic/DeepSeek-R1-Distill-Llama-8B-FP8
 #DEFAULT_MODEL="nvidia/Nemotron-3-Nano-Omni-30B-A3B-Reasoning-NVFP4" # https://huggingface.co/nvidia/Nemotron-3-Nano-Omni-30B-A3B-Reasoning-NVFP4
 
