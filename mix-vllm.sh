@@ -126,6 +126,7 @@ done
 # DEFAULT_MODEL="nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4"  # https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4
 
 # DEFAULT_MODEL="bg-digitalservices/Gemma-4-26B-A4B-it-NVFP4"     # https://huggingface.co/bg-digitalservices/Gemma-4-26B-A4B-it-NVFP4
+# DEFAULT_MODEL="rdtand/MiniMax-M2.7-PrismaQuant-3.20bit-vllm"     # https://huggingface.co/rdtand/MiniMax-M2.7-PrismaQuant-3.20bit-vllm
 
 # DEFAULT_MODEL="LiquidAI/LFM2.5-350M"                            # https://huggingface.co/LiquidAI/LFM2.5-350M
 # DEFAULT_MODEL="Qwen/Qwen3.5-0.8B"                               # https://huggingface.co/Qwen/Qwen3.5-0.8B
@@ -146,8 +147,8 @@ done
 
 
 # ── TO TEST ───────────────────────────────────────────────────────────
-#DEFAULT_MODEL="deepseek-ai/DeepSeek-V4-Flash"                    # https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash
-DEFAULT_MODEL="rdtand/MiniMax-M2.7-PrismaQuant-3.20bit-vllm"     # https://huggingface.co/rdtand/MiniMax-M2.7-PrismaQuant-3.20bit-vllm
+DEFAULT_MODEL="deepseek-ai/DeepSeek-V4-Flash"                    # https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash
+
 
 
 
