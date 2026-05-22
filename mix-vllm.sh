@@ -120,7 +120,7 @@ done
 # ── OK x1 GB1─ ────────────────────────────────────────────────────────────────
 # DEFAULT_MODEL="AEON-7/Qwen3.6-35B-A3B-heretic-NVFP4"            # https://huggingface.co/AEON-7/Qwen3.6-35B-A3B-heretic-NVFP4
 # DEFAULT_MODEL="rdtand/Qwen3.6-35B-A3B-PrismaQuant-4.75bit-vllm" # https://huggingface.co/rdtand/Qwen3.6-35B-A3B-PrismaQuant-4.75bit-vllm
-# DEFAULT_MODEL="Intel/Qwen3-Coder-Next-int4-AutoRound"        # https://huggingface.co/Intel/Qwen3-Coder-Next-int4-AutoRound
+# DEFAULT_MODEL="Intel/Qwen3-Coder-Next-int4-AutoRound"           # https://huggingface.co/Intel/Qwen3-Coder-Next-int4-AutoRound
 
 # DEFAULT_MODEL="nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-NVFP4"     # https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-NVFP4
 # DEFAULT_MODEL="nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4"  # https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4
@@ -134,7 +134,7 @@ done
 # ── x2 GB10 = 256gb
 #DEFAULT_MODEL="RedHatAI/Qwen3.5-122B-A10B-NVFP4"                 # https://huggingface.co/RedHatAI/Qwen3.5-122B-A10B-NVFP4
 #DEFAULT_MODEL="deepseek-ai/DeepSeek-V4-Flash"                    # https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash
-#DEFAULT_MODEL="nm-testing/DeepSeek-R1-Distill-Qwen-32B-NVFP4" # https://huggingface.co/nm-testing/DeepSeek-R1-Distill-Qwen-32B-NVFP4
+#DEFAULT_MODEL="nm-testing/DeepSeek-R1-Distill-Qwen-32B-NVFP4"    # https://huggingface.co/nm-testing/DeepSeek-R1-Distill-Qwen-32B-NVFP4
 
 # ── x4 GB10 = 512gb
 #DEFAULT_MODEL="dervig/m51Lab-MiniMax-M2.7-REAP-139B-A10B-NVFP4-GB10" # https://huggingface.co/dervig/m51Lab-MiniMax-M2.7-REAP-139B-A10B-NVFP4-GB10
@@ -149,10 +149,9 @@ done
 
 # ── TO TEST ───────────────────────────────────────────────────────────
 DEFAULT_MODEL="rdtand/Mistral-Medium-3.5-128B-PrismaQuant-4.75-vllm" # https://huggingface.co/rdtand/Mistral-Medium-3.5-128B-PrismaQuant-4.75-vllm
-#DEFAULT_MODEL="rdtand/MiniMax-M2.7-PrismaQuant-3.20bit-vllm"    # https://huggingface.co/rdtand/MiniMax-M2.7-PrismaQuant-3.20bit-vllm
-#DEFAULT_MODEL="rdtand/Gemma4-31B-IT-PrismaQuant-5.5bit-vllm"    # https://huggingface.co/rdtand/Gemma4-31B-IT-PrismaQuant-5.5bit-vllm
+#DEFAULT_MODEL="rdtand/MiniMax-M2.7-PrismaQuant-3.20bit-vllm"     # https://huggingface.co/rdtand/MiniMax-M2.7-PrismaQuant-3.20bit-vllm
+#DEFAULT_MODEL="rdtand/Gemma4-31B-IT-PrismaQuant-5.5bit-vllm"     # https://huggingface.co/rdtand/Gemma4-31B-IT-PrismaQuant-5.5bit-vllm
 
-#DEFAULT_MODEL="cybermotaz/nemotron3-nano-nvfp4-w4a16"           # https://huggingface.co/cybermotaz/nemotron3-nano-nvfp4-w4a16
 
 
 MODEL="${MODEL:-${DEFAULT_MODEL}}"
@@ -1042,6 +1041,7 @@ case "${MODEL}" in
       "--quantization"         "compressed-tensors"
       "--kv-cache-dtype"       "fp8"
       "--tensor-parallel-size" "1"
+      "--tokenizer-mode"       "mistral"
       "--enable-auto-tool-choice"
       "--tool-call-parser"     "mistral"
       "--reasoning-parser"     "mistral"
