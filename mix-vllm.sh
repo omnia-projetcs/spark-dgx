@@ -8,7 +8,7 @@
 #  #1    AEON-7/Qwen3.6-35B-heretic-NVFP4 + DFlash    88–117   NVFP4    aeon-7 v1.2
 #  #2    openai/gpt-oss-120b (MXFP4)                   ~60     MXFP4    eugr-nightly
 #  #3    nvidia/Nemotron-3-Nano-30B-A3B-NVFP4          ~56     NVFP4    eugr-nightly
-#  #4    QuantTrio/GLM-4.7-Flash-AWQ                   ~35     AWQ      eugr-tf5
+#  #4    cyankiwi/GLM-4.7-Flash-AWQ-4bit               ~35     AWQ      eugr-tf5
 #  #5    Qwen/Qwen3.6-35B-A3B-FP8                      ~30     FP8      cu130-nightly
 #  #6    nvidia/Nemotron-3-Super-120B-A12B-NVFP4       ~22     NVFP4    eugr-nightly
 #  #7    RedHatAI/Qwen3.5-122B-A10B-NVFP4              ~17     NVFP4    eugr-nightly  ← best quality
@@ -113,7 +113,7 @@ done
 # DEFAULT_MODEL="AEON-7/Qwen3.6-35B-A3B-heretic-NVFP4"          # https://huggingface.co/AEON-7/Qwen3.6-35B-A3B-heretic-NVFP4
 #DEFAULT_MODEL="openai/gpt-oss-120b"                            # https://huggingface.co/openai/gpt-oss-120b
 # DEFAULT_MODEL="nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-NVFP4"   # https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-NVFP4
-DEFAULT_MODEL="QuantTrio/GLM-4.7-Flash-AWQ"                 # https://huggingface.co/QuantTrio/GLM-4.7-Flash-AWQ
+DEFAULT_MODEL="cyankiwi/GLM-4.7-Flash-AWQ-4bit"                 # https://huggingface.co/cyankiwi/GLM-4.7-Flash-AWQ-4bit
 #DEFAULT_MODEL="nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4" # https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4
 #DEFAULT_MODEL="RedHatAI/Qwen3.5-122B-A10B-NVFP4"            # https://huggingface.co/RedHatAI/Qwen3.5-122B-A10B-NVFP4
 # DEFAULT_MODEL="bg-digitalservices/Gemma-4-26B-A4B-it-NVFP4"   # https://huggingface.co/bg-digitalservices/Gemma-4-26B-A4B-it-NVFP4
@@ -376,18 +376,18 @@ case "${MODEL}" in
     ;;
 
   # ═══════════════════════════════════════════════════════════════════════════
-  # #4 QuantTrio/GLM-4.7-Flash-AWQ   ~35 tok/s
+  # #4 cyankiwi/GLM-4.7-Flash-AWQ-4bit   ~35 tok/s
   # ═══════════════════════════════════════════════════════════════════════════
   # Fast AWQ MoE by Tsinghua. Single-node capable (~50 GB AWQ).
   # Requires Transformers 5.0 → use eugr-nightly-tf5 image.
   # ⚠️  fix-glm-4.7-flash-AWQ mod applied in this image by default.
   # ═══════════════════════════════════════════════════════════════════════════
-  "QuantTrio/GLM-4.7-Flash-AWQ")
+  "cyankiwi/GLM-4.7-Flash-AWQ-4bit")
     VLLM_IMAGE="${IMG_EUGR_TF5}"
-    GPU_MEM_UTIL=0.80
-    MAX_MODEL_LEN=131072
-    MAX_BATCHED_TOKENS=16384
-    MAX_NUM_SEQS=8
+    GPU_MEM_UTIL=0.70
+    MAX_MODEL_LEN=202752
+    MAX_BATCHED_TOKENS=4096
+    MAX_NUM_SEQS=64
 
     ENV_ARGS=(
       -e VLLM_HTTP_TIMEOUT_KEEP_ALIVE=600
@@ -395,12 +395,11 @@ case "${MODEL}" in
     )
 
     EXTRA_ARGS=(
-      "--served-model-name"   "glm4.7-flash"
+      "--served-model-name"   "glm-4.7-flash"
       "--dtype"               "float16"
       "--load-format"         "fastsafetensors"
       "--quantization"        "awq"
       "--kv-cache-dtype"      "fp8"
-      "--enforce-eager"
       "--enable-auto-tool-choice"
       "--tool-call-parser"    "glm47"
       "--reasoning-parser"    "glm45"
