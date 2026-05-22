@@ -143,14 +143,6 @@ A turnkey Bash script that launches a fully configured, production-ready **vLLM 
 | — | `nvidia/Kimi-K2.6-NVFP4` | cluster | NVFP4 | 32K | 💬 🔧 🧠 | Kimi K2.6 MoE, TP×8 Ray cluster, shared HF cache, drop-caches mod |
 | — | `deepseek-ai/DeepSeek-V4-Flash` | cluster | FP8 | 200K | 💬 🔧 🧠 | DeepSeek V4 Flash FP8, TP=2 MP, custom vllm-node-dsv4 image |
 
-| — | `AEON-7/Gemma-4-E4B-DECKARD-HERETIC-NVFP4` | fast | NVFP4 | 262K | 💬 🔧 🧠 | Gemma-4 NVFP4, DECKARD Heretic calibration, custom aeon-7/eugr image |
-| — | `rdtand/Mistral-Medium-3.5-128B-PrismaQuant-4.75-vllm` | ~25 | 4.75bit | 128K | 💬 🔧 🧠 | Mistral Medium 3.5, PrismaQuant 4.75bit, stock vLLM image |
-| — | `nvidia/Nemotron-3-Nano-Omni-30B-A3B-Reasoning-NVFP4` | ~56 | NVFP4 | 131K | 💬 🔧 🧠 | Nemotron Omni 30B, custom reasoning optimized image, video pruning |
-| — | `rdtand/Gemma4-31B-IT-PrismaQuant-5.5bit-vllm` | ~22 | 5.5bit | 262K | 💬 🔧 🧠 | Gemma-4 31B IT, PrismaQuant 5.5bit, standard eugr image |
-| — | `scottgl/MiniMax-M2.7-REAP-172B-A10B-NVFP4-GB10` | fast | NVFP4 | 196K | 💬 🔧 🧠 | MiniMax M2.7 REAP 172B, TP×4, instanttensor format, GB10 optimized |
-| — | `cybermotaz/nemotron3-nano-nvfp4-w4a16` | ~56 | NVFP4 | 262K | 💬 🔧 🧠 | Nemotron-3 Nano NVFP4, w4a16 quantization path, reasoning parser |
-| — | `dervig/m51Lab-MiniMax-M2.7-REAP-139B-A10B-NVFP4-GB10` | fast | NVFP4 | 196K | 💬 🔧 🧠 | MiniMax M2.7 REAP 139B, TP×4, instanttensor format, GB10 optimized |
-
 > 💬 Text &nbsp; 🖼️ Image &nbsp; 🎥 Video &nbsp; 🔊 Audio &nbsp; 🔧 Tool-call (MCP-compatible) &nbsp; 🧠 Reasoning/thinking
 
 > [!WARNING]
