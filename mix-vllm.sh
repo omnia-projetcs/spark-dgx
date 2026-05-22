@@ -130,7 +130,7 @@ done
 # DEFAULT_MODEL="LiquidAI/LFM2.5-350M"                            # https://huggingface.co/LiquidAI/LFM2.5-350M
 # DEFAULT_MODEL="Qwen/Qwen3.5-0.8B"                               # https://huggingface.co/Qwen/Qwen3.5-0.8B
 
-
+# ── TO TEST ───────────────────────────────────────────────────────────
 # ── x2 GB10 = 256gb
 #DEFAULT_MODEL="RedHatAI/Qwen3.5-122B-A10B-NVFP4"                 # https://huggingface.co/RedHatAI/Qwen3.5-122B-A10B-NVFP4
 #DEFAULT_MODEL="deepseek-ai/DeepSeek-V4-Flash"                    # https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash
@@ -1029,6 +1029,7 @@ case "${MODEL}" in
     MAX_NUM_SEQS=8
 
     ENV_ARGS=(
+      -e VLLM_ALLOW_LONG_MAX_MODEL_LEN=1
       -e VLLM_HTTP_TIMEOUT_KEEP_ALIVE=600
       -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
     )
