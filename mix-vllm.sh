@@ -1268,16 +1268,19 @@ download_if_needed() {
       echo "✓  ${repo} → ${target_dir} (already present)"
     fi
 
-    # ── PATCH FOR NVFP4_AWQ in target_dir ──
-    find "${target_dir}" \( -name "config.json" -o -name "hf_quant_config.json" \) 2>/dev/null | while read -r config_file; do
-      local real_file
-      real_file=$(readlink -f "${config_file}")
-      if [[ -f "${real_file}" ]] && grep -q '"quant_algo": "NVFP4_AWQ"' "${real_file}"; then
-        echo "   Found 'quant_algo': 'NVFP4_AWQ' in ${config_file}. Patching to 'NVFP4'..."
-        chmod +w "${real_file}" 2>/dev/null || true
-        sed -i 's/"quant_algo": "NVFP4_AWQ"/"quant_algo": "NVFP4"/g' "${real_file}"
-      fi
-    done
+    # ── PATCH FOR NVFP4_AWQ in target_dir (via Docker for root permissions) ──
+    docker run --rm \
+      -v "${target_dir}:${target_dir}" \
+      --entrypoint bash \
+      "${VLLM_IMAGE}" \
+      -c "find \"${target_dir}\" \( -name 'config.json' -o -name 'hf_quant_config.json' \) 2>/dev/null | while read -r config_file; do
+        real_file=\$(readlink -f \"\$config_file\")
+        if [ -f \"\$real_file\" ] && grep -q '\"quant_algo\": \"NVFP4_AWQ\"' \"\$real_file\"; then
+          echo \"   Found 'quant_algo': 'NVFP4_AWQ' in \$real_file. Patching...\"
+          chmod +w \"\$real_file\" 2>/dev/null || true
+          sed -i 's/\"quant_algo\": \"NVFP4_AWQ\"/\"quant_algo\": \"NVFP4\"/g' \"\$real_file\"
+        fi
+      done"
   else
     # ── HuggingFace cache download ──
     local cache_name="models--$(echo "${repo}" | tr '/' '--')"
@@ -1300,18 +1303,21 @@ download_if_needed() {
       echo "✓  ${repo} (already cached)"
     fi
 
-    # ── PATCH FOR NVFP4_AWQ in cache ──
+    # ── PATCH FOR NVFP4_AWQ in cache (via Docker for root permissions) ──
     if [[ -d "${cache_path}/snapshots" ]]; then
-      echo "🔧 Checking/patching quantization config in HF cache for ${repo}..."
-      find "${cache_path}/snapshots" \( -name "config.json" -o -name "hf_quant_config.json" \) -type f -o -type l 2>/dev/null | while read -r config_file; do
-        local real_file
-        real_file=$(readlink -f "${config_file}")
-        if [[ -f "${real_file}" ]] && grep -q '"quant_algo": "NVFP4_AWQ"' "${real_file}"; then
-          echo "   Found 'quant_algo': 'NVFP4_AWQ' in ${real_file}. Patching to 'NVFP4'..."
-          chmod +w "${real_file}" 2>/dev/null || true
-          sed -i 's/"quant_algo": "NVFP4_AWQ"/"quant_algo": "NVFP4"/g' "${real_file}"
-        fi
-      done
+      echo "🔧 Checking/patching quantization config in HF cache for ${repo} via Docker..."
+      docker run --rm \
+        -v "${HOME}/.cache/huggingface:/root/.cache/huggingface" \
+        --entrypoint bash \
+        "${VLLM_IMAGE}" \
+        -c "find /root/.cache/huggingface/hub/${cache_name}/snapshots \( -name 'config.json' -o -name 'hf_quant_config.json' \) -type f -o -type l 2>/dev/null | while read -r config_file; do
+          real_file=\$(readlink -f \"\$config_file\")
+          if [ -f \"\$real_file\" ] && grep -q '\"quant_algo\": \"NVFP4_AWQ\"' \"\$real_file\"; then
+            echo \"   Found 'quant_algo': 'NVFP4_AWQ' in \$real_file. Patching to 'NVFP4'...\"
+            chmod +w \"\$real_file\" 2>/dev/null || true
+            sed -i 's/\"quant_algo\": \"NVFP4_AWQ\"/\"quant_algo\": \"NVFP4\"/g' \"\$real_file\"
+          fi
+        done"
     fi
   fi
 }
