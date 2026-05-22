@@ -1267,6 +1267,17 @@ download_if_needed() {
     else
       echo "✓  ${repo} → ${target_dir} (already present)"
     fi
+
+    # ── PATCH FOR NVFP4_AWQ in target_dir ──
+    if [[ -f "${target_dir}/config.json" ]]; then
+      local real_file
+      real_file=$(readlink -f "${target_dir}/config.json")
+      if grep -q '"quant_algo": "NVFP4_AWQ"' "${real_file}"; then
+        echo "   Found 'quant_algo': 'NVFP4_AWQ' in local directory config. Patching to 'NVFP4'..."
+        chmod +w "${real_file}" 2>/dev/null || true
+        sed -i 's/"quant_algo": "NVFP4_AWQ"/"quant_algo": "NVFP4"/g' "${real_file}"
+      fi
+    fi
   else
     # ── HuggingFace cache download ──
     local cache_name="models--$(echo "${repo}" | tr '/' '--')"
@@ -1287,6 +1298,20 @@ download_if_needed() {
       fi
     else
       echo "✓  ${repo} (already cached)"
+    fi
+
+    # ── PATCH FOR NVFP4_AWQ in cache ──
+    if [[ -d "${cache_path}/snapshots" ]]; then
+      echo "🔧 Checking/patching quantization config in HF cache for ${repo}..."
+      find "${cache_path}/snapshots" -name "config.json" -type f -o -type l 2>/dev/null | while read -r config_file; do
+        local real_file
+        real_file=$(readlink -f "${config_file}")
+        if [[ -f "${real_file}" ]] && grep -q '"quant_algo": "NVFP4_AWQ"' "${real_file}"; then
+          echo "   Found 'quant_algo': 'NVFP4_AWQ' in ${real_file}. Patching to 'NVFP4'..."
+          chmod +w "${real_file}" 2>/dev/null || true
+          sed -i 's/"quant_algo": "NVFP4_AWQ"/"quant_algo": "NVFP4"/g' "${real_file}"
+        fi
+      done
     fi
   fi
 }
