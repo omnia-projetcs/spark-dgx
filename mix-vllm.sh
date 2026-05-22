@@ -1271,16 +1271,23 @@ download_if_needed() {
     # ── PATCH FOR NVFP4_AWQ in target_dir (via Docker for root permissions) ──
     docker run --rm \
       -v "${target_dir}:${target_dir}" \
-      --entrypoint bash \
+      --entrypoint python3 \
       "${VLLM_IMAGE}" \
-      -c "find \"${target_dir}\" \( -name 'config.json' -o -name 'hf_quant_config.json' \) 2>/dev/null | while read -r config_file; do
-        real_file=\$(readlink -f \"\$config_file\")
-        if [ -f \"\$real_file\" ] && grep -q '\"quant_algo\": \"NVFP4_AWQ\"' \"\$real_file\"; then
-          echo \"   Found 'quant_algo': 'NVFP4_AWQ' in \$real_file. Patching...\"
-          chmod +w \"\$real_file\" 2>/dev/null || true
-          sed -i 's/\"quant_algo\": \"NVFP4_AWQ\"/\"quant_algo\": \"NVFP4\"/g' \"\$real_file\"
-        fi
-      done"
+      -c "
+import os, glob
+target_dir = '${target_dir}'
+for pattern in ['**/config.json', '**/hf_quant_config.json']:
+    for filepath in glob.glob(os.path.join(target_dir, pattern), recursive=True):
+        real_path = os.path.realpath(filepath)
+        if os.path.exists(real_path):
+            with open(real_path, 'r') as f:
+                content = f.read()
+            if '\"quant_algo\": \"NVFP4_AWQ\"' in content:
+                print('   Found quant_algo: NVFP4_AWQ in ' + real_path + '. Patching...')
+                os.chmod(real_path, 0o666)
+                with open(real_path, 'w') as f:
+                    f.write(content.replace('\"quant_algo\": \"NVFP4_AWQ\"', '\"quant_algo\": \"NVFP4\"'))
+"
   else
     # ── HuggingFace cache download ──
     local cache_name="models--$(echo "${repo}" | tr '/' '--')"
@@ -1308,16 +1315,23 @@ download_if_needed() {
       echo "🔧 Checking/patching quantization config in HF cache for ${repo} via Docker..."
       docker run --rm \
         -v "${HOME}/.cache/huggingface:/root/.cache/huggingface" \
-        --entrypoint bash \
+        --entrypoint python3 \
         "${VLLM_IMAGE}" \
-        -c "find /root/.cache/huggingface/hub/${cache_name}/snapshots \( -name 'config.json' -o -name 'hf_quant_config.json' \) -type f -o -type l 2>/dev/null | while read -r config_file; do
-          real_file=\$(readlink -f \"\$config_file\")
-          if [ -f \"\$real_file\" ] && grep -q '\"quant_algo\": \"NVFP4_AWQ\"' \"\$real_file\"; then
-            echo \"   Found 'quant_algo': 'NVFP4_AWQ' in \$real_file. Patching to 'NVFP4'...\"
-            chmod +w \"\$real_file\" 2>/dev/null || true
-            sed -i 's/\"quant_algo\": \"NVFP4_AWQ\"/\"quant_algo\": \"NVFP4\"/g' \"\$real_file\"
-          fi
-        done"
+        -c "
+import os, glob
+cache_dir = '/root/.cache/huggingface/hub/${cache_name}/snapshots'
+for pattern in ['**/config.json', '**/hf_quant_config.json']:
+    for filepath in glob.glob(os.path.join(cache_dir, pattern), recursive=True):
+        real_path = os.path.realpath(filepath)
+        if os.path.exists(real_path):
+            with open(real_path, 'r') as f:
+                content = f.read()
+            if '\"quant_algo\": \"NVFP4_AWQ\"' in content:
+                print('   Found quant_algo: NVFP4_AWQ in ' + real_path + '. Patching to NVFP4...')
+                os.chmod(real_path, 0o666)
+                with open(real_path, 'w') as f:
+                    f.write(content.replace('\"quant_algo\": \"NVFP4_AWQ\"', '\"quant_algo\": \"NVFP4\"'))
+"
     fi
   fi
 }
