@@ -126,26 +126,26 @@ A turnkey Bash script that launches a fully configured, production-ready **vLLM 
 
 | # | Model | tok/s | Quant | Context | Capabilities | Key Features |
 |---|---|---|---|---|---|---|
-| ★1 | `AEON-7/Qwen3.6-35B-A3B-heretic-NVFP4` | 88–117 | NVFP4 | 128K | 💬 🔧 🧠 | DFlash spec-decode, CUTLASS NVFP4, custom aeon-7 image, FP8 KV-cache |
-| #2 | `nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-NVFP4` | ~56 | NVFP4 | 256K | 💬 🔧 🧠 | MoE 30B/3.5B active, FlashInfer FP4 |
-| #3 | `Qwen/Qwen3.6-35B-A3B-FP8` | ~30 | FP8 | 256K | 💬 🔧 🧠 | 156 tok/s aggregate (c=32), cu130-nightly |
-| #4 | `nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4` | ~22 | NVFP4 | 128K | 💬 🔧 🧠 | MoE 120B/12B active, Marlin dequant |
-| #5 | `RedHatAI/Qwen3.5-122B-A10B-NVFP4` | ~17 | NVFP4 | 64K | 💬 🔧 🧠 | **Best quality** — RedHat calibration ≈ FP16, FlashInfer |
-| — | `nvidia/MiniMax-M2.7-NVFP4` | fast | NVFP4 | 196K | 💬 🔧 🧠 | MiniMax M2.7, TP×4, instanttensor format, FP8 KV-cache |
+| ★1 | `AEON-7/Qwen3.6-35B-A3B-heretic-NVFP4` | ~71 (88–117) | NVFP4 | 128K | 💬 🔧 🧠 | DFlash spec-decode, CUTLASS NVFP4, custom aeon-7 image, FP8 KV-cache |
+| #2 | `rdtand/Qwen3.6-35B-A3B-PrismaQuant-4.75bit-vllm` | ~59 | 4.75bit | 256K | 💬 🔧 🧠 | Speculative decoding (MTP ×3), FP8 KV-cache |
+| #3 | `nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-NVFP4` | ~58 | NVFP4 | 256K | 💬 🔧 🧠 | MoE 30B/3.5B active, FlashInfer FP4 |
+| #4 | `bg-digitalservices/Gemma-4-26B-A4B-it-NVFP4` | ~50 | NVFP4 | 262K | 💬 🖼️ 🎥 🔊 🔧 🧠 | Multimodal, TP×4, FP8 KV-cache |
+| #5 | `Qwen/Qwen3.6-35B-A3B-FP8` | ~30 | FP8 | 256K | 💬 🔧 🧠 | 156 tok/s aggregate (c=32), cu130-nightly |
+| #6 | `rdtand/MiniMax-M2.7-PrismaQuant-3.20bit-vllm` | ~25 | 3.20bit | 196K | 💬 🔧 🧠 | MiniMax M2.7, PrismaQuant 3.20bit, standard eugr image |
+| #7 | `Intel/Qwen3-Coder-Next-int4-AutoRound` | ~17 | INT4 | 1M | 💬 🔧 | MoE FP8, YaRN RoPE scaling, 384 concurrent sequences |
+| #8 | `RedHatAI/Qwen3.5-122B-A10B-NVFP4` | ~17 | NVFP4 | 64K | 💬 🔧 🧠 | **Best quality** — RedHat calibration ≈ FP16, FlashInfer |
+| #9 | `nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4` | ~15 | NVFP4 | 128K | 💬 🔧 🧠 | MoE 120B/12B active, Marlin dequant |
+| — | `LiquidAI/LFM2.5-350M` | ~212 | BF16 | 32K | 💬 | Ultra-lightweight 350M, ideal for testing/development |
+| — | `Qwen/Qwen3.5-0.8B` | ~103 | BF16 | 102K | 💬 🔧 | Lightweight 800M dense model, extremely fast, 102k context |
+| — | `nvidia/MiniMax-M2.7-NVFP4` | ~24 | NVFP4 | 196K | 💬 🔧 🧠 | MiniMax M2.7, TP×4, instanttensor format, FP8 KV-cache |
 | — | `cyankiwi/MiniMax-M2.5-AWQ-4bit` | cluster | AWQ | 128K | 💬 🔧 🧠 | MiniMax M2.5, TP×4, Ray distributed backend |
 | — | `cyankiwi/MiniMax-M2.7-AWQ-4bit` | cluster | AWQ | 128K | 💬 🔧 🧠 | MiniMax M2.7, TP×2, Ray distributed backend |
 | — | `nvidia/Kimi-K2.6-NVFP4` | cluster | NVFP4 | 32K | 💬 🔧 🧠 | Kimi K2.6 MoE, TP×8 Ray cluster, shared HF cache, drop-caches mod |
 | — | `deepseek-ai/DeepSeek-V4-Flash` | cluster | FP8 | 200K | 💬 🔧 🧠 | DeepSeek V4 Flash FP8, TP=2 MP, custom vllm-node-dsv4 image |
-| — | `google/gemma-3-12b-it` | fast | BF16 | 128K | 💬 🖼️ 🔧 | Multimodal, pythonic tool parser, 24 GB |
-| — | `bg-digitalservices/Gemma-4-26B-A4B-it-NVFP4` | ~20 | NVFP4 | 262K | 💬 🖼️ 🎥 🔊 🔧 🧠 | Multimodal, TP×4, FP8 KV-cache |
-| — | `rdtand/Qwen3.6-35B-A3B-PrismaQuant-4.75bit-vllm` | ~40 | 4.75bit | 256K | 💬 🔧 🧠 | Speculative decoding (MTP ×3), FP8 KV-cache |
-| — | `Intel/Qwen3-Coder-Next-int4-AutoRound` | ~30 | INT4 | 1M | 💬 🔧 | MoE FP8, YaRN RoPE scaling, 384 concurrent sequences |
-| — | `LiquidAI/LFM2.5-350M` | fast | BF16 | 32K | 💬 | Ultra-lightweight 350M, ideal for testing/development |
-| — | `zai-org/GLM-5.1-FP8` | cluster | FP8 | 24K | 💬 🔧 🧠 | 754B MoE, TP×8 Ray cluster, shared cache, drop-caches mod |
+
 | — | `AEON-7/Gemma-4-E4B-DECKARD-HERETIC-NVFP4` | fast | NVFP4 | 262K | 💬 🔧 🧠 | Gemma-4 NVFP4, DECKARD Heretic calibration, custom aeon-7/eugr image |
 | — | `rdtand/Mistral-Medium-3.5-128B-PrismaQuant-4.75-vllm` | ~25 | 4.75bit | 128K | 💬 🔧 🧠 | Mistral Medium 3.5, PrismaQuant 4.75bit, stock vLLM image |
 | — | `nvidia/Nemotron-3-Nano-Omni-30B-A3B-Reasoning-NVFP4` | ~56 | NVFP4 | 131K | 💬 🔧 🧠 | Nemotron Omni 30B, custom reasoning optimized image, video pruning |
-| — | `rdtand/MiniMax-M2.7-PrismaQuant-3.20bit-vllm` | fast | 3.20bit | 196K | 💬 🔧 🧠 | MiniMax M2.7, PrismaQuant 3.20bit, standard eugr image |
 | — | `rdtand/Gemma4-31B-IT-PrismaQuant-5.5bit-vllm` | ~22 | 5.5bit | 262K | 💬 🔧 🧠 | Gemma-4 31B IT, PrismaQuant 5.5bit, standard eugr image |
 | — | `scottgl/MiniMax-M2.7-REAP-172B-A10B-NVFP4-GB10` | fast | NVFP4 | 196K | 💬 🔧 🧠 | MiniMax M2.7 REAP 172B, TP×4, instanttensor format, GB10 optimized |
 | — | `cybermotaz/nemotron3-nano-nvfp4-w4a16` | ~56 | NVFP4 | 262K | 💬 🔧 🧠 | Nemotron-3 Nano NVFP4, w4a16 quantization path, reasoning parser |
@@ -237,7 +237,11 @@ python3 benchmark.py --prompt-file my_prompts.txt
 python3 benchmark.py --base-url http://192.168.1.100:8000
 ```
 
-#### Example Output:
+### 📊 Real-World Benchmark Results (Single-Node)
+
+The following benchmark runs represent verified performance metrics across different concurrency levels (1, 2, 4, and 8 simultaneous streams) on a single **NVIDIA DGX Spark** deskside supercomputer (GB10 Grace Blackwell, 128GB unified memory).
+
+````carousel
 ```
 ══════════════════════════════════════════════════════════════════════
   📊 COMPARISON TABLE (AEON-7/Qwen3.6-35B-A3B-heretic-NVFP4)
@@ -249,6 +253,103 @@ python3 benchmark.py --base-url http://192.168.1.100:8000
       4 │   8069.4ms │  12001.9ms │   18.381s │     512.0 │     50.33 │    173.43
       8 │  15521.6ms │  31851.4ms │   25.757s │     512.0 │     50.84 │     98.34
 ```
+<!-- slide -->
+```
+══════════════════════════════════════════════════════════════════════
+  📊 COMPARISON TABLE (rdtand/Qwen3.6-35B-A3B-PrismaQuant-4.75bit-vllm)
+══════════════════════════════════════════════════════════════════════
+   Conc │   TTFT avg │   TTFT p95 │   Lat avg │  Tok/resp │  t/s (req) │  t/s (agg)
+  ─────────────────────────────────────────────────────────────────────────────────
+      1 │    123.0ms │    142.3ms │    8.936s │     512.0 │     58.66 │    401.92
+      2 │    513.2ms │   1247.5ms │   10.452s │     512.0 │     52.01 │    338.13
+      4 │   1104.7ms │   3806.2ms │   14.220s │     512.0 │     40.09 │    243.52
+      8 │   5347.8ms │  10481.9ms │   10.482s │      77.6 │      7.56 │     59.23
+```
+<!-- slide -->
+```
+══════════════════════════════════════════════════════════════════════
+  📊 COMPARISON TABLE (nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-NVFP4)
+══════════════════════════════════════════════════════════════════════
+   Conc │   TTFT avg │   TTFT p95 │   Lat avg │  Tok/resp │  t/s (req) │  t/s (agg)
+  ─────────────────────────────────────────────────────────────────────────────────
+      1 │    111.4ms │    320.9ms │    8.951s │     512.0 │     57.92 │    445.74
+      2 │    217.1ms │    340.7ms │   10.050s │     498.6 │     50.72 │    380.15
+      4 │    244.4ms │    322.4ms │   13.601s │     493.1 │     36.92 │    277.35
+      8 │    206.6ms │    210.2ms │   20.820s │     512.0 │     24.84 │    196.65
+```
+<!-- slide -->
+```
+══════════════════════════════════════════════════════════════════════
+  📊 COMPARISON TABLE (bg-digitalservices/Gemma-4-26B-A4B-it-NVFP4)
+══════════════════════════════════════════════════════════════════════
+   Conc │   TTFT avg │   TTFT p95 │   Lat avg │  Tok/resp │  t/s (req) │  t/s (agg)
+  ─────────────────────────────────────────────────────────────────────────────────
+      1 │     58.0ms │     65.7ms │    9.731s │     479.8 │     49.62 │    367.64
+      2 │    262.0ms │    854.7ms │   10.893s │     481.8 │     45.32 │    314.14
+      4 │     78.2ms │    114.1ms │   13.586s │     480.8 │     35.64 │    263.44
+      8 │    101.5ms │    109.6ms │   17.817s │     478.9 │     27.09 │    200.71
+```
+<!-- slide -->
+```
+══════════════════════════════════════════════════════════════════════
+  📊 COMPARISON TABLE (minimax-m2.7-prisma)
+══════════════════════════════════════════════════════════════════════
+   Conc │   TTFT avg │   TTFT p95 │   Lat avg │  Tok/resp │  t/s (req) │  t/s (agg)
+  ─────────────────────────────────────────────────────────────────────────────────
+      1 │    313.6ms │    713.4ms │   21.168s │     512.0 │     24.55 │     24.19
+      2 │    297.5ms │    438.7ms │   29.994s │     512.0 │     17.24 │     34.13
+      4 │    348.1ms │    384.9ms │   46.086s │     512.0 │     11.19 │     44.41
+      8 │   1011.4ms │   1129.8ms │   72.989s │     512.0 │      7.11 │     56.08
+```
+<!-- slide -->
+```
+══════════════════════════════════════════════════════════════════════
+  📊 COMPARISON TABLE (Intel/Qwen3-Coder-Next-int4-AutoRound)
+══════════════════════════════════════════════════════════════════════
+   Conc │   TTFT avg │   TTFT p95 │   Lat avg │  Tok/resp │  t/s (req) │  t/s (agg)
+  ─────────────────────────────────────────────────────────────────────────────────
+      1 │     39.5ms │     42.8ms │    1.961s │     128.8 │     16.66 │     65.66
+      2 │     47.2ms │     57.7ms │    2.924s │     192.6 │     25.03 │     99.55
+      4 │     62.0ms │     78.1ms │    1.979s │     129.9 │     61.04 │    133.49
+      8 │     99.4ms │    136.4ms │    1.089s │      65.6 │     38.97 │     66.51
+```
+<!-- slide -->
+```
+══════════════════════════════════════════════════════════════════════
+  📊 COMPARISON TABLE (nemotron-super-120b)
+══════════════════════════════════════════════════════════════════════
+   Conc │   TTFT avg │   TTFT p95 │   Lat avg │  Tok/resp │  t/s (req) │  t/s (agg)
+  ─────────────────────────────────────────────────────────────────────────────────
+      1 │    294.5ms │    475.2ms │   35.564s │     512.0 │     14.52 │     14.40
+      2 │    585.9ms │    717.3ms │   41.996s │     512.0 │     12.36 │     24.38
+      4 │    627.4ms │    699.2ms │   54.939s │     512.0 │      9.43 │     37.27
+      8 │  28040.7ms │  55555.8ms │   82.570s │     512.0 │      9.39 │     37.23
+```
+<!-- slide -->
+```
+══════════════════════════════════════════════════════════════════════
+  📊 COMPARISON TABLE (LiquidAI/LFM2.5-350M)
+══════════════════════════════════════════════════════════════════════
+   Conc │   TTFT avg │   TTFT p95 │   Lat avg │  Tok/resp │  t/s (req) │  t/s (agg)
+  ─────────────────────────────────────────────────────────────────────────────────
+      1 │     34.5ms │    149.5ms │    1.756s │     363.9 │    211.62 │   1169.92
+      2 │     54.7ms │    160.8ms │    1.629s │     393.5 │    253.43 │   1284.92
+      4 │     21.6ms │     24.2ms │    1.508s │     376.9 │    255.10 │   1358.30
+      8 │    749.5ms │   2027.5ms │    2.233s │     379.4 │    255.98 │    934.11
+```
+<!-- slide -->
+```
+══════════════════════════════════════════════════════════════════════
+  📊 COMPARISON TABLE (Qwen/Qwen3.5-0.8B)
+══════════════════════════════════════════════════════════════════════
+   Conc │   TTFT avg │   TTFT p95 │   Lat avg │  Tok/resp │  t/s (req) │  t/s (agg)
+  ─────────────────────────────────────────────────────────────────────────────────
+      1 │     57.8ms │    263.9ms │    4.782s │     487.4 │    103.23 │    101.92
+      2 │     39.7ms │     44.3ms │    4.248s │     477.8 │    113.68 │    208.75
+      4 │    110.9ms │    178.0ms │    4.561s │     486.1 │    109.22 │    405.49
+      8 │   2247.8ms │   4804.8ms │    6.474s │     462.0 │    109.24 │    392.19
+```
+````
 
 ---
 
