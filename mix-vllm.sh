@@ -121,6 +121,16 @@ DEFAULT_MODEL="AEON-7/Qwen3.6-35B-A3B-heretic-NVFP4"          # https://huggingf
 # DEFAULT_MODEL="Intel/Qwen3-Coder-Next-int4-AutoRound"        # https://huggingface.co/Intel/Qwen3-Coder-Next-int4-AutoRound
 # DEFAULT_MODEL="LiquidAI/LFM2.5-350M"                         # https://huggingface.co/LiquidAI/LFM2.5-350M
 # DEFAULT_MODEL="Qwen/Qwen3.5-0.8B"                            # https://huggingface.co/Qwen/Qwen3.5-0.8B
+# DEFAULT_MODEL="neuralmagic/DeepSeek-R1-Distill-Qwen-32B-FP8"   # https://huggingface.co/neuralmagic/DeepSeek-R1-Distill-Qwen-32B-FP8
+# DEFAULT_MODEL="casperhansen/deepseek-r1-distill-qwen-32b-awq" # https://huggingface.co/casperhansen/deepseek-r1-distill-qwen-32b-awq
+# DEFAULT_MODEL="neuralmagic/Llama-3.3-70B-Instruct-FP8"        # ⚠️ [GATED] https://huggingface.co/neuralmagic/Llama-3.3-70B-Instruct-FP8
+# DEFAULT_MODEL="casperhansen/llama-3.3-70b-instruct-awq"       # ⚠️ [GATED] https://huggingface.co/casperhansen/llama-3.3-70b-instruct-awq
+# DEFAULT_MODEL="nvidia/Llama-3.3-70B-Instruct-NVFP4"          # ⚠️ [GATED] https://huggingface.co/nvidia/Llama-3.3-70B-Instruct-NVFP4
+# DEFAULT_MODEL="nm-testing/DeepSeek-R1-Distill-Qwen-32B-NVFP4" # https://huggingface.co/nm-testing/DeepSeek-R1-Distill-Qwen-32B-NVFP4
+# DEFAULT_MODEL="neuralmagic/DeepSeek-R1-Distill-Qwen-14B-FP8"   # https://huggingface.co/neuralmagic/DeepSeek-R1-Distill-Qwen-14B-FP8
+# DEFAULT_MODEL="casperhansen/deepseek-r1-distill-qwen-14b-awq" # https://huggingface.co/casperhansen/deepseek-r1-distill-qwen-14b-awq
+# DEFAULT_MODEL="neuralmagic/DeepSeek-R1-Distill-Llama-8B-FP8"   # https://huggingface.co/neuralmagic/DeepSeek-R1-Distill-Llama-8B-FP8
+# DEFAULT_MODEL="casperhansen/deepseek-r1-distill-llama-8b-awq" # https://huggingface.co/casperhansen/deepseek-r1-distill-llama-8b-awq
 
 MODEL="${MODEL:-${DEFAULT_MODEL}}"
 # ─────────────────────────────────────────────────────────────────────────────
@@ -654,6 +664,272 @@ case "${MODEL}" in
       "--reasoning-parser"    "qwen3"
       "--enable-auto-tool-choice"
       "--tool-call-parser"    "qwen3_coder"
+    )
+    ;;
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # DeepSeek R1 Distill Qwen 32B FP8 — 32B reasoning model, FP8, excellent speed and intelligence
+  # ═══════════════════════════════════════════════════════════════════════════
+  "neuralmagic/DeepSeek-R1-Distill-Qwen-32B-FP8")
+    VLLM_IMAGE="${IMG_NIGHTLY}"
+    GPU_MEM_UTIL=0.85
+    MAX_MODEL_LEN=65536
+    MAX_BATCHED_TOKENS=16384
+    MAX_NUM_SEQS=8
+
+    ENV_ARGS=(
+      -e VLLM_HTTP_TIMEOUT_KEEP_ALIVE=600
+      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
+    )
+
+    EXTRA_ARGS=(
+      "--served-model-name"   "deepseek-r1-qwen-32b-fp8"
+      "--dtype"               "auto"
+      "--load-format"         "fastsafetensors"
+      "--quantization"        "fp8"
+      "--kv-cache-dtype"      "fp8"
+      "--enable-auto-tool-choice"
+      "--tool-call-parser"    "qwen3_xml"
+      "--reasoning-parser"    "qwen3"
+    )
+    ;;
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # DeepSeek R1 Distill Qwen 32B AWQ — 32B reasoning model, AWQ, fast on consumer GPUs
+  # ═══════════════════════════════════════════════════════════════════════════
+  "casperhansen/deepseek-r1-distill-qwen-32b-awq")
+    VLLM_IMAGE="${IMG_NIGHTLY}"
+    GPU_MEM_UTIL=0.85
+    MAX_MODEL_LEN=32768
+    MAX_BATCHED_TOKENS=8192
+    MAX_NUM_SEQS=8
+
+    ENV_ARGS=(
+      -e VLLM_HTTP_TIMEOUT_KEEP_ALIVE=600
+      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
+    )
+
+    EXTRA_ARGS=(
+      "--served-model-name"   "deepseek-r1-qwen-32b-awq"
+      "--dtype"               "auto"
+      "--load-format"         "fastsafetensors"
+      "--quantization"        "awq"
+      "--kv-cache-dtype"      "fp8"
+      "--enable-auto-tool-choice"
+      "--tool-call-parser"    "qwen3_xml"
+      "--reasoning-parser"    "qwen3"
+    )
+    ;;
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Llama 3.3 70B Instruct FP8 — 70B frontier model, FP8, excellent balance of quality/speed
+  # ═══════════════════════════════════════════════════════════════════════════
+  "neuralmagic/Llama-3.3-70B-Instruct-FP8")
+    VLLM_IMAGE="${IMG_NIGHTLY}"
+    GPU_MEM_UTIL=0.90
+    MAX_MODEL_LEN=65536
+    MAX_BATCHED_TOKENS=16384
+    MAX_NUM_SEQS=4
+
+    ENV_ARGS=(
+      -e VLLM_MARLIN_USE_ATOMIC_ADD=1
+      -e VLLM_HTTP_TIMEOUT_KEEP_ALIVE=600
+      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
+    )
+
+    EXTRA_ARGS=(
+      "--served-model-name"   "llama-3.3-70b-fp8"
+      "--dtype"               "auto"
+      "--load-format"         "fastsafetensors"
+      "--quantization"        "fp8"
+      "--kv-cache-dtype"      "fp8"
+      "--enable-auto-tool-choice"
+      "--tool-call-parser"    "llama3"
+    )
+    ;;
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Llama 3.3 70B Instruct AWQ — 70B frontier model, AWQ, highly compressed for local serving
+  # ═══════════════════════════════════════════════════════════════════════════
+  "casperhansen/llama-3.3-70b-instruct-awq")
+    VLLM_IMAGE="${IMG_NIGHTLY}"
+    GPU_MEM_UTIL=0.85
+    MAX_MODEL_LEN=32768
+    MAX_BATCHED_TOKENS=8192
+    MAX_NUM_SEQS=4
+
+    ENV_ARGS=(
+      -e VLLM_HTTP_TIMEOUT_KEEP_ALIVE=600
+      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
+    )
+
+    EXTRA_ARGS=(
+      "--served-model-name"   "llama-3.3-70b-awq"
+      "--dtype"               "auto"
+      "--load-format"         "fastsafetensors"
+      "--quantization"        "awq"
+      "--kv-cache-dtype"      "fp8"
+      "--enable-auto-tool-choice"
+      "--tool-call-parser"    "llama3"
+    )
+    ;;
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Llama 3.3 70B Instruct NVFP4 — NVFP4 version of the 70B model, Blackwell optimized
+  # ═══════════════════════════════════════════════════════════════════════════
+  "nvidia/Llama-3.3-70B-Instruct-NVFP4")
+    VLLM_IMAGE="${IMG_EUGR}"
+    GPU_MEM_UTIL=0.90
+    MAX_MODEL_LEN=65536
+    MAX_BATCHED_TOKENS=16384
+    MAX_NUM_SEQS=4
+
+    ENV_ARGS=(
+      -e VLLM_HTTP_TIMEOUT_KEEP_ALIVE=600
+      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
+    )
+
+    EXTRA_ARGS=(
+      "--served-model-name"   "llama-3.3-70b-nvfp4"
+      "--dtype"               "auto"
+      "--load-format"         "fastsafetensors"
+      "--quantization"        "compressed-tensors"
+      "--kv-cache-dtype"      "fp8"
+      "--enable-auto-tool-choice"
+      "--tool-call-parser"    "llama3"
+    )
+    ;;
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # DeepSeek R1 Distill Qwen 32B NVFP4 — NVFP4 version of the 32B model, Blackwell optimized
+  # ═══════════════════════════════════════════════════════════════════════════
+  "nm-testing/DeepSeek-R1-Distill-Qwen-32B-NVFP4")
+    VLLM_IMAGE="${IMG_EUGR}"
+    GPU_MEM_UTIL=0.85
+    MAX_MODEL_LEN=65536
+    MAX_BATCHED_TOKENS=16384
+    MAX_NUM_SEQS=8
+
+    ENV_ARGS=(
+      -e VLLM_HTTP_TIMEOUT_KEEP_ALIVE=600
+      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
+    )
+
+    EXTRA_ARGS=(
+      "--served-model-name"   "deepseek-r1-qwen-32b-nvfp4"
+      "--dtype"               "auto"
+      "--load-format"         "fastsafetensors"
+      "--quantization"        "compressed-tensors"
+      "--kv-cache-dtype"      "fp8"
+      "--enable-auto-tool-choice"
+      "--tool-call-parser"    "qwen3_xml"
+      "--reasoning-parser"    "qwen3"
+    )
+    ;;
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # DeepSeek R1 Distill Qwen 14B FP8 — 14B reasoning model, FP8, extremely fast on RTX 4080 (12GB)
+  # ═══════════════════════════════════════════════════════════════════════════
+  "neuralmagic/DeepSeek-R1-Distill-Qwen-14B-FP8")
+    VLLM_IMAGE="${IMG_NIGHTLY}"
+    GPU_MEM_UTIL=0.85
+    MAX_MODEL_LEN=65536
+    MAX_BATCHED_TOKENS=16384
+    MAX_NUM_SEQS=8
+
+    ENV_ARGS=(
+      -e VLLM_HTTP_TIMEOUT_KEEP_ALIVE=600
+      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
+    )
+
+    EXTRA_ARGS=(
+      "--served-model-name"   "deepseek-r1-qwen-14b-fp8"
+      "--dtype"               "auto"
+      "--load-format"         "fastsafetensors"
+      "--quantization"        "fp8"
+      "--kv-cache-dtype"      "fp8"
+      "--enable-auto-tool-choice"
+      "--tool-call-parser"    "qwen3_xml"
+      "--reasoning-parser"    "qwen3"
+    )
+    ;;
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # DeepSeek R1 Distill Qwen 14B AWQ — 14B reasoning model, AWQ, blazing fast on 12GB VRAM
+  # ═══════════════════════════════════════════════════════════════════════════
+  "casperhansen/deepseek-r1-distill-qwen-14b-awq")
+    VLLM_IMAGE="${IMG_NIGHTLY}"
+    GPU_MEM_UTIL=0.85
+    MAX_MODEL_LEN=32768
+    MAX_BATCHED_TOKENS=8192
+    MAX_NUM_SEQS=8
+
+    ENV_ARGS=(
+      -e VLLM_HTTP_TIMEOUT_KEEP_ALIVE=600
+      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
+    )
+
+    EXTRA_ARGS=(
+      "--served-model-name"   "deepseek-r1-qwen-14b-awq"
+      "--dtype"               "auto"
+      "--load-format"         "fastsafetensors"
+      "--quantization"        "awq"
+      "--kv-cache-dtype"      "fp8"
+      "--enable-auto-tool-choice"
+      "--tool-call-parser"    "qwen3_xml"
+      "--reasoning-parser"    "qwen3"
+    )
+    ;;
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # DeepSeek R1 Distill Llama 8B FP8 — 8B reasoning model, FP8, ultra-fast on RTX 4080 (12GB)
+  # ═══════════════════════════════════════════════════════════════════════════
+  "neuralmagic/DeepSeek-R1-Distill-Llama-8B-FP8")
+    VLLM_IMAGE="${IMG_NIGHTLY}"
+    GPU_MEM_UTIL=0.80
+    MAX_MODEL_LEN=65536
+    MAX_BATCHED_TOKENS=16384
+    MAX_NUM_SEQS=16
+
+    ENV_ARGS=(
+      -e VLLM_HTTP_TIMEOUT_KEEP_ALIVE=600
+      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
+    )
+
+    EXTRA_ARGS=(
+      "--served-model-name"   "deepseek-r1-llama-8b-fp8"
+      "--dtype"               "auto"
+      "--load-format"         "fastsafetensors"
+      "--quantization"        "fp8"
+      "--kv-cache-dtype"      "fp8"
+      "--enable-auto-tool-choice"
+      "--tool-call-parser"    "llama3"
+    )
+    ;;
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # DeepSeek R1 Distill Llama 8B AWQ — 8B reasoning model, AWQ, lightweight and high speed
+  # ═══════════════════════════════════════════════════════════════════════════
+  "casperhansen/deepseek-r1-distill-llama-8b-awq")
+    VLLM_IMAGE="${IMG_NIGHTLY}"
+    GPU_MEM_UTIL=0.80
+    MAX_MODEL_LEN=32768
+    MAX_BATCHED_TOKENS=8192
+    MAX_NUM_SEQS=16
+
+    ENV_ARGS=(
+      -e VLLM_HTTP_TIMEOUT_KEEP_ALIVE=600
+      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
+    )
+
+    EXTRA_ARGS=(
+      "--served-model-name"   "deepseek-r1-llama-8b-awq"
+      "--dtype"               "auto"
+      "--load-format"         "fastsafetensors"
+      "--quantization"        "awq"
+      "--kv-cache-dtype"      "fp8"
+      "--enable-auto-tool-choice"
+      "--tool-call-parser"    "llama3"
     )
     ;;
 
