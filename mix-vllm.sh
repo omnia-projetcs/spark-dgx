@@ -392,7 +392,7 @@ case "${MODEL}" in
 
     EXTRA_ARGS=(
       "--served-model-name"   "glm4.7-flash"
-      "--dtype"               "auto"
+      "--dtype"               "float16"
       "--load-format"         "fastsafetensors"
       "--quantization"        "awq"
       "--kv-cache-dtype"      "fp8"
@@ -666,7 +666,7 @@ case "${MODEL}" in
 
     EXTRA_ARGS=(
       "--served-model-name"   "deepseek-r1-qwen-32b-awq"
-      "--dtype"               "auto"
+      "--dtype"               "float16"
       "--load-format"         "fastsafetensors"
       "--quantization"        "awq"
       "--kv-cache-dtype"      "fp8"
@@ -720,7 +720,7 @@ case "${MODEL}" in
 
     EXTRA_ARGS=(
       "--served-model-name"   "llama-3.3-70b-awq"
-      "--dtype"               "auto"
+      "--dtype"               "float16"
       "--load-format"         "fastsafetensors"
       "--quantization"        "awq"
       "--kv-cache-dtype"      "fp8"
@@ -826,7 +826,7 @@ case "${MODEL}" in
 
     EXTRA_ARGS=(
       "--served-model-name"   "deepseek-r1-qwen-14b-awq"
-      "--dtype"               "auto"
+      "--dtype"               "float16"
       "--load-format"         "fastsafetensors"
       "--quantization"        "awq"
       "--kv-cache-dtype"      "fp8"
@@ -879,7 +879,7 @@ case "${MODEL}" in
 
     EXTRA_ARGS=(
       "--served-model-name"   "deepseek-r1-llama-8b-awq"
-      "--dtype"               "auto"
+      "--dtype"               "float16"
       "--load-format"         "fastsafetensors"
       "--quantization"        "awq"
       "--kv-cache-dtype"      "fp8"
