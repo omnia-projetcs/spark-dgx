@@ -888,7 +888,7 @@ case "${MODEL}" in
   # RedHatAI/Mistral-Small-24B-Instruct-2501-FP8-dynamic — Optimized FP8, 32K context
   # ═══════════════════════════════════════════════════════════════════════════
   "RedHatAI/Mistral-Small-24B-Instruct-2501-FP8-dynamic")
-    VLLM_IMAGE="${IMG_STOCK}"
+    VLLM_IMAGE="${IMG_NIGHTLY}"
     GPU_MEM_UTIL=0.80
     MAX_MODEL_LEN=32768
     MAX_BATCHED_TOKENS=32768
