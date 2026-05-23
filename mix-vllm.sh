@@ -112,42 +112,128 @@ done
 # ── MODEL SELECTION ───────────────────────────────────────────────────────────
 # Select the default model to launch. If the MODEL environment variable or the
 # --model command-line option is set, it will take precedence.
-# To change the default, uncomment ONE of the DEFAULT_MODEL lines below:
 
-# ── OK x1 GB1─ ────────────────────────────────────────────────────────────────
-DEFAULT_MODEL="AEON-7/Qwen3.6-35B-A3B-heretic-NVFP4"            # https://huggingface.co/AEON-7/Qwen3.6-35B-A3B-heretic-NVFP4
-# DEFAULT_MODEL="rdtand/Qwen3.6-35B-A3B-PrismaQuant-4.75bit-vllm" # https://huggingface.co/rdtand/Qwen3.6-35B-A3B-PrismaQuant-4.75bit-vllm
-# DEFAULT_MODEL="Intel/Qwen3-Coder-Next-int4-AutoRound"           # https://huggingface.co/Intel/Qwen3-Coder-Next-int4-AutoRound
+if [[ -z "${MODEL}" ]]; then
+  # Define the models list: MODEL_ID|GB10_COUNT|DESCRIPTION
+  MODELS=(
+    "AEON-7/Qwen3.6-35B-A3B-heretic-NVFP4|1|#1  Qwen 3.6 35B NVFP4 Heretic + DFlash drafter (~71 tok/s, up to 117 w/ DFlash) - FASTEST"
+    "rdtand/Qwen3.6-35B-A3B-PrismaQuant-4.75bit-vllm|1|#2  Qwen 3.6 35B PrismaQuant 4.75bit (~59 tok/s, 256K context)"
+    "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-NVFP4|1|#3  Nemotron-3 Nano 30B NVFP4 (~58 tok/s, 256K context, MoE)"
+    "bg-digitalservices/Gemma-4-26B-A4B-it-NVFP4|1|#4  Gemma-4 26B NVFP4 (~50 tok/s, 262K context, multimodal)"
+    "Qwen/Qwen3.6-35B-A3B-FP8|1|#5  Qwen 3.6 35B FP8 (~30 tok/s, 256K context)"
+    "rdtand/MiniMax-M2.7-PrismaQuant-3.20bit-vllm|1|#6  MiniMax-M2.7 PrismaQuant 3.20bit (~25 tok/s, 196K context)"
+    "Intel/Qwen3-Coder-Next-int4-AutoRound|1|#7  Qwen 3 Coder Next int4 AutoRound (~17 tok/s, 1M context)"
+    "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4|1|#9  Nemotron-3 Super 120B NVFP4 (~15 tok/s, 128K context)"
+    "LiquidAI/LFM2.5-350M|1|──  LiquidAI LFM 2.5 350M (~212 tok/s, BF16 dense, ultra-lightweight)"
+    "Qwen/Qwen3.5-0.8B|1|──  Qwen 3.5 0.8B (~103 tok/s, BF16 dense, ultra-lightweight)"
+    "rdtand/Gemma4-31B-IT-PrismaQuant-5.5bit-vllm|1|──  Gemma 4 31B IT PrismaQuant 5.5bit (~22 tok/s)"
+    "cybermotaz/nemotron3-nano-nvfp4-w4a16|1|──  Nemotron-3 Nano NVFP4 w4a16 (~56 tok/s)"
+    "nvidia/Nemotron-3-Nano-Omni-30B-A3B-Reasoning-NVFP4|1|──  Nemotron-3 Nano Omni 30B reasoning/multimodal (video/audio)"
+    "neuralmagic/DeepSeek-R1-Distill-Llama-8B-FP8|1|──  DeepSeek R1 Distill Llama 8B FP8 (~50 tok/s, reasoning)"
+    "neuralmagic/DeepSeek-R1-Distill-Qwen-14B-FP8|1|──  DeepSeek R1 Distill Qwen 14B FP8 (~40 tok/s, reasoning)"
+    "neuralmagic/Llama-3.3-70B-Instruct-FP8|1|──  Llama 3.3 70B Instruct FP8 (excellent balance, 65K context)"
+    "casperhansen/llama-3.3-70b-instruct-awq|1|──  Llama 3.3 70B Instruct AWQ (highly compressed, 32K context)"
+    "nvidia/Llama-3.3-70B-Instruct-NVFP4|1|──  Llama 3.3 70B Instruct NVFP4 (Blackwell optimized, 65K context)"
+    "rdtand/Mistral-Medium-3.5-128B-PrismaQuant-4.75-vllm|1|──  Mistral-Medium 3.5 128B PrismaQuant 4.75bit"
+    "neuralmagic/Mistral-Small-24B-Instruct-2501-FP8|1|──  Mistral-Small 24B Instruct v2501 FP8 (highly optimized for single GB10, 32K context)"
+    "shieldstar/Qwen3.5-122B-A10B-int4-AutoRound-EC|1|──  Qwen 3.5 122B int4 AutoRound (z-lab DFlash, 196K context)"
+    
+    "RedHatAI/Qwen3.5-122B-A10B-NVFP4|2|#8  Qwen 3.5 122B NVFP4 (~17 tok/s, BEST QUALITY, 64K context)"
+    "nm-testing/DeepSeek-R1-Distill-Qwen-32B-NVFP4|2|──  DeepSeek R1 Distill Qwen 32B NVFP4"
+    "deepseek-ai/DeepSeek-V4-Flash|2|──  DeepSeek V4 Flash FP8 (TP=2, 200K context)"
+    "cyankiwi/MiniMax-M2.7-AWQ-4bit|2|──  MiniMax-M2.7 AWQ 4bit (TP=2)"
 
-# DEFAULT_MODEL="nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-NVFP4"     # https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-NVFP4
-# DEFAULT_MODEL="nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4"  # https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4
+    "dervig/m51Lab-MiniMax-M2.7-REAP-139B-A10B-NVFP4-GB10|4|──  MiniMax-M2.7 REAP 139B NVFP4 (TP=4)"
+    "nvidia/MiniMax-M2.7-NVFP4|4|──  MiniMax-M2.7 NVFP4 (~24 tok/s, TP=4)"
+    "scottgl/MiniMax-M2.7-REAP-172B-A10B-NVFP4-GB10|4|──  MiniMax-M2.7 REAP 172B NVFP4 (TP=4)"
+    "cyankiwi/MiniMax-M2.5-AWQ-4bit|4|──  MiniMax-M2.5 AWQ 4bit (TP=4)"
 
-# DEFAULT_MODEL="bg-digitalservices/Gemma-4-26B-A4B-it-NVFP4"     # https://huggingface.co/bg-digitalservices/Gemma-4-26B-A4B-it-NVFP4
-# DEFAULT_MODEL="rdtand/MiniMax-M2.7-PrismaQuant-3.20bit-vllm"     # https://huggingface.co/rdtand/MiniMax-M2.7-PrismaQuant-3.20bit-vllm
+    "zai-org/GLM-5.1-FP8|8|──  Z.AI GLM-5.1-FP8 754B MoE (TP=8 Ray cluster, drop-caches mod)"
+    "nvidia/Kimi-K2.6-NVFP4|8|──  Kimi-K2.6 NVFP4 MoE (TP=8 Ray cluster, drop-caches mod)"
+  )
 
-# DEFAULT_MODEL="LiquidAI/LFM2.5-350M"                            # https://huggingface.co/LiquidAI/LFM2.5-350M
-# DEFAULT_MODEL="Qwen/Qwen3.5-0.8B"                               # https://huggingface.co/Qwen/Qwen3.5-0.8B
-
-# ── TO TEST ───────────────────────────────────────────────────────────
-#DEFAULT_MODEL="shieldstar/Qwen3.5-122B-A10B-int4-AutoRound-EC"   # https://huggingface.co/shieldstar/Qwen3.5-122B-A10B-int4-AutoRound-EC
-
-
-# ── x2 GB10 = 256gb
-#DEFAULT_MODEL="RedHatAI/Qwen3.5-122B-A10B-NVFP4"                 # https://huggingface.co/RedHatAI/Qwen3.5-122B-A10B-NVFP4
-#DEFAULT_MODEL="nm-testing/DeepSeek-R1-Distill-Qwen-32B-NVFP4"    # https://huggingface.co/nm-testing/DeepSeek-R1-Distill-Qwen-32B-NVFP4
-#DEFAULT_MODEL="deepseek-ai/DeepSeek-V4-Flash"                    # https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash
-
-# ── x4 GB10 = 512gb
-#DEFAULT_MODEL="dervig/m51Lab-MiniMax-M2.7-REAP-139B-A10B-NVFP4-GB10" # https://huggingface.co/dervig/m51Lab-MiniMax-M2.7-REAP-139B-A10B-NVFP4-GB10
-#DEFAULT_MODEL="nvidia/MiniMax-M2.7-NVFP4"                        # https://huggingface.co/nvidia/MiniMax-M2.7-NVFP4
-#DEFAULT_MODEL="scottgl/MiniMax-M2.7-REAP-172B-A10B-NVFP4-GB10"   # https://huggingface.co/scottgl/MiniMax-M2.7-REAP-172B-A10B-NVFP4-GB10
-
-# ── x8 GB10 = 1024gb
-#DEFAULT_MODEL="zai-org/GLM-5.1-FP8"                              # https://huggingface.co/zai-org/GLM-5.1-FP8
-#DEFAULT_MODEL="nvidia/Kimi-K2.6-NVFP4"                           # https://huggingface.co/nvidia/Kimi-K2.6-NVFP4
-
-
-MODEL="${MODEL:-${DEFAULT_MODEL}}"
+  # Check if stdout/stdin are TTYs (interactive mode)
+  if [[ -t 1 && -t 0 ]]; then
+    # Gorgeous color-coded interactive select menu
+    CYAN='\033[0;36m'
+    BRIGHT_CYAN='\033[1;36m'
+    GREEN='\033[0;32m'
+    BRIGHT_GREEN='\033[1;32m'
+    YELLOW='\033[0;33m'
+    BRIGHT_YELLOW='\033[1;33m'
+    ORANGE='\033[38;5;208m'
+    BRIGHT_ORANGE='\033[1;38;5;208m'
+    RED='\033[0;31m'
+    BRIGHT_RED='\033[1;31m'
+    NC='\033[0m' # No Color
+    BOLD='\033[1m'
+    
+    echo -e "${BRIGHT_CYAN}╔══════════════════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${BRIGHT_CYAN}║             🚀  NVIDIA DGX SPARK (GB10) — vLLM LAUNCHER             ║${NC}"
+    echo -e "${BRIGHT_CYAN}╚══════════════════════════════════════════════════════════════════════╝${NC}"
+    echo -e "Unified Grace Blackwell Memory Architecture (128 GB VRAM per GPU)\n"
+    echo -e "${BOLD}Please select an AI model to load:${NC}\n"
+    
+    print_category() {
+      local req_gpus="$1"
+      local cat_title="$2"
+      local cat_color="$3"
+      
+      echo -e "${cat_color}── ${cat_title} ──────────────────────────────────────────────────${NC}"
+      
+      for item in "${MODELS[@]}"; do
+        IFS='|' read -r model_id gpus desc <<< "${item}"
+        if [[ "${gpus}" -eq "${req_gpus}" ]]; then
+          # Find overall 1-based index
+          local idx=1
+          for search_item in "${MODELS[@]}"; do
+            if [[ "${search_item}" == "${item}" ]]; then
+              break
+            fi
+            idx=$((idx + 1))
+          done
+          
+          if [[ "${model_id}" == "AEON-7/Qwen3.6-35B-A3B-heretic-NVFP4" ]]; then
+            printf "  ${cat_color}[%2d]${NC} %-55s ${BRIGHT_GREEN}← DEFAULT${NC}\n" "${idx}" "${model_id}"
+            printf "       ${cat_color}↳${NC} %s\n" "${desc}"
+          else
+            printf "  ${cat_color}[%2d]${NC} %s\n" "${idx}" "${model_id}"
+            printf "       ${cat_color}↳${NC} %s\n" "${desc}"
+          fi
+        fi
+      done
+      echo ""
+    }
+    
+    print_category 1 "🟢 x1 GB10 GPU REQUIRED (Fits in 128 GB VRAM)" "${BRIGHT_GREEN}"
+    print_category 2 "🟡 x2 GB10 GPUs REQUIRED (Fits in 256 GB VRAM)" "${BRIGHT_YELLOW}"
+    print_category 4 "🟠 x4 GB10 GPUs REQUIRED (Fits in 512 GB VRAM)" "${BRIGHT_ORANGE}"
+    print_category 8 "🔴 x8 GB10 GPUs REQUIRED (Fits in 1024 GB VRAM - Ray Distributed)" "${BRIGHT_RED}"
+    
+    while true; do
+      read -p "👉 Enter model number [1-${#MODELS[@]}] or press Enter for default (#1): " choice
+      if [[ -z "${choice}" ]]; then
+        MODEL="AEON-7/Qwen3.6-35B-A3B-heretic-NVFP4"
+        selected_gpus=1
+        break
+      fi
+      if [[ "${choice}" =~ ^[0-9]+$ ]] && [[ "${choice}" -ge 1 ]] && [[ "${choice}" -le "${#MODELS[@]}" ]]; then
+        selected_item="${MODELS[$((choice - 1))]}"
+        IFS='|' read -r MODEL selected_gpus selected_desc <<< "${selected_item}"
+        break
+      fi
+      echo -e "❌ ${RED}Invalid selection. Please enter a number between 1 and ${#MODELS[@]}.${NC}"
+    done
+    
+    echo -e "\n${BRIGHT_GREEN}✔ Selected model: ${BOLD}${MODEL}${NC}"
+    echo -e "${BRIGHT_GREEN}✔ Resources required: ${BOLD}${selected_gpus}x GB10 GPU(s)${NC} (Blackwell SM121)\n"
+  else
+    # Non-interactive fallback
+    DEFAULT_MODEL="AEON-7/Qwen3.6-35B-A3B-heretic-NVFP4"
+    MODEL="${DEFAULT_MODEL}"
+    echo "ℹ Non-interactive shell detected. Falling back to default model: ${MODEL}"
+  fi
+fi
 
 # ── ARENA MODE SUITE RUNNER ───────────────────────────────────────────────────
 if [[ "${ARENA_MODE}" == "true" ]]; then
@@ -1090,6 +1176,35 @@ case "${MODEL}" in
     ;;
 
   # ═══════════════════════════════════════════════════════════════════════════
+  # neuralmagic/Mistral-Small-24B-Instruct-2501-FP8 — Optimized FP8, 32K context
+  # ═══════════════════════════════════════════════════════════════════════════
+  "neuralmagic/Mistral-Small-24B-Instruct-2501-FP8")
+    VLLM_IMAGE="${IMG_STOCK}"
+    GPU_MEM_UTIL=0.80
+    MAX_MODEL_LEN=32768
+    MAX_BATCHED_TOKENS=32768
+    MAX_NUM_SEQS=16
+
+    ENV_ARGS=(
+      -e VLLM_MARLIN_USE_ATOMIC_ADD=1
+      -e VLLM_HTTP_TIMEOUT_KEEP_ALIVE=600
+      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
+    )
+
+    EXTRA_ARGS=(
+      "--served-model-name"    "mistral-small-24b"
+      "--dtype"                "auto"
+      "--load-format"          "fastsafetensors"
+      "--quantization"         "fp8"
+      "--kv-cache-dtype"       "fp8"
+      "--tensor-parallel-size" "1"
+      "--enable-auto-tool-choice"
+      "--tool-call-parser"     "mistral"
+      "--reasoning-parser"     "mistral"
+    )
+    ;;
+
+  # ═══════════════════════════════════════════════════════════════════════════
   # MiniMax-M2.7-PrismaQuant-3.20bit-vllm (rdtand), 196K context, 3.20bit
   # ═══════════════════════════════════════════════════════════════════════════
   "rdtand/MiniMax-M2.7-PrismaQuant-3.20bit-vllm")
@@ -1229,6 +1344,8 @@ case "${MODEL}" in
     ;;
 
   *)
+    echo -e "\033[1;33m⚠️  WARNING — Custom model '${MODEL}' is not in the pre-configured catalog!\033[0m"
+    echo -e "\033[1;33m  Using general stock settings: stock image, 32K context, 80% memory utilization.\033[0m\n"
     VLLM_IMAGE="${IMG_STOCK}"
     GPU_MEM_UTIL=0.80
     MAX_MODEL_LEN=32768
