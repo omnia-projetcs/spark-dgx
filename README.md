@@ -188,6 +188,47 @@ docker logs -f mix-vllm
 
 Each model configuration includes optimized values for `--gpu-memory-utilization`, `--max-model-len`, `--max-num-batched-tokens`, attention backends, quantization settings, and tool-call parsers.
 
+#### Model Storage & Cleanup
+
+Downloaded models can take up significant disk space. The script stores downloaded weights in two possible locations depending on the model's configuration:
+
+1. **Hugging Face Hub Cache (Default)**:
+   By default, model weights are downloaded and cached in your user's standard Hugging Face Hub cache directory:
+   ```bash
+   ~/.cache/huggingface/hub/
+   ```
+   Each model is stored in a subdirectory named like `models--<author>--<model-name>` (where slashes are replaced by double hyphens). For example:
+   `~/.cache/huggingface/hub/models--rdtand--Qwen3.6-35B-A3B-PrismaQuant-4.75bit-vllm`
+
+2. **Custom Local Storage Directories**:
+   Certain high-performance or pre-built models (such as the default `#1 AEON-7` model) are downloaded directly to dedicated custom directories to be mounted directly:
+   * **AEON-7 Model & DFlash**: `/opt/qwen36/`
+
+##### 🧹 How to Free Up Space & Delete Models
+
+* **Option A: Delete a specific model manually**
+  Simply remove the folder of the specific model you wish to delete:
+  ```bash
+  # Delete a standard Hugging Face cached model
+  rm -rf ~/.cache/huggingface/hub/models--rdtand--Mistral-Medium-3.5-128B-PrismaQuant-4.75-vllm
+
+  # Delete the custom AEON-7 model storage (requires sudo)
+  sudo rm -rf /opt/qwen36/
+  ```
+
+* **Option B: Use Hugging Face CLI (Interactive & Safe)**
+  Hugging Face provides an interactive CLI tool to inspect the cache, view sizes, and safely delete models:
+  ```bash
+  pip install huggingface_hub
+  huggingface-cli delete-cache
+  ```
+
+* **Option C: Clean up unused Docker resources**
+  If you have run several models and want to clean up unused Docker containers, cache, or builder items:
+  ```bash
+  docker system prune -f
+  ```
+
 ---
 
 ### `benchmark.py` — Performance Testing
