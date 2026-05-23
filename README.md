@@ -132,6 +132,9 @@ A turnkey Bash script that launches a fully configured, production-ready **vLLM 
 | #2 | `rdtand/Qwen3.6-35B-A3B-PrismaQuant-4.75bit-vllm` | ~59 | 4.75bit | 256K | 💬 🔧 🧠 | Speculative decoding (MTP ×3), FP8 KV-cache |
 | #3 | `nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-NVFP4` | ~58 | NVFP4 | 256K | 💬 🔧 🧠 | MoE 30B/3.5B active, FlashInfer FP4 |
 | #4 | `bg-digitalservices/Gemma-4-26B-A4B-it-NVFP4` | ~50 | NVFP4 | 262K | 💬 🖼️ 🎥 🔊 🔧 🧠 | Multimodal, TP×4, FP8 KV-cache |
+| — | `google/gemma-4-E2B-it` | ~60 | BF16 | 128K | 💬 🖼️ 🔊 🔧 🧠 | **Gemma 4 E2B** — PLE dense, multimodal, native audio support, 128K context |
+| — | `Neural-ICE/Gemma-4-E2B-it-NVFP4` | ~120 | NVFP4 | 128K | 💬 🖼️ 🔊 🔧 🧠 | **Gemma 4 E2B Instruct NVFP4** — Highly optimized W4A4 conversational model |
+| — | `bg-digitalservices/Gemma-4-E2B-NVFP4` | ~120 | NVFP4 | 128K | 💬 🖼️ 🔊 | **Gemma 4 E2B Base NVFP4** — W4A4 quantized pre-trained model |
 | #5 | `Qwen/Qwen3.6-35B-A3B-FP8` | ~30 | FP8 | 256K | 💬 🔧 🧠 | 156 tok/s aggregate (c=32), cu130-nightly |
 | #6 | `rdtand/MiniMax-M2.7-PrismaQuant-3.20bit-vllm` | ~25 | 3.20bit | 196K | 💬 🔧 🧠 | MiniMax M2.7, PrismaQuant 3.20bit, standard eugr image |
 | #7 | `Intel/Qwen3-Coder-Next-int4-AutoRound` | ~17 | INT4 | 1M | 💬 🔧 | MoE FP8, YaRN RoPE scaling, 384 concurrent sequences |
@@ -478,6 +481,7 @@ To stay updated, ask questions, and troubleshoot bugs, utilize the following com
 ### 📚 Official Documentation
 *   **[sparkrun Workload Orchestrator](https://sparkrun.dev/)**: Launch, manage, and stop LLM inference workloads on one or more NVIDIA DGX Spark systems — no Slurm, no Kubernetes, no fuss.
 *   **[vLLM Official Documentation](https://docs.vllm.ai/)**: For advanced configurations, speculative decoding, and pipeline parallelism.
+*   **[NVIDIA DGX Spark Playbooks — vLLM Serving](https://github.com/NVIDIA/dgx-spark-playbooks/tree/main/nvidia/vllm)**: Official deployment playbooks and optimized environment setups for serving vLLM on DGX Spark systems.
 *   **[NVIDIA Blackwell Architecture](https://www.nvidia.com/en-us/data-center/blackwell-architecture/)**: Official page highlighting Blackwell's internal tech (FP4 Decompression, Dequantization Engine).
 *   **[NVIDIA NGC Container Catalog](https://catalog.ngc.nvidia.com/)**: For finding official GPU-optimized, ARM64 vLLM and TensorRT-LLM container tags.
 
