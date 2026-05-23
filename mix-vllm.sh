@@ -9,7 +9,6 @@
 #  #2    rdtand/Qwen3.6-35B-A3B-PrismaQuant            ~59      4.75bit   vllm-latest
 #  #3    nvidia/Nemotron-3-Nano-30B-A3B-NVFP4          ~58      NVFP4     eugr-nightly
 #  #4    bg-digitalservices/Gemma-4-26B-A4B-it-NVFP4   ~50      NVFP4     eugr-nightly
-#  ──    google/gemma-4-E2B-it                        ~60      BF16      eugr-nightly  ← multimodal, native audio
 #  ──    Neural-ICE/Gemma-4-E2B-it-NVFP4              ~120     NVFP4     eugr-nightly  ← multimodal, native audio, W4A4
 #  ──    bg-digitalservices/Gemma-4-E2B-NVFP4         ~120     NVFP4     eugr-nightly  ← base model, W4A4
 #  #5    Qwen/Qwen3.6-35B-A3B-FP8                      ~30      FP8       cu130-nightly
@@ -126,7 +125,6 @@ if [[ -z "${MODEL}" ]]; then
     "rdtand/Qwen3.6-35B-A3B-PrismaQuant-4.75bit-vllm|1|#2  Qwen 3.6 35B PrismaQuant 4.75bit (~59 tok/s, 256K context)"
     "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-NVFP4|1|#3  Nemotron-3 Nano 30B NVFP4 (~58 tok/s, 256K context, MoE)"
     "bg-digitalservices/Gemma-4-26B-A4B-it-NVFP4|1|#4  Gemma-4 26B NVFP4 (~50 tok/s, 262K context, multimodal)"
-    "google/gemma-4-E2B-it|1|──  Gemma-4 E2B Instruct (~60 tok/s, 128K context, multimodal, native audio)"
     "Neural-ICE/Gemma-4-E2B-it-NVFP4|1|──  Gemma-4 E2B Instruct NVFP4 (~120 tok/s, 128K context, multimodal, audio, FP4 quantized)"
     "bg-digitalservices/Gemma-4-E2B-NVFP4|1|──  Gemma-4 E2B Base NVFP4 (~120 tok/s, 128K context, multimodal, audio, FP4 quantized)"
     "Qwen/Qwen3.6-35B-A3B-FP8|1|#5  Qwen 3.6 35B FP8 (~30 tok/s, 256K context)"
@@ -622,34 +620,6 @@ case "${MODEL}" in
 
     EXTRA_ARGS=(
       "--served-model-name"    "gemma4-26b"
-      "--dtype"                "auto"
-      "--load-format"          "fastsafetensors"
-      "--kv-cache-dtype"       "fp8"
-      "--tensor-parallel-size" "${TP_SIZE}"
-      "--enable-auto-tool-choice"
-      "--tool-call-parser"     "gemma4"
-      "--reasoning-parser"     "gemma4"
-    )
-    ;;
-
-  # ═══════════════════════════════════════════════════════════════════════════
-  # Gemma 4 E2B Instruct — Google DeepMind, PLE dense (2.3B active/5.1B total), 128k context
-  # ⚠️  Requires fix-gemma4-tool-parser — present in IMG_EUGR (recent builds)
-  # ═══════════════════════════════════════════════════════════════════════════
-  "google/gemma-4-E2B-it")
-    VLLM_IMAGE="${IMG_EUGR}"
-    GPU_MEM_UTIL=0.80
-    MAX_MODEL_LEN=102400
-    MAX_BATCHED_TOKENS=16384
-    MAX_NUM_SEQS=16
-
-    ENV_ARGS=(
-      -e VLLM_HTTP_TIMEOUT_KEEP_ALIVE=600
-      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
-    )
-
-    EXTRA_ARGS=(
-      "--served-model-name"    "gemma4-e2b"
       "--dtype"                "auto"
       "--load-format"          "fastsafetensors"
       "--kv-cache-dtype"       "fp8"

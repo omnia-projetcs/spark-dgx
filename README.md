@@ -5,7 +5,7 @@
 [![vLLM Support](https://img.shields.io/badge/vLLM-Supported-orange?logo=python)](https://github.com/vllm-project/vllm)
 [![Platform](https://img.shields.io/badge/Platform-Linux_aarch64-lightgrey)](https://www.nvidia.com/en-us/data-center/dgx-spark/)
 
-Welcome to the ultimate repository and guide for running, optimizing, and benchmarking state-of-the-art AI models on the **NVIDIA DGX Spark** deskside supercomputer, powered by the cutting-edge **NVIDIA GB10 Grace Blackwell Superchip**. 
+Welcome to my repository and guide for running, optimizing, and benchmarking state-of-the-art AI models on the **NVIDIA DGX Spark** deskside supercomputer, powered by the cutting-edge **NVIDIA GB10 Grace Blackwell Superchip**. 
 
 This guide is designed to help researchers, developers, and data scientists get the maximum performance out of their local workstation when running LLMs, VLMs, and diffusion models.
 
@@ -132,7 +132,6 @@ A turnkey Bash script that launches a fully configured, production-ready **vLLM 
 | #2 | `rdtand/Qwen3.6-35B-A3B-PrismaQuant-4.75bit-vllm` | ~59 | 4.75bit | 256K | 💬 🔧 🧠 | Speculative decoding (MTP ×3), FP8 KV-cache |
 | #3 | `nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-NVFP4` | ~58 | NVFP4 | 256K | 💬 🔧 🧠 | MoE 30B/3.5B active, FlashInfer FP4 |
 | #4 | `bg-digitalservices/Gemma-4-26B-A4B-it-NVFP4` | ~50 | NVFP4 | 262K | 💬 🖼️ 🎥 🔊 🔧 🧠 | Multimodal, TP×4, FP8 KV-cache |
-| — | `google/gemma-4-E2B-it` | ~60 | BF16 | 128K | 💬 🖼️ 🔊 🔧 🧠 | **Gemma 4 E2B** — PLE dense, multimodal, native audio support, 128K context |
 | — | `Neural-ICE/Gemma-4-E2B-it-NVFP4` | ~120 | NVFP4 | 128K | 💬 🖼️ 🔊 🔧 🧠 | **Gemma 4 E2B Instruct NVFP4** — Highly optimized W4A4 conversational model |
 | — | `bg-digitalservices/Gemma-4-E2B-NVFP4` | ~120 | NVFP4 | 128K | 💬 🖼️ 🔊 | **Gemma 4 E2B Base NVFP4** — W4A4 quantized pre-trained model |
 | #5 | `Qwen/Qwen3.6-35B-A3B-FP8` | ~30 | FP8 | 256K | 💬 🔧 🧠 | 156 tok/s aggregate (c=32), cu130-nightly |
