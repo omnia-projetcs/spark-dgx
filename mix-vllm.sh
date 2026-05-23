@@ -134,7 +134,6 @@ if [[ -z "${MODEL}" ]]; then
     "neuralmagic/Llama-3.3-70B-Instruct-FP8|1|──  Llama 3.3 70B Instruct FP8 (excellent balance, 65K context)"
     "casperhansen/llama-3.3-70b-instruct-awq|1|──  Llama 3.3 70B Instruct AWQ (highly compressed, 32K context)"
     "nvidia/Llama-3.3-70B-Instruct-NVFP4|1|──  Llama 3.3 70B Instruct NVFP4 (Blackwell optimized, 65K context)"
-    "rdtand/Mistral-Medium-3.5-128B-PrismaQuant-4.75-vllm|1|──  Mistral-Medium 3.5 128B PrismaQuant 4.75bit"
     "zdy1995love/Mistral-Medium-3.5-128B-NVFP4|1|──  Mistral-Medium 3.5 128B NVFP4 (highly optimized for single GB10, native Blackwell 4-bit)"
     "RedHatAI/Mistral-Small-24B-Instruct-2501-FP8-dynamic|1|──  Mistral-Small 24B Instruct v2501 FP8 (highly optimized for single GB10, 32K context)"
     "shieldstar/Qwen3.5-122B-A10B-int4-AutoRound-EC|1|──  Qwen 3.5 122B int4 AutoRound (z-lab DFlash, 196K context)"
@@ -1145,38 +1144,6 @@ case "${MODEL}" in
 
 
   # ═══════════════════════════════════════════════════════════════════════════
-  # Mistral-Medium-3.5-128B-PrismaQuant-4.75-vllm (rdtand), 128K context, 4.75bit
-  # ═══════════════════════════════════════════════════════════════════════════
-  "rdtand/Mistral-Medium-3.5-128B-PrismaQuant-4.75-vllm")
-    VLLM_IMAGE="${IMG_STOCK}"
-    GPU_MEM_UTIL=0.90
-    MAX_MODEL_LEN=32768
-    MAX_BATCHED_TOKENS=16384
-    MAX_NUM_SEQS=4
-
-    ENV_ARGS=(
-      -e VLLM_MARLIN_USE_ATOMIC_ADD=1
-      -e VLLM_HTTP_TIMEOUT_KEEP_ALIVE=600
-      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
-    )
-
-    EXTRA_ARGS=(
-      "--served-model-name"    "mistral-medium-prisma"
-      "--dtype"                "auto"
-      "--load-format"          "safetensors"
-      "--quantization"         "compressed-tensors"
-      "--kv-cache-dtype"       "fp8"
-      "--tensor-parallel-size" "1"
-      "--tokenizer"            "mistralai/Mistral-Medium-3.5-128B"
-      "--tokenizer-mode"       "mistral"
-      "--enable-auto-tool-choice"
-      "--tool-call-parser"     "mistral"
-      "--reasoning-parser"     "mistral"
-      "--language-model-only"
-    )
-    ;;
-
-  # ═══════════════════════════════════════════════════════════════════════════
   # zdy1995love/Mistral-Medium-3.5-128B-NVFP4 (NVFP4 quantized, 128K context)
   # ═══════════════════════════════════════════════════════════════════════════
   "zdy1995love/Mistral-Medium-3.5-128B-NVFP4")
@@ -1420,6 +1387,7 @@ download_if_needed() {
     # ── Local directory download ──
     if [[ ! -f "${target_dir}/config.json" && ! -f "${target_dir}/params.json" ]]; then
       echo "📥 Downloading ${repo} → ${target_dir} ..."
+      echo "⏳ Note: With a good internet connection, it takes on average 10 minutes to download/cache a model."
       mkdir -p "${target_dir}"
       docker run --rm \
         --entrypoint python3 \
@@ -1463,6 +1431,7 @@ for pattern in ['**/config.json', '**/hf_quant_config.json']:
     local cache_path="${HOME}/.cache/huggingface/hub/${cache_name}"
     if [[ ! -d "${cache_path}/snapshots" ]]; then
       echo "📥 Caching ${repo} ..."
+      echo "⏳ Note: With a good internet connection, it takes on average 10 minutes to download/cache a model."
       docker run --rm \
         --entrypoint python3 \
         -v "${HOME}/.cache/huggingface:/root/.cache/huggingface" \

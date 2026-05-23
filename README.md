@@ -120,7 +120,9 @@ This repository ships with two ready-to-use scripts to deploy and benchmark mode
 
 ### `mix-vllm.sh` — Multi-Model Launcher
 
-A turnkey Bash script that launches a fully configured, production-ready **vLLM Docker container** with optimized per-model settings. Simply uncomment the model you want to serve and run the script.
+A turnkey Bash script that launches a fully configured, production-ready **vLLM Docker container** with optimized per-model settings. Simply run the script to interactively select and launch any model.
+
+> ⏳ **Note**: With a good internet connection, it takes on average **10 minutes** to download and cache a model during its first run.
 
 #### Supported Models (pre-configured):
 
@@ -136,7 +138,6 @@ A turnkey Bash script that launches a fully configured, production-ready **vLLM 
 | #8 | `RedHatAI/Qwen3.5-122B-A10B-NVFP4` | ~17 | NVFP4 | 64K | 💬 🔧 🧠 | **Best quality** — RedHat calibration ≈ FP16, FlashInfer |
 | — | `shieldstar/Qwen3.5-122B-A10B-int4-AutoRound-EC` | — | INT4 | 196K | 💬 🔧 | AutoRound INT4, z-lab DFlash speculative decoding, custom vllm-node-tf5 image |
 | — | `RedHatAI/Mistral-Small-24B-Instruct-2501-FP8-dynamic` | ~65 | FP8 | 32K | 💬 🔧 | **Mistral Small v4** — Highly optimized, extremely low VRAM footprint (~24 GB) |
-| — | `rdtand/Mistral-Medium-3.5-128B-PrismaQuant-4.75-vllm` | ~15 | 4.75bit | 128K | 💬 🔧 | Mistral Medium 3.5 128B, PrismaQuant 4.75-bit |
 | — | `zdy1995love/Mistral-Medium-3.5-128B-NVFP4` | ~30+ | NVFP4 | 128K | 💬 🔧 | **Mistral Medium 3.5 (NVFP4)** — Highly optimized, native Blackwell 4-bit |
 | #9 | `nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4` | ~15 | NVFP4 | 128K | 💬 🔧 🧠 | MoE 120B/12B active, Marlin dequant |
 | — | `LiquidAI/LFM2.5-350M` | ~212 | BF16 | 32K | 💬 | Ultra-lightweight 350M, ideal for testing/development |
