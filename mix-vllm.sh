@@ -135,7 +135,8 @@ if [[ -z "${MODEL}" ]]; then
     "casperhansen/llama-3.3-70b-instruct-awq|1|──  Llama 3.3 70B Instruct AWQ (highly compressed, 32K context)"
     "nvidia/Llama-3.3-70B-Instruct-NVFP4|1|──  Llama 3.3 70B Instruct NVFP4 (Blackwell optimized, 65K context)"
     "rdtand/Mistral-Medium-3.5-128B-PrismaQuant-4.75-vllm|1|──  Mistral-Medium 3.5 128B PrismaQuant 4.75bit"
-    "neuralmagic/Mistral-Small-24B-Instruct-2501-FP8|1|──  Mistral-Small 24B Instruct v2501 FP8 (highly optimized for single GB10, 32K context)"
+    "zdy1995love/Mistral-Medium-3.5-128B-NVFP4|1|──  Mistral-Medium 3.5 128B NVFP4 (highly optimized for single GB10, native Blackwell 4-bit)"
+    "RedHatAI/Mistral-Small-24B-Instruct-2501-FP8-dynamic|1|──  Mistral-Small 24B Instruct v2501 FP8 (highly optimized for single GB10, 32K context)"
     "shieldstar/Qwen3.5-122B-A10B-int4-AutoRound-EC|1|──  Qwen 3.5 122B int4 AutoRound (z-lab DFlash, 196K context)"
     
     "RedHatAI/Qwen3.5-122B-A10B-NVFP4|2|#8  Qwen 3.5 122B NVFP4 (~17 tok/s, BEST QUALITY, 64K context)"
@@ -1176,9 +1177,41 @@ case "${MODEL}" in
     ;;
 
   # ═══════════════════════════════════════════════════════════════════════════
-  # neuralmagic/Mistral-Small-24B-Instruct-2501-FP8 — Optimized FP8, 32K context
+  # zdy1995love/Mistral-Medium-3.5-128B-NVFP4 (NVFP4 quantized, 128K context)
   # ═══════════════════════════════════════════════════════════════════════════
-  "neuralmagic/Mistral-Small-24B-Instruct-2501-FP8")
+  "zdy1995love/Mistral-Medium-3.5-128B-NVFP4")
+    VLLM_IMAGE="${IMG_STOCK}"
+    GPU_MEM_UTIL=0.90
+    MAX_MODEL_LEN=32768
+    MAX_BATCHED_TOKENS=16384
+    MAX_NUM_SEQS=4
+
+    ENV_ARGS=(
+      -e VLLM_MARLIN_USE_ATOMIC_ADD=1
+      -e VLLM_HTTP_TIMEOUT_KEEP_ALIVE=600
+      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
+    )
+
+    EXTRA_ARGS=(
+      "--served-model-name"    "mistral-medium-nvfp4"
+      "--dtype"                "auto"
+      "--load-format"          "safetensors"
+      "--quantization"         "compressed-tensors"
+      "--kv-cache-dtype"       "fp8"
+      "--tensor-parallel-size" "1"
+      "--tokenizer"            "mistralai/Mistral-Medium-3.5-128B"
+      "--tokenizer-mode"       "mistral"
+      "--enable-auto-tool-choice"
+      "--tool-call-parser"     "mistral"
+      "--reasoning-parser"     "mistral"
+      "--language-model-only"
+    )
+    ;;
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # RedHatAI/Mistral-Small-24B-Instruct-2501-FP8-dynamic — Optimized FP8, 32K context
+  # ═══════════════════════════════════════════════════════════════════════════
+  "RedHatAI/Mistral-Small-24B-Instruct-2501-FP8-dynamic")
     VLLM_IMAGE="${IMG_STOCK}"
     GPU_MEM_UTIL=0.80
     MAX_MODEL_LEN=32768
@@ -1372,6 +1405,12 @@ download_if_needed() {
   local repo="${entry%%|*}"
   local target_dir="${entry#*|}"
 
+  local dl_image="${VLLM_IMAGE}"
+  # Fall back to stable stock image for downloading if the image is a custom local-only one
+  if [[ "${dl_image}" == "vllm-node"* || "${dl_image}" == "vllm-glm51"* ]]; then
+    dl_image="${IMG_STOCK}"
+  fi
+
   # If no | separator, target_dir equals repo → cache mode
   if [[ "${target_dir}" == "${repo}" ]]; then
     target_dir=""
@@ -1386,7 +1425,7 @@ download_if_needed() {
         --entrypoint python3 \
         -v "${target_dir}:${target_dir}" \
         -e HF_TOKEN="${HUGGING_FACE_HUB_TOKEN}" \
-        "${VLLM_IMAGE}" \
+        "${dl_image}" \
         -c "from huggingface_hub import snapshot_download; snapshot_download('${repo}', local_dir='${target_dir}')"
       if [[ $? -ne 0 ]]; then
         echo "❌ Failed to download ${repo}"
@@ -1402,7 +1441,7 @@ download_if_needed() {
     docker run --rm \
       -v "${target_dir}:${target_dir}" \
       --entrypoint python3 \
-      "${VLLM_IMAGE}" \
+      "${dl_image}" \
       -c "
 import os, glob
 target_dir = '${target_dir}'
@@ -1428,7 +1467,7 @@ for pattern in ['**/config.json', '**/hf_quant_config.json']:
         --entrypoint python3 \
         -v "${HOME}/.cache/huggingface:/root/.cache/huggingface" \
         -e HF_TOKEN="${HUGGING_FACE_HUB_TOKEN}" \
-        "${VLLM_IMAGE}" \
+        "${dl_image}" \
         -c "from huggingface_hub import snapshot_download; snapshot_download('${repo}')"
       if [[ $? -ne 0 ]]; then
         echo "❌ Failed to download ${repo}"
@@ -1446,7 +1485,7 @@ for pattern in ['**/config.json', '**/hf_quant_config.json']:
       docker run --rm \
         -v "${HOME}/.cache/huggingface:/root/.cache/huggingface" \
         --entrypoint python3 \
-        "${VLLM_IMAGE}" \
+        "${dl_image}" \
         -c "
 import os, glob
 cache_dir = '/root/.cache/huggingface/hub/${cache_name}/snapshots'
@@ -1513,6 +1552,16 @@ for env_arg in "${ENV_ARGS[@]}"; do
 done
 if [[ "${has_v1_env}" == "false" ]]; then
   ENV_ARGS+=(-e VLLM_USE_V1=0)
+fi
+
+# Check if the requested custom local image exists before running
+if [[ "${VLLM_IMAGE}" == "vllm-node"* || "${VLLM_IMAGE}" == "vllm-glm51"* ]]; then
+  if [[ -z "$(docker images -q "${VLLM_IMAGE}")" ]]; then
+    echo -e "\033[1;31m❌ ERROR: Local docker image '${VLLM_IMAGE}' is not present!\033[0m"
+    echo -e "\033[1;33m💡 This model requires a custom local image that must be built first.\033[0m"
+    echo -e "\033[1;33m   Please ensure you have built or imported the '${VLLM_IMAGE}' image before launching this model.\033[0m"
+    exit 1
+  fi
 fi
 
 docker stop "${CONTAINER_NAME}" 2>/dev/null
