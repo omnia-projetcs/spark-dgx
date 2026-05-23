@@ -907,6 +907,7 @@ case "${MODEL}" in
       "--quantization"         "compressed-tensors"
       "--kv-cache-dtype"       "fp8"
       "--tensor-parallel-size" "1"
+      "--tokenizer-mode"       "mistral"
       "--enable-auto-tool-choice"
       "--tool-call-parser"     "mistral"
       "--reasoning-parser"     "mistral"
