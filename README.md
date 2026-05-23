@@ -138,11 +138,11 @@ A turnkey Bash script that launches a fully configured, production-ready **vLLM 
 | #8 | `RedHatAI/Qwen3.5-122B-A10B-NVFP4` | ~17 | NVFP4 | 64K | 💬 🔧 🧠 | **Best quality** — RedHat calibration ≈ FP16, FlashInfer |
 | — | `shieldstar/Qwen3.5-122B-A10B-int4-AutoRound-EC` | — | INT4 | 196K | 💬 🔧 | AutoRound INT4, z-lab DFlash speculative decoding, custom vllm-node-tf5 image |
 | — | `RedHatAI/Mistral-Small-24B-Instruct-2501-FP8-dynamic` | ~65 | FP8 | 32K | 💬 🔧 | **Mistral Small v4** — Highly optimized, extremely low VRAM footprint (~24 GB) |
-| — | `zdy1995love/Mistral-Medium-3.5-128B-NVFP4` | ~30+ | NVFP4 | 128K | 💬 🔧 | **Mistral Medium 3.5 (NVFP4)** — Highly optimized, native Blackwell 4-bit |
 | #9 | `nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4` | ~15 | NVFP4 | 128K | 💬 🔧 🧠 | MoE 120B/12B active, Marlin dequant |
 | — | `LiquidAI/LFM2.5-350M` | ~212 | BF16 | 32K | 💬 | Ultra-lightweight 350M, ideal for testing/development |
 | — | `Qwen/Qwen3.5-0.8B` | ~103 | BF16 | 102K | 💬 🔧 | Lightweight 800M dense model, extremely fast, 102k context |
 | — | `nvidia/MiniMax-M2.7-NVFP4` | ~24 | NVFP4 | 196K | 💬 🔧 🧠 | MiniMax M2.7, TP×4, instanttensor format, FP8 KV-cache |
+| — | `dervig/m51Lab-MiniMax-M2.7-REAP-139B-A10B-NVFP4-GB10` | fast | NVFP4 | 102K | 💬 🔧 🧠 | MiniMax M2.7 REAP 139B, TP×4, instanttensor format |
 | — | `cyankiwi/MiniMax-M2.5-AWQ-4bit` | cluster | AWQ | 128K | 💬 🔧 🧠 | MiniMax M2.5, TP×4, Ray distributed backend |
 | — | `cyankiwi/MiniMax-M2.7-AWQ-4bit` | cluster | AWQ | 128K | 💬 🔧 🧠 | MiniMax M2.7, TP×2, Ray distributed backend |
 | — | `nvidia/Kimi-K2.6-NVFP4` | cluster | NVFP4 | 32K | 💬 🔧 🧠 | Kimi K2.6 MoE, TP×8 Ray cluster, shared HF cache, drop-caches mod |
@@ -210,7 +210,7 @@ Downloaded models can take up significant disk space. The script stores download
   Simply remove the folder of the specific model you wish to delete:
   ```bash
   # Delete a standard Hugging Face cached model
-  rm -rf ~/.cache/huggingface/hub/models--rdtand--Mistral-Medium-3.5-128B-PrismaQuant-4.75-vllm
+  rm -rf ~/.cache/huggingface/hub/models--rdtand--Qwen3.6-35B-A3B-PrismaQuant-4.75bit-vllm
 
   # Delete the custom AEON-7 model storage (requires sudo)
   sudo rm -rf /opt/qwen36/

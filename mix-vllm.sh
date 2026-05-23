@@ -16,8 +16,6 @@
 #  #9    nvidia/Nemotron-3-Super-120B-A12B-NVFP4       ~15      NVFP4     eugr-nightly
 #  ──    LiquidAI/LFM2.5-350M                         ~212      BF16      vllm-latest   ← ultra-lightweight
 #  ──    Qwen/Qwen3.5-0.8B                            ~103      BF16      vllm-latest   ← ultra-lightweight
-#  ──    rdtand/Gemma4-31B-IT-PrismaQuant-5.5bit       ~22      5.5bit    eugr-nightly
-#  ──    cybermotaz/nemotron3-nano-nvfp4-w4a16         ~56      NVFP4     eugr-nightly
 #  ──    dervig/m51Lab-MiniMax-M2.7-REAP-139B-A10B-NVFP4 fast   NVFP4     eugr-nightly
 #
 #  * gpt-oss MXFP4 uses eugr-nightly with CUTLASS backend (no local build needed)
@@ -123,33 +121,22 @@ if [[ -z "${MODEL}" ]]; then
     "Qwen/Qwen3.6-35B-A3B-FP8|1|#5  Qwen 3.6 35B FP8 (~30 tok/s, 256K context)"
     "rdtand/MiniMax-M2.7-PrismaQuant-3.20bit-vllm|1|#6  MiniMax-M2.7 PrismaQuant 3.20bit (~25 tok/s, 196K context)"
     "Intel/Qwen3-Coder-Next-int4-AutoRound|1|#7  Qwen 3 Coder Next int4 AutoRound (~17 tok/s, 1M context)"
+    "RedHatAI/Qwen3.5-122B-A10B-NVFP4|2|#8  Qwen 3.5 122B NVFP4 (~17 tok/s, BEST QUALITY, 64K context)"
+    "shieldstar/Qwen3.5-122B-A10B-int4-AutoRound-EC|1|──  Qwen 3.5 122B int4 AutoRound (z-lab DFlash, 196K context)"
+
+    "RedHatAI/Mistral-Small-24B-Instruct-2501-FP8-dynamic|1|──  Mistral-Small 24B Instruct v2501 FP8 (highly optimized for single GB10, 32K context)"
+
     "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4|1|#9  Nemotron-3 Super 120B NVFP4 (~15 tok/s, 128K context)"
     "LiquidAI/LFM2.5-350M|1|──  LiquidAI LFM 2.5 350M (~212 tok/s, BF16 dense, ultra-lightweight)"
     "Qwen/Qwen3.5-0.8B|1|──  Qwen 3.5 0.8B (~103 tok/s, BF16 dense, ultra-lightweight)"
-    "rdtand/Gemma4-31B-IT-PrismaQuant-5.5bit-vllm|1|──  Gemma 4 31B IT PrismaQuant 5.5bit (~22 tok/s)"
-    "cybermotaz/nemotron3-nano-nvfp4-w4a16|1|──  Nemotron-3 Nano NVFP4 w4a16 (~56 tok/s)"
-    "nvidia/Nemotron-3-Nano-Omni-30B-A3B-Reasoning-NVFP4|1|──  Nemotron-3 Nano Omni 30B reasoning/multimodal (video/audio)"
-    "neuralmagic/DeepSeek-R1-Distill-Llama-8B-FP8|1|──  DeepSeek R1 Distill Llama 8B FP8 (~50 tok/s, reasoning)"
-    "neuralmagic/DeepSeek-R1-Distill-Qwen-14B-FP8|1|──  DeepSeek R1 Distill Qwen 14B FP8 (~40 tok/s, reasoning)"
-    "neuralmagic/Llama-3.3-70B-Instruct-FP8|1|──  Llama 3.3 70B Instruct FP8 (excellent balance, 65K context)"
-    "casperhansen/llama-3.3-70b-instruct-awq|1|──  Llama 3.3 70B Instruct AWQ (highly compressed, 32K context)"
-    "nvidia/Llama-3.3-70B-Instruct-NVFP4|1|──  Llama 3.3 70B Instruct NVFP4 (Blackwell optimized, 65K context)"
-    "zdy1995love/Mistral-Medium-3.5-128B-NVFP4|1|──  Mistral-Medium 3.5 128B NVFP4 (highly optimized for single GB10, native Blackwell 4-bit)"
-    "RedHatAI/Mistral-Small-24B-Instruct-2501-FP8-dynamic|1|──  Mistral-Small 24B Instruct v2501 FP8 (highly optimized for single GB10, 32K context)"
-    "shieldstar/Qwen3.5-122B-A10B-int4-AutoRound-EC|1|──  Qwen 3.5 122B int4 AutoRound (z-lab DFlash, 196K context)"
-    
-    "RedHatAI/Qwen3.5-122B-A10B-NVFP4|2|#8  Qwen 3.5 122B NVFP4 (~17 tok/s, BEST QUALITY, 64K context)"
-    "nm-testing/DeepSeek-R1-Distill-Qwen-32B-NVFP4|2|──  DeepSeek R1 Distill Qwen 32B NVFP4"
-    "deepseek-ai/DeepSeek-V4-Flash|2|──  DeepSeek V4 Flash FP8 (TP=2, 200K context)"
+
+    "nvidia/MiniMax-M2.7-NVFP4|4|──  MiniMax-M2.7 NVFP4 (~24 tok/s, TP=4)"
+    "cyankiwi/MiniMax-M2.5-AWQ-4bit|4|──  MiniMax-M2.5 AWQ 4bit (TP=4)"
     "cyankiwi/MiniMax-M2.7-AWQ-4bit|2|──  MiniMax-M2.7 AWQ 4bit (TP=2)"
 
-    "dervig/m51Lab-MiniMax-M2.7-REAP-139B-A10B-NVFP4-GB10|4|──  MiniMax-M2.7 REAP 139B NVFP4 (TP=4)"
-    "nvidia/MiniMax-M2.7-NVFP4|4|──  MiniMax-M2.7 NVFP4 (~24 tok/s, TP=4)"
-    "scottgl/MiniMax-M2.7-REAP-172B-A10B-NVFP4-GB10|4|──  MiniMax-M2.7 REAP 172B NVFP4 (TP=4)"
-    "cyankiwi/MiniMax-M2.5-AWQ-4bit|4|──  MiniMax-M2.5 AWQ 4bit (TP=4)"
-
-    "zai-org/GLM-5.1-FP8|8|──  Z.AI GLM-5.1-FP8 754B MoE (TP=8 Ray cluster, drop-caches mod)"
     "nvidia/Kimi-K2.6-NVFP4|8|──  Kimi-K2.6 NVFP4 MoE (TP=8 Ray cluster, drop-caches mod)"
+    "deepseek-ai/DeepSeek-V4-Flash|2|──  DeepSeek V4 Flash FP8 (TP=2, 200K context)"
+    "dervig/m51Lab-MiniMax-M2.7-REAP-139B-A10B-NVFP4-GB10|4|──  MiniMax-M2.7 REAP 139B NVFP4 (TP=4)"
   )
 
   # Check if stdout/stdin are TTYs (interactive mode)
@@ -245,9 +232,7 @@ if [[ "${ARENA_MODE}" == "true" ]]; then
   ARENA_MODELS=(
     "LiquidAI/LFM2.5-350M"
     "Qwen/Qwen3.5-0.8B"
-    "neuralmagic/DeepSeek-R1-Distill-Llama-8B-FP8"
     "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-NVFP4"
-    "nvidia/Nemotron-3-Nano-Omni-30B-A3B-Reasoning-NVFP4"
     "AEON-7/Qwen3.6-35B-A3B-heretic-NVFP4"
   )
   
@@ -334,11 +319,6 @@ IMG_NIGHTLY="vllm/vllm-openai:cu130-nightly"
 IMG_STOCK="vllm/vllm-openai:latest"
 #         └─ Standard stable image — BF16/FP8, no NVFP4 SM121 patches
 
-IMG_NEMOTRON_OMNI="vllm/vllm-openai:v0.20.0-aarch64-cu130-ubuntu2404"
-#         └─ Custom Nemotron-3-Nano-Omni-30B-A3B-Reasoning-NVFP4 optimized image
-
-IMG_GLM51="vllm-glm51-cu130"
-#         └─ Z.AI GLM-5.1-FP8 optimized image with CUDA 13.0 (8-node Ray cluster)
 
 IMG_MINIMAX_NVFP4="ghcr.io/spark-arena/dgx-vllm-eugr-nightly:2026050601"
 #         └─ Custom nightly for MiniMax-M2.7-NVFP4
@@ -738,248 +718,7 @@ case "${MODEL}" in
     )
     ;;
 
-  # ═══════════════════════════════════════════════════════════════════════════
-  # Llama 3.3 70B Instruct FP8 — 70B frontier model, FP8, excellent balance of quality/speed
-  # ═══════════════════════════════════════════════════════════════════════════
-  "neuralmagic/Llama-3.3-70B-Instruct-FP8")
-    VLLM_IMAGE="${IMG_NIGHTLY}"
-    GPU_MEM_UTIL=0.90
-    MAX_MODEL_LEN=65536
-    MAX_BATCHED_TOKENS=16384
-    MAX_NUM_SEQS=4
 
-    ENV_ARGS=(
-      -e VLLM_MARLIN_USE_ATOMIC_ADD=1
-      -e VLLM_HTTP_TIMEOUT_KEEP_ALIVE=600
-      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
-    )
-
-    EXTRA_ARGS=(
-      "--served-model-name"   "llama-3.3-70b-fp8"
-      "--dtype"               "auto"
-      "--load-format"         "fastsafetensors"
-      "--quantization"        "fp8"
-      "--kv-cache-dtype"      "fp8"
-      "--enable-auto-tool-choice"
-      "--tool-call-parser"    "llama3"
-    )
-    ;;
-
-  # ═══════════════════════════════════════════════════════════════════════════
-  # Llama 3.3 70B Instruct AWQ — 70B frontier model, AWQ, highly compressed for local serving
-  # ═══════════════════════════════════════════════════════════════════════════
-  "casperhansen/llama-3.3-70b-instruct-awq")
-    VLLM_IMAGE="${IMG_NIGHTLY}"
-    GPU_MEM_UTIL=0.85
-    MAX_MODEL_LEN=32768
-    MAX_BATCHED_TOKENS=8192
-    MAX_NUM_SEQS=4
-
-    ENV_ARGS=(
-      -e VLLM_HTTP_TIMEOUT_KEEP_ALIVE=600
-      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
-    )
-
-    EXTRA_ARGS=(
-      "--served-model-name"   "llama-3.3-70b-awq"
-      "--dtype"               "float16"
-      "--load-format"         "fastsafetensors"
-      "--quantization"        "awq"
-      "--kv-cache-dtype"      "fp8"
-      "--enable-auto-tool-choice"
-      "--tool-call-parser"    "llama3"
-    )
-    ;;
-
-  # ═══════════════════════════════════════════════════════════════════════════
-  # Llama 3.3 70B Instruct NVFP4 — NVFP4 version of the 70B model, Blackwell optimized
-  # ═══════════════════════════════════════════════════════════════════════════
-  "nvidia/Llama-3.3-70B-Instruct-NVFP4")
-    VLLM_IMAGE="${IMG_EUGR}"
-    GPU_MEM_UTIL=0.90
-    MAX_MODEL_LEN=65536
-    MAX_BATCHED_TOKENS=16384
-    MAX_NUM_SEQS=4
-
-    ENV_ARGS=(
-      -e VLLM_HTTP_TIMEOUT_KEEP_ALIVE=600
-      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
-    )
-
-    EXTRA_ARGS=(
-      "--served-model-name"   "llama-3.3-70b-nvfp4"
-      "--dtype"               "auto"
-      "--load-format"         "fastsafetensors"
-      "--quantization"        "compressed-tensors"
-      "--kv-cache-dtype"      "fp8"
-      "--enable-auto-tool-choice"
-      "--tool-call-parser"    "llama3"
-    )
-    ;;
-
-  # ═══════════════════════════════════════════════════════════════════════════
-  # DeepSeek R1 Distill Qwen 32B NVFP4 — NVFP4 version of the 32B model, Blackwell optimized
-  # ═══════════════════════════════════════════════════════════════════════════
-  "nm-testing/DeepSeek-R1-Distill-Qwen-32B-NVFP4")
-    VLLM_IMAGE="${IMG_EUGR}"
-    GPU_MEM_UTIL=0.85
-    MAX_MODEL_LEN=65536
-    MAX_BATCHED_TOKENS=16384
-    MAX_NUM_SEQS=8
-
-    ENV_ARGS=(
-      -e VLLM_HTTP_TIMEOUT_KEEP_ALIVE=600
-      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
-    )
-
-    EXTRA_ARGS=(
-      "--served-model-name"   "deepseek-r1-qwen-32b-nvfp4"
-      "--dtype"               "auto"
-      "--load-format"         "fastsafetensors"
-      "--quantization"        "compressed-tensors"
-      "--kv-cache-dtype"      "fp8"
-      "--enable-auto-tool-choice"
-      "--tool-call-parser"    "qwen3_xml"
-      "--reasoning-parser"    "qwen3"
-    )
-    ;;
-
-  # ═══════════════════════════════════════════════════════════════════════════
-  # DeepSeek R1 Distill Qwen 14B FP8 — 14B reasoning model, FP8, extremely fast on RTX 4080 (12GB)
-  # ═══════════════════════════════════════════════════════════════════════════
-  "neuralmagic/DeepSeek-R1-Distill-Qwen-14B-FP8")
-    VLLM_IMAGE="${IMG_NIGHTLY}"
-    GPU_MEM_UTIL=0.85
-    MAX_MODEL_LEN=65536
-    MAX_BATCHED_TOKENS=16384
-    MAX_NUM_SEQS=8
-
-    ENV_ARGS=(
-      -e VLLM_HTTP_TIMEOUT_KEEP_ALIVE=600
-      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
-    )
-
-    EXTRA_ARGS=(
-      "--served-model-name"   "deepseek-r1-qwen-14b-fp8"
-      "--dtype"               "auto"
-      "--load-format"         "fastsafetensors"
-      "--quantization"        "fp8"
-      "--kv-cache-dtype"      "fp8"
-      "--enable-auto-tool-choice"
-      "--tool-call-parser"    "qwen3_xml"
-      "--reasoning-parser"    "qwen3"
-    )
-    ;;
-
-
-  # ═══════════════════════════════════════════════════════════════════════════
-  # DeepSeek R1 Distill Llama 8B FP8 — 8B reasoning model, FP8, ultra-fast on RTX 4080 (12GB)
-  # ═══════════════════════════════════════════════════════════════════════════
-  "neuralmagic/DeepSeek-R1-Distill-Llama-8B-FP8")
-    VLLM_IMAGE="${IMG_NIGHTLY}"
-    GPU_MEM_UTIL=0.80
-    MAX_MODEL_LEN=65536
-    MAX_BATCHED_TOKENS=16384
-    MAX_NUM_SEQS=16
-
-    ENV_ARGS=(
-      -e VLLM_HTTP_TIMEOUT_KEEP_ALIVE=600
-      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
-    )
-
-    EXTRA_ARGS=(
-      "--served-model-name"   "deepseek-r1-llama-8b-fp8"
-      "--dtype"               "auto"
-      "--load-format"         "fastsafetensors"
-      "--quantization"        "fp8"
-      "--kv-cache-dtype"      "fp8"
-      "--enable-auto-tool-choice"
-      "--tool-call-parser"    "llama3"
-    )
-    ;;
-
-
-  # ═══════════════════════════════════════════════════════════════════════════
-  # Nemotron-3-Nano-Omni-30B-A3B-Reasoning-NVFP4 on a single GB10
-  # ═══════════════════════════════════════════════════════════════════════════
-  "nvidia/Nemotron-3-Nano-Omni-30B-A3B-Reasoning-NVFP4")
-    VLLM_IMAGE="${IMG_NEMOTRON_OMNI}"
-    GPU_MEM_UTIL=0.80
-    MAX_MODEL_LEN=102400
-    MAX_BATCHED_TOKENS=32768
-    MAX_NUM_SEQS=8
-
-    ENV_ARGS=(
-      -e VLLM_NVFP4_GEMM_BACKEND=marlin
-      -e VLLM_MARLIN_USE_ATOMIC_ADD=1
-      -e VLLM_USE_FLASHINFER_MOE_FP4=0
-      -e VLLM_ALLOW_LONG_MAX_MODEL_LEN=1
-      -e CUDA_MANAGED_FORCE_DEVICE_ALLOC=1
-      -e PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
-      -e OMP_NUM_THREADS=4
-      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
-    )
-
-    EXTRA_ARGS=(
-      "--served-model-name"         "nvidia/Nemotron-3-Nano-Omni-30B-A3B-Reasoning-NVFP4"
-      "--served-model-name"         "nemotron-3-nano-omni"
-      "--quantization"              "fp4"
-      "--moe-backend"               "marlin"
-      "--kv-cache-dtype"            "fp8"
-      "--mamba-ssm-cache-dtype"     "float32"
-      "--reasoning-parser"          "nemotron_v3"
-      "--enable-auto-tool-choice"
-      "--tool-call-parser"          "qwen3_coder"
-      "--video-pruning-rate"        "0.5"
-      "--limit-mm-per-prompt"       '{"video":1,"image":1,"audio":1}'
-      "--media-io-kwargs"           '{"video":{"fps":2,"num_frames":256}}'
-      "--allowed-local-media-path"  "/"
-      "--trust-remote-code"
-    )
-    ;;
-
-  # ═══════════════════════════════════════════════════════════════════════════
-  # Z.AI GLM-5.1-FP8 754B MoE on 8 DGX Spark nodes
-  # ═══════════════════════════════════════════════════════════════════════════
-  "zai-org/GLM-5.1-FP8")
-    VLLM_IMAGE="${IMG_GLM51}"
-    GPU_MEM_UTIL=0.84
-    MAX_MODEL_LEN=24576
-    MAX_BATCHED_TOKENS=8192
-    MAX_NUM_SEQS=8
-    MODEL_DOWNLOADS=("none")
-
-    VOLUME_ARGS=(
-      -v /mnt/glm51-hf-cache:/root/.cache/huggingface
-      -v /mnt/glm51-hf-cache:/mnt/glm51-hf-cache
-    )
-
-    ENV_ARGS=(
-      -e HF_HUB_OFFLINE=1
-      -e TRANSFORMERS_OFFLINE=1
-      -e HF_HOME=/mnt/glm51-hf-cache
-      -e VLLM_USE_DEEP_GEMM=0
-      -e VLLM_MOE_USE_DEEP_GEMM=0
-      -e VLLM_USE_DEEP_GEMM_E8M0=0
-      -e VLLM_MLA_DISABLE=1
-      -e VLLM_DISABLED_KERNELS=CutlassFP8ScaledMMLinearKernel
-      -e VLLM_USE_FLASHINFER_SAMPLER=0
-      -e OMP_NUM_THREADS=4
-      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
-    )
-
-    EXTRA_ARGS=(
-      "--tensor-parallel-size"        "8"
-      "--distributed-executor-backend" "ray"
-      "--enforce-eager"
-      "--kv-cache-dtype"              "fp8"
-      "--tool-call-parser"            "glm47"
-      "--reasoning-parser"            "glm45"
-      "--enable-auto-tool-choice"
-      "--chat-template-content-format" "string"
-      "--served-model-name"           "glm-5.1-fp8"
-    )
-    ;;
 
   # ═══════════════════════════════════════════════════════════════════════════
   # nvidia/MiniMax-M2.7-NVFP4
@@ -1143,37 +882,7 @@ case "${MODEL}" in
 
 
 
-  # ═══════════════════════════════════════════════════════════════════════════
-  # zdy1995love/Mistral-Medium-3.5-128B-NVFP4 (NVFP4 quantized, 128K context)
-  # ═══════════════════════════════════════════════════════════════════════════
-  "zdy1995love/Mistral-Medium-3.5-128B-NVFP4")
-    VLLM_IMAGE="${IMG_STOCK}"
-    GPU_MEM_UTIL=0.90
-    MAX_MODEL_LEN=32768
-    MAX_BATCHED_TOKENS=16384
-    MAX_NUM_SEQS=4
 
-    ENV_ARGS=(
-      -e VLLM_MARLIN_USE_ATOMIC_ADD=1
-      -e VLLM_HTTP_TIMEOUT_KEEP_ALIVE=600
-      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
-    )
-
-    EXTRA_ARGS=(
-      "--served-model-name"    "mistral-medium-nvfp4"
-      "--dtype"                "auto"
-      "--load-format"          "safetensors"
-      "--quantization"         "compressed-tensors"
-      "--kv-cache-dtype"       "fp8"
-      "--tensor-parallel-size" "1"
-      "--tokenizer"            "mistralai/Mistral-Medium-3.5-128B"
-      "--tokenizer-mode"       "mistral"
-      "--enable-auto-tool-choice"
-      "--tool-call-parser"     "mistral"
-      "--reasoning-parser"     "mistral"
-      "--language-model-only"
-    )
-    ;;
 
   # ═══════════════════════════════════════════════════════════════════════════
   # RedHatAI/Mistral-Small-24B-Instruct-2501-FP8-dynamic — Optimized FP8, 32K context
@@ -1195,7 +904,7 @@ case "${MODEL}" in
       "--served-model-name"    "mistral-small-24b"
       "--dtype"                "auto"
       "--load-format"          "fastsafetensors"
-      "--quantization"         "fp8"
+      "--quantization"         "compressed-tensors"
       "--kv-cache-dtype"       "fp8"
       "--tensor-parallel-size" "1"
       "--enable-auto-tool-choice"
@@ -1233,90 +942,6 @@ case "${MODEL}" in
     ;;
 
   # ═══════════════════════════════════════════════════════════════════════════
-  # Gemma4-31B-IT-PrismaQuant-5.5bit-vllm (rdtand), 262K context, 5.5bit
-  # ═══════════════════════════════════════════════════════════════════════════
-  "rdtand/Gemma4-31B-IT-PrismaQuant-5.5bit-vllm")
-    VLLM_IMAGE="${IMG_EUGR}"
-    GPU_MEM_UTIL=0.80
-    MAX_MODEL_LEN=102400
-    MAX_BATCHED_TOKENS=8192
-    MAX_NUM_SEQS=8
-
-    ENV_ARGS=(
-      -e VLLM_HTTP_TIMEOUT_KEEP_ALIVE=600
-      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
-    )
-
-    EXTRA_ARGS=(
-      "--served-model-name"    "gemma4-31b-prisma"
-      "--dtype"                "auto"
-      "--load-format"          "fastsafetensors"
-      "--quantization"         "compressed-tensors"
-      "--kv-cache-dtype"       "fp8"
-      "--tensor-parallel-size" "1"
-      "--enable-auto-tool-choice"
-      "--tool-call-parser"     "gemma4"
-      "--reasoning-parser"     "gemma4"
-    )
-    ;;
-
-  # ═══════════════════════════════════════════════════════════════════════════
-  # scottgl/MiniMax-M2.7-REAP-172B-A10B-NVFP4-GB10, TP=4, NVFP4 Quant, GB10 REAP
-  # ═══════════════════════════════════════════════════════════════════════════
-  "scottgl/MiniMax-M2.7-REAP-172B-A10B-NVFP4-GB10")
-    VLLM_IMAGE="${IMG_MINIMAX_NVFP4}"
-    GPU_MEM_UTIL=0.90
-    MAX_MODEL_LEN=102400
-    MAX_BATCHED_TOKENS=32768
-    MAX_NUM_SEQS=8
-
-    ENV_ARGS=(
-      -e VLLM_MARLIN_USE_ATOMIC_ADD=1
-      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
-    )
-
-    EXTRA_ARGS=(
-      "--served-model-name"           "minimax-m2.7-reap-172b"
-      "-tp"                           "4"
-      "-pp"                           "1"
-      "--load-format"                 "instanttensor"
-      "--enable-auto-tool-choice"
-      "--tool-call-parser"            "minimax_m2"
-      "--reasoning-parser"            "minimax_m2"
-      "--kv-cache-dtype"              "fp8"
-    )
-    ;;
-
-  # ═══════════════════════════════════════════════════════════════════════════
-  # cybermotaz/nemotron3-nano-nvfp4-w4a16, TP=1, NVFP4 Quant, w4a16
-  # ═══════════════════════════════════════════════════════════════════════════
-  "cybermotaz/nemotron3-nano-nvfp4-w4a16")
-    VLLM_IMAGE="${IMG_EUGR}"
-    GPU_MEM_UTIL=0.70
-    MAX_MODEL_LEN=102400
-    MAX_BATCHED_TOKENS=32768
-    MAX_NUM_SEQS=8
-
-    ENV_ARGS=(
-      -e VLLM_USE_FLASHINFER_MOE_FP4=1
-      -e VLLM_FLASHINFER_MOE_BACKEND=throughput
-      -e VLLM_HTTP_TIMEOUT_KEEP_ALIVE=600
-      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
-    )
-
-    EXTRA_ARGS=(
-      "--served-model-name"   "nemotron-nano-nvfp4-w4a16"
-      "--dtype"               "auto"
-      "--load-format"         "fastsafetensors"
-      "--kv-cache-dtype"      "fp8"
-      "--tensor-parallel-size" "1"
-      "--enable-auto-tool-choice"
-      "--tool-call-parser"    "qwen3_xml"
-      "--reasoning-parser"    "nemotron_v3"
-    )
-    ;;
-
-  # ═══════════════════════════════════════════════════════════════════════════
   # dervig/m51Lab-MiniMax-M2.7-REAP-139B-A10B-NVFP4-GB10, TP=4, NVFP4 Quant, GB10
   # ═══════════════════════════════════════════════════════════════════════════
   "dervig/m51Lab-MiniMax-M2.7-REAP-139B-A10B-NVFP4-GB10")
@@ -1342,6 +967,7 @@ case "${MODEL}" in
       "--kv-cache-dtype"              "fp8"
     )
     ;;
+
 
   *)
     echo -e "\033[1;33m⚠️  WARNING — Custom model '${MODEL}' is not in the pre-configured catalog!\033[0m"
@@ -1498,7 +1124,7 @@ echo "   ctx    : ${MAX_MODEL_LEN}   mem: ${GPU_MEM_UTIL}   seqs: ${MAX_NUM_SEQS
 
 # ── MOD: DROP CACHES ──────────────────────────────────────────────────────────
 # If selected model includes drop-caches mod, drop system caches to reclaim RAM
-if [[ "${MODEL}" == "zai-org/GLM-5.1-FP8" || "${MODEL}" == "nvidia/Kimi-K2.6-NVFP4" ]]; then
+if [[ "${MODEL}" == "nvidia/Kimi-K2.6-NVFP4" ]]; then
   echo "🧹 Applying mod: mods/drop-caches..."
   if [[ -w /proc/sys/vm/drop_caches ]]; then
     echo "   Writing to /proc/sys/vm/drop_caches..."
