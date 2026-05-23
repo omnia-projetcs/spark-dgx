@@ -137,7 +137,7 @@ A turnkey Bash script that launches a fully configured, production-ready **vLLM 
 | #7 | `Intel/Qwen3-Coder-Next-int4-AutoRound` | ~17 | INT4 | 1M | 💬 🔧 | MoE FP8, YaRN RoPE scaling, 384 concurrent sequences |
 | #8 | `RedHatAI/Qwen3.5-122B-A10B-NVFP4` | ~17 | NVFP4 | 64K | 💬 🔧 🧠 | **Best quality** — RedHat calibration ≈ FP16, FlashInfer |
 | — | `shieldstar/Qwen3.5-122B-A10B-int4-AutoRound-EC` | — | INT4 | 196K | 💬 🔧 | AutoRound INT4, z-lab DFlash speculative decoding, custom vllm-node-tf5 image |
-| — | `RedHatAI/Mistral-Small-24B-Instruct-2501-FP8-dynamic` | ~65 | FP8 | 32K | 💬 🔧 | **Mistral Small v4** — Highly optimized, extremely low VRAM footprint (~24 GB) |
+| — | `RedHatAI/Mistral-Small-24B-Instruct-2501-FP8-dynamic` | ~8.6 (58.6 agg) | FP8 | 32K | 💬 🔧 | **Mistral Small v4** — Highly optimized, extremely low VRAM footprint (~24 GB) |
 | #9 | `nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4` | ~15 | NVFP4 | 128K | 💬 🔧 🧠 | MoE 120B/12B active, Marlin dequant |
 | — | `LiquidAI/LFM2.5-350M` | ~212 | BF16 | 32K | 💬 | Ultra-lightweight 350M, ideal for testing/development |
 | — | `Qwen/Qwen3.5-0.8B` | ~103 | BF16 | 102K | 💬 🔧 | Lightweight 800M dense model, extremely fast, 102k context |
@@ -175,9 +175,14 @@ A turnkey Bash script that launches a fully configured, production-ready **vLLM 
 
 #### Usage:
 ```bash
-# 1. Edit mix-vllm.sh to uncomment the desired MODEL line
-# 2. Launch the container
+# 1. Launch the interactive model selection menu
 ./mix-vllm.sh
+
+# Or launch a specific model directly
+./mix-vllm.sh --model nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-NVFP4
+
+# Launch a model and override the default Tensor Parallel size (number of GPUs)
+./mix-vllm.sh --model RedHatAI/Mistral-Small-24B-Instruct-2501-FP8-dynamic --tp 2
 
 # Check server health
 curl http://localhost:8000/health
@@ -185,6 +190,12 @@ curl http://localhost:8000/health
 # View live logs
 docker logs -f mix-vllm
 ```
+
+The script supports the following command-line options:
+*   `--model <model_id>`: Launches a specific model directly, bypassing the interactive selection menu.
+*   `--tp <tp_size>`: Overrides the default Tensor Parallel size (number of GPUs) for the selected model. If omitted, the script automatically defaults to the recommended number of GPUs defined in the model catalog.
+*   `--port <port>`: Overrides the port on which the vLLM server is served (default is `8000`).
+*   `--no-wait`: Runs the container in the background without waiting for the server to become healthy.
 
 Each model configuration includes optimized values for `--gpu-memory-utilization`, `--max-model-len`, `--max-num-batched-tokens`, attention backends, quantization settings, and tool-call parsers.
 
@@ -430,6 +441,23 @@ Click on any model below to expand its detailed concurrency comparison table:
       2 │     39.7ms │     44.3ms │    4.248s │     477.8 │    113.68 │    208.75
       4 │    110.9ms │    178.0ms │    4.561s │     486.1 │    109.22 │    405.49
       8 │   2247.8ms │   4804.8ms │    6.474s │     462.0 │    109.24 │    392.19
+```
+
+</details>
+
+<details>
+<summary><b>10. RedHatAI/Mistral-Small-24B-Instruct-2501-FP8-dynamic</b></summary>
+
+```
+══════════════════════════════════════════════════════════════════════
+  📊 COMPARISON TABLE (mistral-small-24b)
+══════════════════════════════════════════════════════════════════════
+   Conc │   TTFT avg │   TTFT p95 │   Lat avg │  Tok/resp │  t/s (req) │  t/s (agg)
+  ─────────────────────────────────────────────────────────────────────────────────
+      1 │    168.1ms │    260.3ms │   52.183s │     446.2 │      8.59 │      8.55
+      2 │    329.2ms │    380.7ms │   52.382s │     450.6 │      8.66 │     15.69
+      4 │    291.9ms │    377.9ms │   50.724s │     437.8 │      8.68 │     29.52
+      8 │    249.8ms │    267.2ms │   50.773s │     436.2 │      8.64 │     58.57
 ```
 
 </details>

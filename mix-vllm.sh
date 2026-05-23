@@ -16,6 +16,7 @@
 #  #9    nvidia/Nemotron-3-Super-120B-A12B-NVFP4       ~15      NVFP4     eugr-nightly
 #  ──    LiquidAI/LFM2.5-350M                         ~212      BF16      vllm-latest   ← ultra-lightweight
 #  ──    Qwen/Qwen3.5-0.8B                            ~103      BF16      vllm-latest   ← ultra-lightweight
+#  ──    RedHatAI/Mistral-Small-24B-FP8               ~8.6      FP8       cu130-nightly ← low VRAM (~24 GB)
 #  ──    dervig/m51Lab-MiniMax-M2.7-REAP-139B-A10B-NVFP4 fast   NVFP4     eugr-nightly
 #
 #  * gpt-oss MXFP4 uses eugr-nightly with CUTLASS backend (no local build needed)
@@ -77,8 +78,8 @@ fi
 CONTAINER_NAME="mix-vllm"
 PORT="${PORT:-8000}"
 WAIT_FOR_HEALTH=true
-
 ARENA_MODE=false
+TP_OVERRIDE=""
 
 # ── ARGUMENT PARSING ──────────────────────────────────────────────────────────
 while [[ $# -gt 0 ]]; do
@@ -99,9 +100,13 @@ while [[ $# -gt 0 ]]; do
       ARENA_MODE=true
       shift
       ;;
+    --tp)
+      TP_OVERRIDE="$2"
+      shift 2
+      ;;
     *)
       echo "Unknown option: $1"
-      echo "Usage: $0 [--no-wait] [--port <port>] [--model <model>] [--arena]"
+      echo "Usage: $0 [--no-wait] [--port <port>] [--model <model>] [--arena] [--tp <tp_size>]"
       exit 1
       ;;
   esac
@@ -221,6 +226,31 @@ if [[ -z "${MODEL}" ]]; then
     echo "ℹ Non-interactive shell detected. Falling back to default model: ${MODEL}"
   fi
 fi
+
+# ── RESOLVE TP SIZE ──
+# If selected_gpus is not resolved yet, try to find it in the MODELS list array
+if [[ -z "${selected_gpus}" ]]; then
+  for item in "${MODELS[@]}"; do
+    IFS='|' read -r m_id m_gpus m_desc <<< "${item}"
+    if [[ "${m_id}" == "${MODEL}" ]]; then
+      selected_gpus="${m_gpus}"
+      break
+    fi
+  done
+fi
+
+# Fallback selected_gpus to 1 if still not resolved
+if [[ -z "${selected_gpus}" ]]; then
+  selected_gpus=1
+fi
+
+# Resolve final TP size using override if specified
+TP_SIZE="${TP_OVERRIDE:-${selected_gpus}}"
+if [[ -z "${TP_SIZE}" || "${TP_SIZE}" -lt 1 ]]; then
+  TP_SIZE=1
+fi
+
+echo -e "${BRIGHT_GREEN}✔ Tensor Parallel size: ${BOLD}${TP_SIZE}${NC}\n"
 
 # ── ARENA MODE SUITE RUNNER ───────────────────────────────────────────────────
 if [[ "${ARENA_MODE}" == "true" ]]; then
@@ -385,7 +415,7 @@ case "${MODEL}" in
       "--served-model-name"   "qwen3.6-35b-aeon7"
       "--dtype"               "auto"
       "--quantization"        "compressed-tensors"
-      "--tensor-parallel-size" "1"
+      "--tensor-parallel-size" "${TP_SIZE}"
       "--enable-auto-tool-choice"
       "--tool-call-parser"    "qwen3_xml"
       "--reasoning-parser"    "qwen3"
@@ -422,7 +452,7 @@ case "${MODEL}" in
       "--dtype"               "auto"
       "--load-format"         "fastsafetensors"
       "--kv-cache-dtype"      "fp8"
-      "--tensor-parallel-size" "1"
+      "--tensor-parallel-size" "${TP_SIZE}"
       "--enable-auto-tool-choice"
       "--tool-call-parser"    "qwen3_xml"
       "--reasoning-parser"    "nemotron_v3"
@@ -485,7 +515,7 @@ case "${MODEL}" in
       "--dtype"               "auto"
       "--load-format"         "fastsafetensors"
       "--kv-cache-dtype"      "fp8"
-      "--tensor-parallel-size" "1"
+      "--tensor-parallel-size" "${TP_SIZE}"
       "--enable-auto-tool-choice"
       "--tool-call-parser"    "qwen3_xml"
       "--reasoning-parser"    "nemotron_v3"
@@ -589,7 +619,7 @@ case "${MODEL}" in
       "--dtype"                "auto"
       "--load-format"          "fastsafetensors"
       "--kv-cache-dtype"       "fp8"
-      "--tensor-parallel-size" "1"
+      "--tensor-parallel-size" "${TP_SIZE}"
       "--enable-auto-tool-choice"
       "--tool-call-parser"     "gemma4"
       "--reasoning-parser"     "gemma4"
@@ -737,7 +767,7 @@ case "${MODEL}" in
 
     EXTRA_ARGS=(
       "--served-model-name"           "minimax-m2.7-nvfp4"
-      "-tp"                           "4"
+      "-tp"                           "${TP_SIZE}"
       "-pp"                           "1"
       "--load-format"                 "instanttensor"
       "--enable-auto-tool-choice"
@@ -763,7 +793,7 @@ case "${MODEL}" in
 
     EXTRA_ARGS=(
       "--served-model-name"            "minimax-m2.5-awq"
-      "-tp"                            "4"
+      "-tp"                            "${TP_SIZE}"
       "--distributed-executor-backend" "ray"
       "--load-format"                  "fastsafetensors"
       "--enable-auto-tool-choice"
@@ -788,7 +818,7 @@ case "${MODEL}" in
 
     EXTRA_ARGS=(
       "--served-model-name"            "minimax-m2.7-awq"
-      "-tp"                            "2"
+      "-tp"                            "${TP_SIZE}"
       "--distributed-executor-backend" "ray"
       "--load-format"                  "fastsafetensors"
       "--enable-auto-tool-choice"
@@ -824,7 +854,7 @@ case "${MODEL}" in
     )
 
     EXTRA_ARGS=(
-      "--tensor-parallel-size"         "8"
+      "--tensor-parallel-size"         "${TP_SIZE}"
       "--distributed-executor-backend" "ray"
       "--enforce-eager"
       "--kv-cache-dtype"              "fp8"
@@ -863,8 +893,8 @@ case "${MODEL}" in
 
     EXTRA_ARGS=(
       "--served-model-name"            "deepseek-v4-flash"
-      "-tp"                            "2"
-      "-pp"                            "1"
+      "-tp"                            "${TP_SIZE}"
+      "-pp"                           "1"
       "--kv-cache-dtype"               "fp8"
       "--block-size"                   "256"
       "--distributed-executor-backend" "mp"
@@ -906,7 +936,7 @@ case "${MODEL}" in
       "--load-format"          "fastsafetensors"
       "--quantization"         "compressed-tensors"
       "--kv-cache-dtype"       "fp8"
-      "--tensor-parallel-size" "1"
+      "--tensor-parallel-size" "${TP_SIZE}"
     )
     ;;
 
@@ -931,7 +961,7 @@ case "${MODEL}" in
       "--load-format"          "safetensors"
       "--quantization"         "compressed-tensors"
       "--kv-cache-dtype"       "fp8"
-      "--tensor-parallel-size" "1"
+      "--tensor-parallel-size" "${TP_SIZE}"
       "--enable-auto-tool-choice"
       "--tool-call-parser"     "minimax_m2"
       "--reasoning-parser"     "minimax_m2"
@@ -955,7 +985,7 @@ case "${MODEL}" in
 
     EXTRA_ARGS=(
       "--served-model-name"           "minimax-m2.7-reap-139b"
-      "-tp"                           "4"
+      "-tp"                           "${TP_SIZE}"
       "-pp"                           "1"
       "--load-format"                 "instanttensor"
       "--enable-auto-tool-choice"
@@ -1154,6 +1184,19 @@ if [[ "${VLLM_IMAGE}" == "vllm-node"* || "${VLLM_IMAGE}" == "vllm-glm51"* ]]; th
     echo -e "\033[1;33m   Please ensure you have built or imported the '${VLLM_IMAGE}' image before launching this model.\033[0m"
     exit 1
   fi
+fi
+
+# Append tensor parallel size if not already specified in EXTRA_ARGS
+has_tp_arg=false
+for arg in "${EXTRA_ARGS[@]}"; do
+  if [[ "${arg}" == "--tensor-parallel-size" || "${arg}" == "-tp" ]]; then
+    has_tp_arg=true
+    break
+  fi
+done
+
+if [[ "${has_tp_arg}" == "false" ]]; then
+  EXTRA_ARGS+=("--tensor-parallel-size" "${TP_SIZE}")
 fi
 
 docker stop "${CONTAINER_NAME}" 2>/dev/null
