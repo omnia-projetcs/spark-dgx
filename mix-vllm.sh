@@ -77,7 +77,11 @@ if [[ -z "${HUGGING_FACE_HUB_TOKEN}" || "${HUGGING_FACE_HUB_TOKEN}" == "hf_..." 
 fi
 # ─────────────────────────────────────────────────────────────────────────────
 
-CONTAINER_NAME="mix-vllm"
+CONTAINER_NAME_OVERRIDE=""
+GPUS_DEVICE="all"
+MAX_NUM_SEQS_OVERRIDE=""
+MAX_MODEL_LEN_OVERRIDE=""
+GPU_MEM_UTIL_OVERRIDE=""
 PORT="${PORT:-8000}"
 WAIT_FOR_HEALTH=true
 ARENA_MODE=false
@@ -106,9 +110,29 @@ while [[ $# -gt 0 ]]; do
       TP_OVERRIDE="$2"
       shift 2
       ;;
+    --gpus|--device)
+      GPUS_DEVICE="$2"
+      shift 2
+      ;;
+    --name)
+      CONTAINER_NAME_OVERRIDE="$2"
+      shift 2
+      ;;
+    --max-num-seqs|--max-seqs)
+      MAX_NUM_SEQS_OVERRIDE="$2"
+      shift 2
+      ;;
+    --max-model-len|--max-len)
+      MAX_MODEL_LEN_OVERRIDE="$2"
+      shift 2
+      ;;
+    --gpu-memory-utilization|--mem-util)
+      GPU_MEM_UTIL_OVERRIDE="$2"
+      shift 2
+      ;;
     *)
       echo "Unknown option: $1"
-      echo "Usage: $0 [--no-wait] [--port <port>] [--model <model>] [--arena] [--tp <tp_size>]"
+      echo "Usage: $0 [--no-wait] [--port <port>] [--model <model>] [--arena] [--tp <tp_size>] [--gpus <gpu_devices>] [--name <container_name>] [--max-seqs <max_num_seqs>] [--max-len <max_model_len>] [--mem-util <gpu_memory_utilization>]"
       exit 1
       ;;
   esac
@@ -255,6 +279,17 @@ if [[ -z "${TP_SIZE}" || "${TP_SIZE}" -lt 1 ]]; then
 fi
 
 echo -e "${BRIGHT_GREEN}✔ Tensor Parallel size: ${BOLD}${TP_SIZE}${NC}\n"
+
+# Resolve container name
+if [[ -z "${CONTAINER_NAME_OVERRIDE}" ]]; then
+  # Sanitize model name: replace slashes and other non-alphanumeric chars with dashes
+  safe_model_name=$(echo "${MODEL}" | tr '/' '-' | tr -cd '[:alnum:]_-')
+  CONTAINER_NAME="mix-vllm-${safe_model_name}"
+else
+  CONTAINER_NAME="${CONTAINER_NAME_OVERRIDE}"
+fi
+
+echo -e "${BRIGHT_GREEN}✔ Container name: ${BOLD}${CONTAINER_NAME}${NC}\n"
 
 # ── ARENA MODE SUITE RUNNER ───────────────────────────────────────────────────
 if [[ "${ARENA_MODE}" == "true" ]]; then
@@ -1063,6 +1098,17 @@ case "${MODEL}" in
     ;;
 esac
 
+# Apply overrides if specified
+if [[ -n "${MAX_NUM_SEQS_OVERRIDE}" ]]; then
+  MAX_NUM_SEQS="${MAX_NUM_SEQS_OVERRIDE}"
+fi
+if [[ -n "${MAX_MODEL_LEN_OVERRIDE}" ]]; then
+  MAX_MODEL_LEN="${MAX_MODEL_LEN_OVERRIDE}"
+fi
+if [[ -n "${GPU_MEM_UTIL_OVERRIDE}" ]]; then
+  GPU_MEM_UTIL="${GPU_MEM_UTIL_OVERRIDE}"
+fi
+
 # Force disable the unstable experimental V1 engine unless explicitly enabled by AEON-7
 if [[ "${MODEL}" != "AEON-7/Qwen3.6-35B-A3B-heretic-NVFP4" ]]; then
   ENV_ARGS+=(-e VLLM_USE_V1=0)
@@ -1204,6 +1250,7 @@ done
 echo "🔥 ${MODEL}"
 echo "   image  : ${VLLM_IMAGE}"
 echo "   ctx    : ${MAX_MODEL_LEN}   mem: ${GPU_MEM_UTIL}   seqs: ${MAX_NUM_SEQS}"
+echo "   gpus   : ${GPUS_DEVICE}   container: ${CONTAINER_NAME}"
 
 # ── MOD: DROP CACHES ──────────────────────────────────────────────────────────
 # If selected model includes drop-caches mod, drop system caches to reclaim RAM
@@ -1260,7 +1307,7 @@ docker rm   "${CONTAINER_NAME}" 2>/dev/null
 
 docker run -d \
   --name    "${CONTAINER_NAME}" \
-  --gpus    all \
+  --gpus    "${GPUS_DEVICE}" \
   --ipc     host \
   --ulimit  memlock=-1 \
   --ulimit  stack=67108864 \
