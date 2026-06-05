@@ -77,7 +77,7 @@ if [[ -z "${HUGGING_FACE_HUB_TOKEN}" || "${HUGGING_FACE_HUB_TOKEN}" == "hf_..." 
 fi
 # ─────────────────────────────────────────────────────────────────────────────
 
-CONTAINER_NAME_OVERRIDE=""
+CONTAINER_NAME="mix-vllm"
 GPUS_DEVICE="all"
 MAX_NUM_SEQS_OVERRIDE=""
 MAX_MODEL_LEN_OVERRIDE=""
@@ -114,10 +114,6 @@ while [[ $# -gt 0 ]]; do
       GPUS_DEVICE="$2"
       shift 2
       ;;
-    --name)
-      CONTAINER_NAME_OVERRIDE="$2"
-      shift 2
-      ;;
     --max-num-seqs|--max-seqs)
       MAX_NUM_SEQS_OVERRIDE="$2"
       shift 2
@@ -132,7 +128,7 @@ while [[ $# -gt 0 ]]; do
       ;;
     *)
       echo "Unknown option: $1"
-      echo "Usage: $0 [--no-wait] [--port <port>] [--model <model>] [--arena] [--tp <tp_size>] [--gpus <gpu_devices>] [--name <container_name>] [--max-seqs <max_num_seqs>] [--max-len <max_model_len>] [--mem-util <gpu_memory_utilization>]"
+      echo "Usage: $0 [--no-wait] [--port <port>] [--model <model>] [--arena] [--tp <tp_size>] [--gpus <gpu_devices>] [--max-seqs <max_num_seqs>] [--max-len <max_model_len>] [--mem-util <gpu_memory_utilization>]"
       exit 1
       ;;
   esac
@@ -279,9 +275,6 @@ if [[ -z "${TP_SIZE}" || "${TP_SIZE}" -lt 1 ]]; then
 fi
 
 echo -e "${BRIGHT_GREEN}✔ Tensor Parallel size: ${BOLD}${TP_SIZE}${NC}\n"
-
-# Resolve container name
-CONTAINER_NAME="${CONTAINER_NAME_OVERRIDE:-mix-vllm}"
 
 echo -e "${BRIGHT_GREEN}✔ Container name: ${BOLD}${CONTAINER_NAME}${NC}\n"
 
