@@ -281,13 +281,7 @@ fi
 echo -e "${BRIGHT_GREEN}✔ Tensor Parallel size: ${BOLD}${TP_SIZE}${NC}\n"
 
 # Resolve container name
-if [[ -z "${CONTAINER_NAME_OVERRIDE}" ]]; then
-  # Sanitize model name: replace slashes and other non-alphanumeric chars with dashes
-  safe_model_name=$(echo "${MODEL}" | tr '/' '-' | tr -cd '[:alnum:]_-')
-  CONTAINER_NAME="mix-vllm-${safe_model_name}"
-else
-  CONTAINER_NAME="${CONTAINER_NAME_OVERRIDE}"
-fi
+CONTAINER_NAME="${CONTAINER_NAME_OVERRIDE:-mix-vllm}"
 
 echo -e "${BRIGHT_GREEN}✔ Container name: ${BOLD}${CONTAINER_NAME}${NC}\n"
 
@@ -1304,6 +1298,14 @@ fi
 
 docker stop "${CONTAINER_NAME}" 2>/dev/null
 docker rm   "${CONTAINER_NAME}" 2>/dev/null
+
+# Stop any container currently publishing to the target port to avoid bind conflicts
+existing_container=$(docker ps -q --filter "publish=${PORT}")
+if [[ -n "${existing_container}" ]]; then
+  echo "🧹 Stopping and removing conflicting container using port ${PORT}..."
+  docker stop "${existing_container}" >/dev/null 2>&1 || true
+  docker rm   "${existing_container}" >/dev/null 2>&1 || true
+fi
 
 docker run -d \
   --name    "${CONTAINER_NAME}" \
