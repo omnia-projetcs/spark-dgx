@@ -145,6 +145,7 @@ if [[ -z "${MODEL}" ]]; then
     "rdtand/Qwen3.6-35B-A3B-PrismaQuant-4.75bit-vllm|1|#2  Qwen 3.6 35B PrismaQuant 4.75bit (~59 tok/s, 256K context)"
     "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-NVFP4|1|#3  Nemotron-3 Nano 30B NVFP4 (~58 tok/s, 256K context, MoE)"
     "bg-digitalservices/Gemma-4-26B-A4B-it-NVFP4|1|#4  Gemma-4 26B NVFP4 (~50 tok/s, 262K context, multimodal)"
+    "nvidia/diffusiongemma-26B-A4B-IT-NVFP4|1|──  Diffusion Gemma 26B A4B IT NVFP4 (Gemma 4 architecture, Triton attention, reasoning)"
     "Neural-ICE/Gemma-4-E2B-it-NVFP4|1|──  Gemma-4 E2B Instruct NVFP4 (~120 tok/s, 128K context, multimodal, audio, FP4 quantized)"
     "bg-digitalservices/Gemma-4-E2B-NVFP4|1|──  Gemma-4 E2B Base NVFP4 (~120 tok/s, 128K context, multimodal, audio, FP4 quantized)"
     "Qwen/Qwen3.6-35B-A3B-FP8|1|#5  Qwen 3.6 35B FP8 (~30 tok/s, 256K context)"
@@ -374,6 +375,9 @@ IMG_NIGHTLY="vllm/vllm-openai:cu130-nightly"
 
 IMG_STOCK="vllm/vllm-openai:latest"
 #         └─ Standard stable image — BF16/FP8, no NVFP4 SM121 patches
+
+IMG_GEMMA="vllm/vllm-openai:gemma"
+#         └─ Custom vLLM OpenAI image for Gemma models
 
 
 IMG_MINIMAX_NVFP4="ghcr.io/spark-arena/dgx-vllm-eugr-nightly:2026050601"
@@ -649,6 +653,37 @@ case "${MODEL}" in
       "--enable-auto-tool-choice"
       "--tool-call-parser"     "gemma4"
       "--reasoning-parser"     "gemma4"
+    )
+    ;;
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Diffusion Gemma 26B A4B IT NVFP4
+  # ═══════════════════════════════════════════════════════════════════════════
+  "nvidia/diffusiongemma-26B-A4B-IT-NVFP4")
+    VLLM_IMAGE="${IMG_GEMMA}"
+    GPU_MEM_UTIL=0.80
+    MAX_MODEL_LEN=102400
+    MAX_BATCHED_TOKENS=8192
+    MAX_NUM_SEQS=4
+
+    ENV_ARGS=(
+      -e VLLM_USE_V2_MODEL_RUNNER=1
+      -e VLLM_HTTP_TIMEOUT_KEEP_ALIVE=600
+      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
+    )
+
+    EXTRA_ARGS=(
+      "--served-model-name"            "diffusiongemma"
+      "--dtype"                        "auto"
+      "--load-format"                  "fastsafetensors"
+      "--kv-cache-dtype"               "fp8"
+      "--tensor-parallel-size"         "${TP_SIZE}"
+      "--attention-backend"            "TRITON_ATTN"
+      "--enable-auto-tool-choice"
+      "--tool-call-parser"             "gemma4"
+      "--reasoning-parser"             "gemma4"
+      "--override-generation-config"   '{"max_new_tokens": null}'
+      "--default-chat-template-kwargs" '{"enable_thinking":true}'
     )
     ;;
 
