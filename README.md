@@ -132,16 +132,16 @@ A turnkey Bash script that launches a fully configured, production-ready **vLLM 
 | #2 | `rdtand/Qwen3.6-35B-A3B-PrismaQuant-4.75bit-vllm` | ~59 | 4.75bit | 256K | 💬 🔧 🧠 | Speculative decoding (MTP ×3), FP8 KV-cache |
 | #3 | `nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-NVFP4` | ~58 | NVFP4 | 256K | 💬 🔧 🧠 | MoE 30B/3.5B active, FlashInfer FP4 |
 | #4 | `bg-digitalservices/Gemma-4-26B-A4B-it-NVFP4` | ~50 | NVFP4 | 262K | 💬 🖼️ 🎥 🔊 🔧 🧠 | Multimodal, TP×4, FP8 KV-cache |
-| — | `nvidia/diffusiongemma-26B-A4B-IT-NVFP4` | — | NVFP4 | 100K | 💬 🔧 🧠 | **Diffusion Gemma 26B A4B IT NVFP4** — Gemma 4 architecture, Triton attention, reasoning, vllm/vllm-openai:gemma image |
-| — | `Neural-ICE/Gemma-4-E2B-it-NVFP4` | ~120 | NVFP4 | 128K | 💬 🖼️ 🔊 🔧 🧠 | **Gemma 4 E2B Instruct NVFP4** — Highly optimized W4A4 conversational model |
-| — | `bg-digitalservices/Gemma-4-E2B-NVFP4` | ~120 | NVFP4 | 128K | 💬 🖼️ 🔊 | **Gemma 4 E2B Base NVFP4** — W4A4 quantized pre-trained model |
-| #5 | `Qwen/Qwen3.6-35B-A3B-FP8` | ~30 | FP8 | 256K | 💬 🔧 🧠 | 156 tok/s aggregate (c=32), cu130-nightly |
-| #6 | `rdtand/MiniMax-M2.7-PrismaQuant-3.20bit-vllm` | ~25 | 3.20bit | 196K | 💬 🔧 🧠 | MiniMax M2.7, PrismaQuant 3.20bit, standard eugr image |
-| #7 | `Intel/Qwen3-Coder-Next-int4-AutoRound` | ~17 | INT4 | 1M | 💬 🔧 | MoE FP8, YaRN RoPE scaling, 384 concurrent sequences |
-| #8 | `RedHatAI/Qwen3.5-122B-A10B-NVFP4` | ~17 | NVFP4 | 64K | 💬 🔧 🧠 | **Best quality** — RedHat calibration ≈ FP16, FlashInfer |
-| — | `shieldstar/Qwen3.5-122B-A10B-int4-AutoRound-EC` | — | INT4 | 196K | 💬 🔧 | AutoRound INT4, z-lab DFlash speculative decoding, custom vllm-node-tf5 image |
-| — | `RedHatAI/Mistral-Small-24B-Instruct-2501-FP8-dynamic` | ~8.6 (58.6 agg) | FP8 | 32K | 💬 🔧 | **Mistral Small v4** — Highly optimized, extremely low VRAM footprint (~24 GB) |
-| #9 | `nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4` | ~15 | NVFP4 | 128K | 💬 🔧 🧠 | MoE 120B/12B active, Marlin dequant |
+| #5 | `nvidia/diffusiongemma-26B-A4B-IT-NVFP4` | ~300 | NVFP4 | 100K | 💬 🔧 🧠 | **Diffusion Gemma 26B A4B IT NVFP4** — Gemma 4 architecture, Triton attention, reasoning, vllm/vllm-openai:gemma image |
+| #6 | `Neural-ICE/Gemma-4-E2B-it-NVFP4` | ~120 | NVFP4 | 128K | 💬 🖼️ 🔊 🔧 🧠 | **Gemma 4 E2B Instruct NVFP4** — Highly optimized W4A4 conversational model |
+| #7 | `bg-digitalservices/Gemma-4-E2B-NVFP4` | ~120 | NVFP4 | 128K | 💬 🖼️ 🔊 | **Gemma 4 E2B Base NVFP4** — W4A4 quantized pre-trained model |
+| #8 | `Qwen/Qwen3.6-35B-A3B-FP8` | ~30 | FP8 | 256K | 💬 🔧 🧠 | 156 tok/s aggregate (c=32), cu130-nightly |
+| #9 | `rdtand/MiniMax-M2.7-PrismaQuant-3.20bit-vllm` | ~25 | 3.20bit | 196K | 💬 🔧 🧠 | MiniMax M2.7, PrismaQuant 3.20bit, standard eugr image |
+| #10 | `Intel/Qwen3-Coder-Next-int4-AutoRound` | ~17 | INT4 | 1M | 💬 🔧 | MoE FP8, YaRN RoPE scaling, 384 concurrent sequences |
+| #11 | `RedHatAI/Qwen3.5-122B-A10B-NVFP4` | ~17 | NVFP4 | 64K | 💬 🔧 🧠 | **Best quality** — RedHat calibration ≈ FP16, FlashInfer |
+| #12 | `shieldstar/Qwen3.5-122B-A10B-int4-AutoRound-EC` | — | INT4 | 196K | 💬 🔧 | AutoRound INT4, z-lab DFlash speculative decoding, custom vllm-node-tf5 image |
+| #13 | `RedHatAI/Mistral-Small-24B-Instruct-2501-FP8-dynamic` | ~8.6 (58.6 agg) | FP8 | 32K | 💬 🔧 | **Mistral Small v4** — Highly optimized, extremely low VRAM footprint (~24 GB) |
+| #14 | `nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4` | ~15 | NVFP4 | 128K | 💬 🔧 🧠 | MoE 120B/12B active, Marlin dequant |
 | — | `LiquidAI/LFM2.5-350M` | ~212 | BF16 | 32K | 💬 | Ultra-lightweight 350M, ideal for testing/development |
 | — | `Qwen/Qwen3.5-0.8B` | ~103 | BF16 | 102K | 💬 🔧 | Lightweight 800M dense model, extremely fast, 102k context |
 | — | `nvidia/MiniMax-M2.7-NVFP4` | ~24 | NVFP4 | 196K | 💬 🔧 🧠 | MiniMax M2.7, TP×4, instanttensor format, FP8 KV-cache |
@@ -359,6 +359,23 @@ Click on any model below to expand its detailed concurrency comparison table:
       2 │    262.0ms │    854.7ms │   10.893s │     481.8 │     45.32 │    314.14
       4 │     78.2ms │    114.1ms │   13.586s │     480.8 │     35.64 │    263.44
       8 │    101.5ms │    109.6ms │   17.817s │     478.9 │     27.09 │    200.71
+```
+
+</details>
+
+<details>
+<summary><b>5. diffusiongemma (nvidia/diffusiongemma-27B-A3B-NVFP4)</b></summary>
+
+```
+══════════════════════════════════════════════════════════════════════
+  📊 COMPARISON TABLE (nvidia/diffusiongemma-27B-A3B-NVFP4)
+══════════════════════════════════════════════════════════════════════
+   Conc │   TTFT avg │   TTFT p95 │   Lat avg │  Tok/resp │  t/s (req) │  t/s (agg)
+  ─────────────────────────────────────────────────────────────────────────────────
+      1 │   2208.6ms │   3190.2ms │    3.911s │     512.0 │    322.88 │    130.92
+      2 │   4400.2ms │   7618.5ms │    7.156s │     512.0 │    198.31 │    143.08
+      4 │   4817.4ms │   6133.1ms │    8.959s │     512.0 │    128.34 │    219.57
+      8 │   9029.4ms │  14433.4ms │   13.295s │     512.0 │    126.37 │    219.51
 ```
 
 </details>
