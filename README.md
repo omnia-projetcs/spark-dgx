@@ -146,6 +146,8 @@ A turnkey Bash script that launches a fully configured, production-ready **vLLM 
 | — | `Qwen/Qwen3.5-0.8B` | ~103 | BF16 | 102K | 💬 🔧 | Lightweight 800M dense model, extremely fast, 102k context |
 | — | `nvidia/MiniMax-M2.7-NVFP4` | ~24 | NVFP4 | 196K | 💬 🔧 🧠 | MiniMax M2.7, TP×4, instanttensor format, FP8 KV-cache |
 | — | `dervig/m51Lab-MiniMax-M2.7-REAP-139B-A10B-NVFP4-GB10` | fast | NVFP4 | 102K | 💬 🔧 🧠 | MiniMax M2.7 REAP 139B, TP×4, instanttensor format |
+| — | `sparkarena/Minimax-M3-v0-NVFP4` | — | NVFP4 | 1M | 💬 🖼️ 🔧 🧠 | **MiniMax-M3-v0 NVFP4** — Native multimodal model, TP×4, 1M context, block_size=128 |
+| — | `Kimuraxhalu/gemma-4-12B-coder-fable5-composer2.5-MTP-NVFP4` | — | NVFP4 | 16K | 💬 🔧 🧠 | **[TEST] Gemma-4 12B Coder** — weight-only NVFP4, built-in MTP Speculative decoding, TP×1 |
 | — | `cyankiwi/MiniMax-M2.5-AWQ-4bit` | cluster | AWQ | 128K | 💬 🔧 🧠 | MiniMax M2.5, TP×4, Ray distributed backend |
 | — | `cyankiwi/MiniMax-M2.7-AWQ-4bit` | cluster | AWQ | 128K | 💬 🔧 🧠 | MiniMax M2.7, TP×2, Ray distributed backend |
 | — | `nvidia/Kimi-K2.6-NVFP4` | cluster | NVFP4 | 32K | 💬 🔧 🧠 | Kimi K2.6 MoE, TP×8 Ray cluster, shared HF cache, drop-caches mod |

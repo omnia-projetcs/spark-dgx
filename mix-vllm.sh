@@ -146,6 +146,7 @@ if [[ -z "${MODEL}" ]]; then
     "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-NVFP4|1|#3  Nemotron-3 Nano 30B NVFP4 (~58 tok/s, 256K context, MoE)"
     "bg-digitalservices/Gemma-4-26B-A4B-it-NVFP4|1|#4  Gemma-4 26B NVFP4 (~50 tok/s, 262K context, multimodal)"
     "nvidia/diffusiongemma-26B-A4B-IT-NVFP4|1|──  Diffusion Gemma 26B A4B IT NVFP4 (Gemma 4 architecture, Triton attention, reasoning)"
+    "edwixx/diffusiongemma-26B-A4B-it-HERETIC-Uncensored|1|──  DiffusionGemma 26B Heretic Uncensored (abliterated BF16, Gemma 4 arch, reasoning)"
     "Neural-ICE/Gemma-4-E2B-it-NVFP4|1|──  Gemma-4 E2B Instruct NVFP4 (~120 tok/s, 128K context, multimodal, audio, FP4 quantized)"
     "bg-digitalservices/Gemma-4-E2B-NVFP4|1|──  Gemma-4 E2B Base NVFP4 (~120 tok/s, 128K context, multimodal, audio, FP4 quantized)"
     "Qwen/Qwen3.6-35B-A3B-FP8|1|#5  Qwen 3.6 35B FP8 (~30 tok/s, 256K context)"
@@ -167,6 +168,8 @@ if [[ -z "${MODEL}" ]]; then
     "nvidia/Kimi-K2.6-NVFP4|8|──  Kimi-K2.6 NVFP4 MoE (TP=8 Ray cluster, drop-caches mod)"
     "deepseek-ai/DeepSeek-V4-Flash|2|──  DeepSeek V4 Flash FP8 (TP=2, 200K context)"
     "dervig/m51Lab-MiniMax-M2.7-REAP-139B-A10B-NVFP4-GB10|4|──  MiniMax-M2.7 REAP 139B NVFP4 (TP=4)"
+    "sparkarena/Minimax-M3-v0-NVFP4|4|──  MiniMax-M3-v0 NVFP4 (TP=4)"
+    "Kimuraxhalu/gemma-4-12B-coder-fable5-composer2.5-MTP-NVFP4|1|──  [TEST] Gemma-4 12B Coder Fable-5 Composer-2.5 MTP NVFP4 (TP=1)"
   )
 
   # Check if stdout/stdin are TTYs (interactive mode)
@@ -688,6 +691,37 @@ case "${MODEL}" in
     ;;
 
   # ═══════════════════════════════════════════════════════════════════════════
+  # DiffusionGemma 26B Heretic Uncensored — edwixx, abliterated BF16, Gemma 4 arch
+  # ═══════════════════════════════════════════════════════════════════════════
+  "edwixx/diffusiongemma-26B-A4B-it-HERETIC-Uncensored")
+    VLLM_IMAGE="${IMG_GEMMA}"
+    GPU_MEM_UTIL=0.85
+    MAX_MODEL_LEN=102400
+    MAX_BATCHED_TOKENS=8192
+    MAX_NUM_SEQS=4
+
+    ENV_ARGS=(
+      -e VLLM_USE_V2_MODEL_RUNNER=1
+      -e VLLM_HTTP_TIMEOUT_KEEP_ALIVE=600
+      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
+    )
+
+    EXTRA_ARGS=(
+      "--served-model-name"            "diffusiongemma-heretic"
+      "--dtype"                        "bfloat16"
+      "--load-format"                  "fastsafetensors"
+      "--kv-cache-dtype"               "fp8"
+      "--tensor-parallel-size"         "${TP_SIZE}"
+      "--attention-backend"            "TRITON_ATTN"
+      "--enable-auto-tool-choice"
+      "--tool-call-parser"             "gemma4"
+      "--reasoning-parser"             "gemma4"
+      "--override-generation-config"   '{"max_new_tokens": null}'
+      "--default-chat-template-kwargs" '{"enable_thinking":true}'
+    )
+    ;;
+
+  # ═══════════════════════════════════════════════════════════════════════════
   # Gemma 4 E2B Instruct NVFP4 — Neural-ICE, NVFP4 Quantized E2B-it, 128k context
   # ⚠️  Requires fix-gemma4-tool-parser — present in IMG_EUGR (recent builds)
   # ═══════════════════════════════════════════════════════════════════════════
@@ -1108,6 +1142,63 @@ case "${MODEL}" in
     )
     ;;
 
+    # ═══════════════════════════════════════════════════════════════════════════
+    # sparkarena/Minimax-M3-v0-NVFP4, TP=4, NVFP4 Quant, block_size=128
+    # ═══════════════════════════════════════════════════════════════════════════
+  "sparkarena/Minimax-M3-v0-NVFP4")
+    VLLM_IMAGE="${IMG_EUGR}"
+    GPU_MEM_UTIL=0.80
+    MAX_MODEL_LEN=102400
+    MAX_BATCHED_TOKENS=8192
+    MAX_NUM_SEQS=8
+
+    ENV_ARGS=(
+      -e VLLM_MARLIN_USE_ATOMIC_ADD=1
+      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
+    )
+
+    EXTRA_ARGS=(
+      "--served-model-name"           "minimax-m3-v0-nvfp4"
+      "-tp"                           "${TP_SIZE}"
+      "-pp"                           "1"
+      "--load-format"                 "instanttensor"
+      "--enable-auto-tool-choice"
+      "--tool-call-parser"            "minimax_m3"
+      "--reasoning-parser"            "minimax_m3"
+      "--kv-cache-dtype"              "fp8"
+      "--block-size"                  "128"
+    )
+    ;;
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # Gemma-4 12B Coder Fable-5 Composer-2.5 MTP NVFP4 (TEST)
+    # ═══════════════════════════════════════════════════════════════════════════
+  "Kimuraxhalu/gemma-4-12B-coder-fable5-composer2.5-MTP-NVFP4")
+    VLLM_IMAGE="${IMG_EUGR}"
+    GPU_MEM_UTIL=0.90
+    MAX_MODEL_LEN=16384
+    MAX_BATCHED_TOKENS=8192
+    MAX_NUM_SEQS=8
+
+    ENV_ARGS=(
+      -e VLLM_MARLIN_USE_ATOMIC_ADD=1
+      -e FLASHINFER_DISABLE_VERSION_CHECK=1
+      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
+    )
+
+    EXTRA_ARGS=(
+      "--served-model-name"           "gemma4-coder"
+      "--dtype"                       "auto"
+      "--kv-cache-dtype"              "fp8"
+      "-tp"                           "${TP_SIZE}"
+      "-pp"                           "1"
+      "--enable-auto-tool-choice"
+      "--tool-call-parser"            "gemma4"
+      "--reasoning-parser"            "gemma4"
+      "--speculative-config"          '{"method":"mtp","model":"/model/assistant","num_speculative_tokens":3}'
+    )
+    ;;
+
 
   *)
     echo -e "\033[1;33m⚠️  WARNING — Custom model '${MODEL}' is not in the pre-configured catalog!\033[0m"
@@ -1266,6 +1357,21 @@ for dl in "${MODEL_DOWNLOADS[@]}"; do
   fi
   download_if_needed "${dl}"
 done
+
+# Post-download snapshot resolution for local mounting (required for MTP speculative decoding subfolder)
+if [[ "${MODEL}" == "Kimuraxhalu/gemma-4-12B-coder-fable5-composer2.5-MTP-NVFP4" ]]; then
+  cache_name="models--Kimuraxhalu--gemma-4-12B-coder-fable5-composer2.5-MTP-NVFP4"
+  cache_path="${HOME}/.cache/huggingface/hub/${cache_name}"
+  snapshot_path=$(find "${cache_path}/snapshots" -mindepth 1 -maxdepth 1 -type d | head -n 1)
+  if [[ -n "${snapshot_path}" ]]; then
+    echo "🔗 Resolved HF snapshot path: ${snapshot_path}"
+    # Mount snapshot directly to /model in container
+    VOLUME_ARGS+=("-v" "${snapshot_path}:/model:ro")
+    MODEL="/model"
+  else
+    echo "⚠️ WARNING: Could not resolve snapshot directory for ${MODEL}. MTP speculative decoding might fail."
+  fi
+fi
 
 # ─────────────────────────────────────────────────────────────────────────────
 
