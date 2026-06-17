@@ -1174,7 +1174,7 @@ case "${MODEL}" in
     # Gemma-4 12B Coder Fable-5 Composer-2.5 MTP NVFP4 (TEST)
     # ═══════════════════════════════════════════════════════════════════════════
   "Kimuraxhalu/gemma-4-12B-coder-fable5-composer2.5-MTP-NVFP4")
-    VLLM_IMAGE="${IMG_EUGR}"
+    VLLM_IMAGE="${IMG_GEMMA}"
     GPU_MEM_UTIL=0.90
     MAX_MODEL_LEN=16384
     MAX_BATCHED_TOKENS=8192
