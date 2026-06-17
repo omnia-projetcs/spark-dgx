@@ -1195,7 +1195,6 @@ case "${MODEL}" in
       "--enable-auto-tool-choice"
       "--tool-call-parser"            "gemma4"
       "--reasoning-parser"            "gemma4"
-      "--speculative-config"          '{"method":"mtp","model":"/model/assistant","num_speculative_tokens":3}'
     )
     ;;
 
@@ -1358,16 +1357,18 @@ for dl in "${MODEL_DOWNLOADS[@]}"; do
   download_if_needed "${dl}"
 done
 
-# Post-download snapshot resolution for local mounting (required for MTP speculative decoding subfolder)
+# Post-download snapshot resolution (required for MTP speculative decoding subfolder)
 if [[ "${MODEL}" == "Kimuraxhalu/gemma-4-12B-coder-fable5-composer2.5-MTP-NVFP4" ]]; then
   cache_name="models--Kimuraxhalu--gemma-4-12B-coder-fable5-composer2.5-MTP-NVFP4"
   cache_path="${HOME}/.cache/huggingface/hub/${cache_name}"
   snapshot_path=$(find "${cache_path}/snapshots" -mindepth 1 -maxdepth 1 -type d | head -n 1)
   if [[ -n "${snapshot_path}" ]]; then
-    echo "🔗 Resolved HF snapshot path: ${snapshot_path}"
-    # Mount snapshot directly to /model in container
-    VOLUME_ARGS+=("-v" "${snapshot_path}:/model:ro")
-    MODEL="/model"
+    snapshot_dir=$(basename "${snapshot_path}")
+    container_snapshot_path="/root/.cache/huggingface/hub/${cache_name}/snapshots/${snapshot_dir}"
+    echo "🔗 Resolved container cache path: ${container_snapshot_path}"
+    # Use the container snapshot directory path so that Hugging Face Hub symlinks resolve correctly
+    MODEL="${container_snapshot_path}"
+    EXTRA_ARGS+=("--speculative-config" "{\"method\":\"mtp\",\"model\":\"${container_snapshot_path}/assistant\",\"num_speculative_tokens\":3}")
   else
     echo "⚠️ WARNING: Could not resolve snapshot directory for ${MODEL}. MTP speculative decoding might fail."
   fi
