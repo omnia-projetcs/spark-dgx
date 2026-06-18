@@ -151,6 +151,7 @@ A turnkey Bash script that launches a fully configured, production-ready **vLLM 
 | — | `cyankiwi/MiniMax-M2.5-AWQ-4bit` | cluster | AWQ | 128K | 💬 🔧 🧠 | MiniMax M2.5, TP×4, Ray distributed backend |
 | — | `cyankiwi/MiniMax-M2.7-AWQ-4bit` | cluster | AWQ | 128K | 💬 🔧 🧠 | MiniMax M2.7, TP×2, Ray distributed backend |
 | — | `nvidia/Kimi-K2.6-NVFP4` | cluster | NVFP4 | 32K | 💬 🔧 🧠 | Kimi K2.6 MoE, TP×8 Ray cluster, shared HF cache, drop-caches mod |
+| — | `netarmy007/Kimi-K2.7-Code` | cluster | — | 256K | 💬 🔧 🧠 | Kimi K2.7 Code, TP×8 Ray cluster, drop-caches mod |
 | — | `deepseek-ai/DeepSeek-V4-Flash` | cluster | FP8 | 200K | 💬 🔧 🧠 | DeepSeek V4 Flash FP8, TP=2 MP, custom vllm-node-dsv4 image |
 
 > 💬 Text &nbsp; 🖼️ Image &nbsp; 🎥 Video &nbsp; 🔊 Audio &nbsp; 🔧 Tool-call (MCP-compatible) &nbsp; 🧠 Reasoning/thinking

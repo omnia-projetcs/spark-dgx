@@ -166,6 +166,7 @@ if [[ -z "${MODEL}" ]]; then
     "cyankiwi/MiniMax-M2.7-AWQ-4bit|2|──  MiniMax-M2.7 AWQ 4bit (TP=2)"
 
     "nvidia/Kimi-K2.6-NVFP4|8|──  Kimi-K2.6 NVFP4 MoE (TP=8 Ray cluster, drop-caches mod)"
+    "netarmy007/Kimi-K2.7-Code|8|──  Kimi-K2.7 Code (TP=8 Ray cluster, drop-caches mod)"
     "deepseek-ai/DeepSeek-V4-Flash|2|──  DeepSeek V4 Flash FP8 (TP=2, 200K context)"
     "dervig/m51Lab-MiniMax-M2.7-REAP-139B-A10B-NVFP4-GB10|4|──  MiniMax-M2.7 REAP 139B NVFP4 (TP=4)"
     "sparkarena/Minimax-M3-v0-NVFP4|4|──  MiniMax-M3-v0 NVFP4 (TP=4)"
@@ -975,6 +976,38 @@ case "${MODEL}" in
     ;;
 
   # ═══════════════════════════════════════════════════════════════════════════
+  # netarmy007/Kimi-K2.7-Code on 8 DGX Spark nodes
+  # ═══════════════════════════════════════════════════════════════════════════
+  "netarmy007/Kimi-K2.7-Code")
+    VLLM_IMAGE="${IMG_VLLM_NODE}"
+    GPU_MEM_UTIL=0.72
+    MAX_MODEL_LEN=32768
+    MAX_BATCHED_TOKENS=2048
+    MAX_NUM_SEQS=1
+
+    ENV_ARGS=(
+      -e VLLM_DISTRIBUTED_EXECUTOR_CONFIG='{"placement_group_options":{"strategy":"SPREAD"}}'
+      -e VLLM_MARLIN_USE_ATOMIC_ADD=1
+      -e VLLM_USE_FLASHINFER_SAMPLER=0
+      -e OMP_NUM_THREADS=4
+      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
+    )
+
+    EXTRA_ARGS=(
+      "--tensor-parallel-size"         "${TP_SIZE}"
+      "--distributed-executor-backend" "ray"
+      "--enforce-eager"
+      "--kv-cache-dtype"              "fp8"
+      "--mm-processor-cache-gb"       "0"
+      "--tool-call-parser"            "kimi_k2"
+      "--reasoning-parser"            "kimi_k2"
+      "--enable-auto-tool-choice"
+      "--served-model-name"           "kimi-k2.7-code"
+      "--no-async-scheduling"
+    )
+    ;;
+
+  # ═══════════════════════════════════════════════════════════════════════════
   # nvidia/Kimi-K2.6-NVFP4 on 8 DGX Spark nodes
   # ═══════════════════════════════════════════════════════════════════════════
   "nvidia/Kimi-K2.6-NVFP4")
@@ -1383,7 +1416,7 @@ echo "   gpus   : ${GPUS_DEVICE}   container: ${CONTAINER_NAME}"
 
 # ── MOD: DROP CACHES ──────────────────────────────────────────────────────────
 # If selected model includes drop-caches mod, drop system caches to reclaim RAM
-if [[ "${MODEL}" == "nvidia/Kimi-K2.6-NVFP4" ]]; then
+if [[ "${MODEL}" == "nvidia/Kimi-K2.6-NVFP4" || "${MODEL}" == "netarmy007/Kimi-K2.7-Code" ]]; then
   echo "🧹 Applying mod: mods/drop-caches..."
   if [[ -w /proc/sys/vm/drop_caches ]]; then
     echo "   Writing to /proc/sys/vm/drop_caches..."
