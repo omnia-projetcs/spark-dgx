@@ -166,3 +166,25 @@ Pour convertir le dossier fusionné en un seul fichier `.gguf` :
    rm temp.gguf
    ```
 
+### Utilisation avec vLLM
+
+vLLM prend en charge nativement le format Hugging Face standard (Safetensors) ainsi que le chargement dynamique des adaptateurs LoRA.
+
+#### Option A : Lancer le modèle fusionné (Recommandé pour de meilleures performances)
+Une fois le modèle fusionné (Étape 1), lancez simplement vLLM en pointant vers le dossier fusionné :
+```bash
+python3 -m vllm.entrypoints.openai.api_server \
+    --model /chemin/vers/outputs/qwen25-merged \
+    --port 8000
+```
+
+#### Option B : Lancer avec chargement dynamique de LoRA (Sans fusionner les poids)
+vLLM peut appliquer votre adaptateur LoRA à chaud sur le modèle de base. Lancez vLLM en spécifiant le modèle de base et le chemin de votre adaptateur :
+```bash
+python3 -m vllm.entrypoints.openai.api_server \
+    --model Qwen/Qwen2.5-7B-Instruct \
+    --enable-lora \
+    --lora-modules cyber-defensive=/chemin/vers/outputs/cyber-qwen25-7b-lora/final \
+    --port 8000
+```
+Lors de vos requêtes API, passez simplement `"model": "cyber-defensive"` dans le payload pour cibler votre modèle finetuné.
