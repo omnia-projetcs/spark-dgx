@@ -85,6 +85,7 @@ GPU_MEM_UTIL_OVERRIDE=""
 PORT="${PORT:-8000}"
 WAIT_FOR_HEALTH=true
 ARENA_MODE=false
+CLEAN_ARENA=false
 TP_OVERRIDE=""
 
 # ── ARGUMENT PARSING ──────────────────────────────────────────────────────────
@@ -104,6 +105,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --arena)
       ARENA_MODE=true
+      shift
+      ;;
+    --clean-arena)
+      CLEAN_ARENA=true
       shift
       ;;
     --tp)
@@ -128,7 +133,7 @@ while [[ $# -gt 0 ]]; do
       ;;
     *)
       echo "Unknown option: $1"
-      echo "Usage: $0 [--no-wait] [--port <port>] [--model <model>] [--arena] [--tp <tp_size>] [--gpus <gpu_devices>] [--max-seqs <max_num_seqs>] [--max-len <max_model_len>] [--mem-util <gpu_memory_utilization>]"
+      echo "Usage: $0 [--no-wait] [--port <port>] [--model <model>] [--arena] [--clean-arena] [--tp <tp_size>] [--gpus <gpu_devices>] [--max-seqs <max_num_seqs>] [--max-len <max_model_len>] [--mem-util <gpu_memory_utilization>]"
       exit 1
       ;;
   esac
@@ -304,13 +309,30 @@ if [[ "${ARENA_MODE}" == "true" ]]; then
   echo ""
 
   RESULTS_FILE="arena_benchmark_results.md"
-  echo "# 🏆 Spark Arena Benchmark Results" > "${RESULTS_FILE}"
-  echo "Generated on $(date)" >> "${RESULTS_FILE}"
-  echo "" >> "${RESULTS_FILE}"
-  echo "| Model | TTFT Avg | Tokens/s (Req) | Tokens/s (Agg) | Status |" >> "${RESULTS_FILE}"
-  echo "| :--- | :---: | :---: | :---: | :---: |" >> "${RESULTS_FILE}"
+  PROGRESS_FILE="arena_progress.txt"
+
+  if [[ "${CLEAN_ARENA}" == "true" ]]; then
+    echo "🧹 Cleaning up previous arena benchmarks..."
+    rm -f "${RESULTS_FILE}"
+    rm -f "${PROGRESS_FILE}"
+  fi
+
+  if [[ ! -f "${RESULTS_FILE}" ]]; then
+    echo "# 🏆 Spark Arena Benchmark Results" > "${RESULTS_FILE}"
+    echo "Generated on $(date)" >> "${RESULTS_FILE}"
+    echo "" >> "${RESULTS_FILE}"
+    echo "| Model | TTFT Avg | Tokens/s (Req) | Tokens/s (Agg) | Status |" >> "${RESULTS_FILE}"
+    echo "| :--- | :---: | :---: | :---: | :---: |" >> "${RESULTS_FILE}"
+  else
+    echo "⏳ Found existing results file: ${RESULTS_FILE}. Appending new results."
+  fi
 
   for am in "${ARENA_MODELS[@]}"; do
+    if [[ -f "${PROGRESS_FILE}" ]] && grep -qxF "${am}" "${PROGRESS_FILE}"; then
+      echo "⏭️ Skipping already completed model: ${am}"
+      continue
+    fi
+
     echo "----------------------------------------------------------------------"
     echo "🚀 Starting arena run for model: ${am}"
     echo "----------------------------------------------------------------------"
@@ -321,6 +343,7 @@ if [[ "${ARENA_MODE}" == "true" ]]; then
     if [[ $? -ne 0 ]]; then
       echo "❌ Failed to start/healthcheck ${am}, skipping..."
       echo "| ${am} | N/A | N/A | N/A | ❌ FAILED |" >> "${RESULTS_FILE}"
+      echo "${am}" >> "${PROGRESS_FILE}"
       continue
     fi
     
@@ -350,11 +373,15 @@ except Exception as e:
       echo "| ${am} | N/A | N/A | N/A | ⚠️ NO RESULTS |" >> "${RESULTS_FILE}"
     fi
 
+    echo "${am}" >> "${PROGRESS_FILE}"
+
     echo "🛑 Stopping container for ${am}..."
     docker stop "${CONTAINER_NAME}" >/dev/null 2>/dev/null
     docker rm "${CONTAINER_NAME}" >/dev/null 2>/dev/null
     echo ""
   done
+
+  rm -f "${PROGRESS_FILE}"
 
   echo "======================================================================"
   echo "🏆              ALL ARENA BENCHMARKS COMPLETED!                       "

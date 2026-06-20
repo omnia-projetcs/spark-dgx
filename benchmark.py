@@ -24,6 +24,7 @@ Requirements:
 
 import argparse
 import json
+import os
 import sys
 import time
 import statistics
@@ -204,7 +205,7 @@ def run_single_request(
 
     try:
         session = get_session()
-        with session.post(url, json=payload, stream=True, timeout=300) as resp:
+        with session.post(url, json=payload, stream=True, timeout=(15.0, 30.0)) as resp:
             resp.raise_for_status()
             for line in resp.iter_lines(decode_unicode=True):
                 if not line or not line.startswith("data: "):
@@ -294,6 +295,7 @@ def run_benchmark(
 
     if concurrency == 1:
         # Sequential execution
+        consecutive_failures = 0
         for i, prompt in enumerate(request_prompts):
             r = run_single_request(base_url, model, prompt, max_tokens, temperature)
             result.results.append(r)
@@ -305,12 +307,30 @@ def run_benchmark(
                 f"{r.tokens_per_sec:.1f} t/s | "
                 f"total={r.total_time:.2f}s"
             )
+            if not r.success:
+                consecutive_failures += 1
+                if consecutive_failures >= 3:
+                    print("❌ Aborting benchmark: 3 consecutive failures detected. Server might be down.")
+                    raise RuntimeError("Aborted: 3 consecutive request failures.")
+            else:
+                consecutive_failures = 0
     else:
         # Concurrent execution
         lock = threading.Lock()
         completed = [0]
+        consecutive_failures = [0]
+        abort_event = threading.Event()
 
         def task(idx, prompt):
+            if abort_event.is_set():
+                return RequestResult(
+                    ttft=0,
+                    total_time=0,
+                    output_tokens=0,
+                    tokens_per_sec=0,
+                    success=False,
+                    error="Aborted due to too many failures",
+                )
             r = run_single_request(base_url, model, prompt, max_tokens, temperature)
             with lock:
                 completed[0] += 1
@@ -322,6 +342,12 @@ def run_benchmark(
                     f"{r.tokens_per_sec:.1f} t/s | "
                     f"total={r.total_time:.2f}s"
                 )
+                if not r.success:
+                    consecutive_failures[0] += 1
+                    if consecutive_failures[0] >= 3:
+                        abort_event.set()
+                else:
+                    consecutive_failures[0] = 0
             return r
 
         with ThreadPoolExecutor(max_workers=concurrency) as executor:
@@ -331,6 +357,10 @@ def run_benchmark(
             }
             for future in as_completed(futures):
                 result.results.append(future.result())
+
+        if abort_event.is_set():
+            print("❌ Aborting benchmark: 3 consecutive failures detected. Server might be down.")
+            raise RuntimeError("Aborted: 3 consecutive request failures.")
 
     t_end = time.perf_counter()
     result.wall_time = t_end - t_start
@@ -456,6 +486,11 @@ def main():
         default=None,
         help="Path to save the JSON results file (default: benchmark_results_{model}_{timestamp}.json)",
     )
+    parser.add_argument(
+        "--no-resume",
+        action="store_true",
+        help="Disable loading checkpoints and force a clean benchmark run",
+    )
 
     args = parser.parse_args()
 
@@ -496,31 +531,79 @@ def main():
             print(f"  {status} Warmup {i+1}/{args.warmup} — "
                   f"TTFT={r.ttft*1000:.0f}ms, {r.output_tokens} tok")
 
+    # ── Checkpoint & Resume Logic ──
+    safe_model_name = model.replace("/", "--").replace(" ", "_")
+    checkpoint_file = f"benchmark_checkpoint_{safe_model_name}.json"
+    loaded_summaries = {}
+    checkpoint_loaded = False
+
+    if not args.no_resume and os.path.exists(checkpoint_file):
+        try:
+            with open(checkpoint_file, "r", encoding="utf-8") as f:
+                checkpoint_data = json.load(f)
+            # Verify if metadata matches
+            if (
+                checkpoint_data.get("model") == model
+                and checkpoint_data.get("num_requests") == args.num_requests
+                and checkpoint_data.get("max_tokens") == args.max_tokens
+                and checkpoint_data.get("temperature") == args.temperature
+            ):
+                loaded_summaries = checkpoint_data.get("completed_concurrencies", {})
+                print(f"  ⏳ Found existing checkpoint: {checkpoint_file}")
+                print(f"  ⏳ Loaded completed concurrency levels: {list(loaded_summaries.keys())}")
+                checkpoint_loaded = True
+            else:
+                print("  ⚠️ Checkpoint found but parameters do not match current run. Starting fresh.")
+        except Exception as e:
+            print(f"  ⚠️ Error loading checkpoint: {e}. Starting fresh.")
+
     # ── Run benchmarks ──
     all_summaries = []
 
     for conc in sorted(args.concurrency):
+        conc_str = str(conc)
+        if checkpoint_loaded and conc_str in loaded_summaries:
+            print(f"  ⏭️ Skipping benchmark for concurrency {conc} (loaded from checkpoint)")
+            all_summaries.append(loaded_summaries[conc_str])
+            continue
+
         label = "SINGLE-THREAD" if conc == 1 else f"MULTI-THREAD (×{conc})"
         print_header(f"🚀 BENCHMARK — {label}")
         print(f"  Concurrency: {conc} | Requests: {args.num_requests} | "
               f"Max tokens: {args.max_tokens}")
         print()
 
-        bench = run_benchmark(
-            base_url=args.base_url,
-            model=model,
-            prompts=prompts,
-            concurrency=conc,
-            max_tokens=args.max_tokens,
-            temperature=args.temperature,
-            num_requests=args.num_requests,
-        )
+        try:
+            bench = run_benchmark(
+                base_url=args.base_url,
+                model=model,
+                prompts=prompts,
+                concurrency=conc,
+                max_tokens=args.max_tokens,
+                temperature=args.temperature,
+                num_requests=args.num_requests,
+            )
+            s = bench.summary()
+            all_summaries.append(s)
 
-        s = bench.summary()
-        all_summaries.append(s)
+            # Save progress to checkpoint file
+            loaded_summaries[conc_str] = s
+            checkpoint_data = {
+                "model": model,
+                "num_requests": args.num_requests,
+                "max_tokens": args.max_tokens,
+                "temperature": args.temperature,
+                "completed_concurrencies": loaded_summaries
+            }
+            with open(checkpoint_file, "w", encoding="utf-8") as f:
+                json.dump(checkpoint_data, f, indent=2, ensure_ascii=False)
 
-        print()
-        print_summary(s)
+            print()
+            print_summary(s)
+        except Exception as e:
+            print(f"\n❌ Concurrency level {conc} failed: {e}")
+            print("Checkpoint saved. You can resume later.")
+            sys.exit(1)
 
     # ── Final comparison ──
     if len(all_summaries) > 1:
@@ -530,8 +613,6 @@ def main():
     if args.output:
         results_file = args.output
     else:
-        # Generate safe model name (replace slash and other characters)
-        safe_model_name = model.replace("/", "--").replace(" ", "_")
         timestamp = time.strftime("%Y%m%d_%H%M%S")
         results_file = f"benchmark_results_{safe_model_name}_{timestamp}.json"
 
@@ -548,6 +629,14 @@ def main():
         json.dump(output, f, indent=2, ensure_ascii=False)
     print(f"  💾 Results saved to {results_file}")
     print()
+
+    # Clean up checkpoint file on successful completion
+    if os.path.exists(checkpoint_file):
+        try:
+            os.remove(checkpoint_file)
+            print(f"  🧹 Cleaned up checkpoint file {checkpoint_file}")
+        except Exception as e:
+            print(f"  ⚠️ Could not remove checkpoint file: {e}")
 
 
 if __name__ == "__main__":

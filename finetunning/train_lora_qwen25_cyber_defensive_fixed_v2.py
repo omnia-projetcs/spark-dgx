@@ -482,7 +482,28 @@ trainer = Trainer(
 # TRAIN
 # ============================================================
 
-trainer.train()
+import glob
+
+# Check if there are checkpoints in the output directory
+resume_from_checkpoint = None
+if os.path.exists(OUTPUT_DIR):
+    checkpoints = glob.glob(os.path.join(OUTPUT_DIR, "checkpoint-*"))
+    if checkpoints:
+        # Sort checkpoints by step number to find the latest
+        def get_step_num(path):
+            try:
+                return int(path.split("-")[-1])
+            except ValueError:
+                return 0
+        checkpoints.sort(key=get_step_num)
+        resume_from_checkpoint = checkpoints[-1]
+        print(f"Existing checkpoints found in {OUTPUT_DIR}. Resuming from: {resume_from_checkpoint}")
+    else:
+        print("No checkpoints found. Starting training from scratch.")
+else:
+    print("Output directory does not exist. Starting training from scratch.")
+
+trainer.train(resume_from_checkpoint=resume_from_checkpoint)
 
 trainer.save_model(FINAL_DIR)
 tokenizer.save_pretrained(FINAL_DIR)
