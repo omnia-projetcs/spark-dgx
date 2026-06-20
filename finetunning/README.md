@@ -106,3 +106,63 @@ tokenizer = AutoTokenizer.from_pretrained(adapter_path)
 base_model = AutoModelForCausalLM.from_pretrained(base_model_name, device_map="auto")
 model = PeftModel.from_pretrained(base_model, adapter_path)
 ```
+
+### Fusionner et Convertir en un Fichier Unique (Merge & Export to GGUF)
+
+Si vous souhaitez fusionner les poids LoRA avec le modèle de base pour obtenir un seul modèle complet, puis le convertir au format de fichier unique **GGUF** (très utile pour l'exécution locale avec Ollama, LM Studio ou llama.cpp) :
+
+#### 1. Fusionner le LoRA avec le modèle de base
+Créez un script Python (par exemple `merge_lora.py`) :
+
+```python
+import torch
+from transformers import AutoModelForCausalLM, AutoTokenizer
+from peft import PeftModel
+
+base_model_path = "Qwen/Qwen2.5-7B-Instruct"
+lora_weights_path = "outputs/cyber-qwen25-7b-lora/final"
+output_dir = "outputs/qwen25-merged"
+
+# 1. Charger le tokenizer
+tokenizer = AutoTokenizer.from_pretrained(base_model_path)
+
+# 2. Charger le modèle de base sur CPU (pour économiser la VRAM du GPU)
+base_model = AutoModelForCausalLM.from_pretrained(
+    base_model_path,
+    torch_dtype=torch.float16,
+    device_map="cpu"
+)
+
+# 3. Charger le modèle LoRA
+model = PeftModel.from_pretrained(base_model, lora_weights_path)
+
+# 4. Fusionner les poids
+merged_model = model.merge_and_unload()
+
+# 5. Sauvegarder le modèle fusionné
+merged_model.save_pretrained(output_dir, safe_serialization=True)
+tokenizer.save_pretrained(output_dir)
+```
+
+#### 2. Convertir au format GGUF (Fichier Unique)
+Pour convertir le dossier fusionné en un seul fichier `.gguf` :
+
+1. Cloner `llama.cpp` et installer ses dépendances :
+   ```bash
+   git clone https://github.com/ggerganov/llama.cpp
+   cd llama.cpp
+   pip install -r requirements.txt
+   ```
+
+2. Convertir au format GGUF :
+   ```bash
+   # Convertir directement en format f16 (fichier unique lourd, ~14 Go)
+   python convert_hf_to_gguf.py /chemin/vers/outputs/qwen25-merged --outfile mon_modele_f16.gguf
+   
+   # Ou quantifier le modèle pour réduire sa taille (ex: Q8_0 à ~7.7 Go, ou Q4_K_M à ~4.5 Go)
+   make -j
+   python convert_hf_to_gguf.py /chemin/vers/outputs/qwen25-merged --outfile temp.gguf
+   ./llama-quantize temp.gguf mon_modele_Q8_0.gguf Q8_0
+   rm temp.gguf
+   ```
+
