@@ -2,7 +2,7 @@
 
 This directory contains the pipeline to fine-tune **Qwen/Qwen2.5-7B-Instruct** using QLoRA (Quantized Low-Rank Adaptation) on cybersecurity QA datasets.
 
-The training script leverages 4-bit NormalFloat (NF4) quantization, 8-bit Paged AdamW optimization, and gradient checkpointing to allow fine-tuning on consumer-grade and enterprise GPUs (with low VRAM footprints, e.g. < 24GB).
+The training script leverages 4-bit NormalFloat (NF4) quantization, 8-bit Paged AdamW optimization, dynamic padding, length-grouped batches, batched tokenization, TF32 when available, and automatic FlashAttention 2 -> SDPA fallback. Gradient checkpointing is now optional: keep it disabled for speed, enable it for low-VRAM runs.
 
 ---
 
@@ -21,6 +21,8 @@ pip install -U torch transformers datasets accelerate peft bitsandbytes sentence
 ```
 
 Ensure you have a CUDA-compatible GPU setup. The script automatically detects and uses `bfloat16` if your hardware supports it, or falls back to `float16`.
+
+Optional: if your platform supports it, install FlashAttention 2 for faster attention kernels. The script will try it automatically and fall back to PyTorch SDPA if it is unavailable.
 
 ---
 
@@ -62,9 +64,16 @@ The key hyperparameters configured in `train_lora_qwen25_cyber_defensive_fixed_v
   - Dropout: `0.05`
   - Target Modules: `q_proj`, `k_proj`, `v_proj`, `o_proj`, `gate_proj`, `up_proj`, `down_proj` (all linear modules of the attention and MLP layers)
 - **Optimizer**: `paged_adamw_8bit`
-- **Learning Rate**: `1e-4` with a cosine schedule and `500` warmup steps
-- **Batch Size**: Effective batch size of `16` (Per-device batch size `1` * Gradient accumulation steps `16`)
+- **Learning Rate**: `1e-4` with a cosine schedule and `0.03` warmup ratio
+- **Batch Size**: Effective batch size of `16` by default (per-device batch size `2` * gradient accumulation steps `8`)
 - **Epochs**: `1`
+- **Speed Optimizations**:
+  - tokenization runs before model loading, in batches, with up to `4` CPU processes;
+  - dynamic padding pads to multiples of `8` for Tensor Core-friendly batches;
+  - `group_by_length=True` reduces wasted padding;
+  - `TF32` is enabled on Ampere/Blackwell-class GPUs;
+  - attention uses `flash_attention_2` if available, otherwise `sdpa`;
+  - gradient checkpointing is disabled by default for speed and can be enabled for low VRAM.
 
 ---
 
@@ -79,12 +88,144 @@ export TOKENIZERS_PARALLELISM=false
 python train_lora_qwen25_cyber_defensive_fixed_v2.py
 ```
 
+### Fast Profiles
+
+Default speed-first profile:
+```bash
+cd finetunning
+export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+export TOKENIZERS_PARALLELISM=false
+
+python train_lora_qwen25_cyber_defensive_fixed_v2.py
+```
+
+Quick throughput benchmark before a full run:
+```bash
+MAX_STEPS=200 \
+SAVE_STEPS=1000000 \
+EVAL_STEPS=1000000 \
+python train_lora_qwen25_cyber_defensive_fixed_v2.py
+```
+
+More aggressive profile if VRAM allows it:
+```bash
+PER_DEVICE_TRAIN_BATCH_SIZE=4 \
+EFFECTIVE_BATCH_SIZE=16 \
+GRADIENT_CHECKPOINTING=false \
+MAX_LENGTH=512 \
+python train_lora_qwen25_cyber_defensive_fixed_v2.py
+```
+
+Low-VRAM profile if you hit OOM:
+```bash
+PER_DEVICE_TRAIN_BATCH_SIZE=1 \
+GRADIENT_ACCUMULATION_STEPS=16 \
+GRADIENT_CHECKPOINTING=true \
+ATTN_IMPLEMENTATION=sdpa \
+python train_lora_qwen25_cyber_defensive_fixed_v2.py
+```
+
+Longer context profile:
+```bash
+MAX_LENGTH=1024 \
+PER_DEVICE_TRAIN_BATCH_SIZE=1 \
+GRADIENT_ACCUMULATION_STEPS=16 \
+GRADIENT_CHECKPOINTING=true \
+python train_lora_qwen25_cyber_defensive_fixed_v2.py
+```
+
+### Useful Runtime Knobs
+
+| Variable | Default | Use |
+|---|---:|---|
+| `MAX_LENGTH` | `512` | Sequence length. Increase to `1024`/`2048` only if memory allows. |
+| `MAX_STEPS` | `-1` | Stop early for a benchmark. Use `200` before a full 160k-record run. |
+| `PER_DEVICE_TRAIN_BATCH_SIZE` | `2` | Micro-batch size. Higher is faster until VRAM is saturated. |
+| `EFFECTIVE_BATCH_SIZE` | `16` | Target effective batch; auto-computes gradient accumulation unless overridden. |
+| `GRADIENT_ACCUMULATION_STEPS` | auto | Set directly for exact control. |
+| `GRADIENT_CHECKPOINTING` | `false` | `true` saves VRAM but slows training. |
+| `ATTN_IMPLEMENTATION` | `auto` | `auto` tries `flash_attention_2`, then `sdpa`; set `sdpa` to skip the FlashAttention attempt. |
+| `TOKENIZE_NUM_PROC` | up to `4` | CPU workers for preprocessing. |
+| `TOKENIZE_BATCH_SIZE` | `256` | Batch size for tokenizer calls. Lower if RAM is tight. |
+| `DATALOADER_NUM_WORKERS` | up to `4` | PyTorch dataloader workers. |
+| `OPTIM` | `paged_adamw_8bit` | Keep for QLoRA memory efficiency; try `adamw_torch_fused` only if your install supports it and VRAM is comfortable. |
+| `TF32` | auto | Enable/disable TensorFloat-32 matmul on compatible NVIDIA GPUs. |
+| `AUTO_RESUME` | `true` | Resume latest checkpoint automatically. |
+
 ### VRAM and Resource Constraints
 - The script includes safety checks. If the base model takes more than 20 GB of VRAM right after loading, training will halt (indicating that 4-bit quantization did not load correctly).
 - If you encounter Out-Of-Memory (OOM) errors during the backward pass:
   1. Kill any stale python processes (`pkill -f python`).
-  2. Reduce `MAX_LENGTH` to `512` or lower.
-  3. Ensure `expandable_segments:True` is set in `PYTORCH_CUDA_ALLOC_CONF`.
+  2. Use `PER_DEVICE_TRAIN_BATCH_SIZE=1`.
+  3. Enable `GRADIENT_CHECKPOINTING=true`.
+  4. Reduce `MAX_LENGTH` to `512` or lower.
+  5. Ensure `expandable_segments:True` is set in `PYTORCH_CUDA_ALLOC_CONF`.
+
+---
+
+## Experimental: DiffusionGemma LoRA / QLoRA
+
+DiffusionGemma is not a standard causal language model. It uses a block-diffusion encoder/decoder architecture, so the Qwen script must not be reused by only changing `MODEL_NAME`.
+
+Use the dedicated experimental script:
+
+```bash
+cd finetunning
+export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+export TOKENIZERS_PARALLELISM=false
+
+python train_lora_diffusiongemma_experimental.py
+```
+
+Default profile:
+- **Base model**: `google/diffusiongemma-26B-A4B-it`
+- **Training mode**: experimental PEFT LoRA with `task_type="FEATURE_EXTRACTION"`
+- **Quantization**: `LOAD_IN_4BIT=true` by default for QLoRA-style memory savings
+- **Batch**: per-device batch size `1`, effective batch `8`
+- **Gradient checkpointing**: enabled by default
+
+Useful profiles:
+
+```bash
+# Quick smoke test before a full run
+MAX_STEPS=50 \
+SAVE_STEPS=1000000 \
+EVAL_STEPS=1000000 \
+python train_lora_diffusiongemma_experimental.py
+```
+
+```bash
+# Safer BF16 LoRA if memory allows it
+LOAD_IN_4BIT=false \
+PER_DEVICE_TRAIN_BATCH_SIZE=1 \
+GRADIENT_ACCUMULATION_STEPS=8 \
+python train_lora_diffusiongemma_experimental.py
+```
+
+```bash
+# Low-memory experimental QLoRA
+LOAD_IN_4BIT=true \
+PER_DEVICE_TRAIN_BATCH_SIZE=1 \
+GRADIENT_ACCUMULATION_STEPS=16 \
+MAX_LENGTH=512 \
+python train_lora_diffusiongemma_experimental.py
+```
+
+```bash
+# Use the abliterated BF16 variant as a starting point
+MODEL_NAME=edwixx/diffusiongemma-26B-A4B-it-HERETIC-Uncensored \
+LOAD_IN_4BIT=true \
+python train_lora_diffusiongemma_experimental.py
+```
+
+Important notes:
+- `nvidia/diffusiongemma-26B-A4B-IT-NVFP4` is best treated as an inference-optimized vLLM/NVFP4 artifact. For fine-tuning, prefer the BF16 base or a BF16 fine-tune.
+- You may need a very recent or pre-release `transformers` build. The script looks for `DiffusionGemmaForBlockDiffusion` first, then `AutoModelForMultimodalLM`.
+- The script intentionally refuses to invent a naive causal loss if the model does not return a native training loss. Block-diffusion training should use the model-native objective.
+- Dynamic PEFT adapters may need extra validation for generation because DiffusionGemma has shared encoder/decoder weights. If inference ignores the LoRA delta, test a merged adapter.
+
+The DiffusionGemma adapter is saved to:
+- **Adapter Directory**: `outputs/cyber-diffusiongemma-26b-lora/final`
 
 ---
 

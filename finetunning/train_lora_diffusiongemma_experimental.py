@@ -1,38 +1,40 @@
-# train_lora_qwen25_cyber_defensive_fixed_v2.py
+# train_lora_diffusiongemma_experimental.py
+#
+# Experimental LoRA/QLoRA fine-tuning for DiffusionGemma.
+#
+# DiffusionGemma is not a standard AutoModelForCausalLM model. It uses a
+# block-diffusion encoder/decoder architecture, so this script is deliberately
+# separate from the Qwen causal-LM training script.
 #
 # Recommended installation:
 # python3 -m venv venv
 # source venv/bin/activate
 # pip install --upgrade pip
-# pip install -U torch transformers datasets accelerate peft bitsandbytes sentencepiece protobuf
+# pip install -U --pre torch transformers datasets accelerate peft bitsandbytes sentencepiece protobuf
 #
 # Launch:
 # export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 # export TOKENIZERS_PARALLELISM=false
-# python train_lora_qwen25_cyber_defensive_fixed_v2.py
+# python train_lora_diffusiongemma_experimental.py
 
 import gc
 import glob
 import inspect
-import os
 import json
 import math
+import os
 from pathlib import Path
 
 import torch
-
+import transformers
 from datasets import load_dataset
+from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
 from transformers import (
-    AutoModelForCausalLM,
+    AutoProcessor,
     AutoTokenizer,
     BitsAndBytesConfig,
-    TrainingArguments,
     Trainer,
-)
-from peft import (
-    LoraConfig,
-    get_peft_model,
-    prepare_model_for_kbit_training,
+    TrainingArguments,
 )
 
 
@@ -60,6 +62,13 @@ def env_float(name, default):
     return default if value in (None, "") else float(value)
 
 
+def env_list(name, default):
+    value = os.environ.get(name)
+    if value in (None, ""):
+        return list(default)
+    return [item.strip() for item in value.split(",") if item.strip()]
+
+
 def resolve_data_file(env_name, default_name):
     override = os.environ.get(env_name)
     if override:
@@ -72,23 +81,20 @@ def resolve_data_file(env_name, default_name):
     return str(SCRIPT_DIR / default_name)
 
 
-MODEL_NAME = os.environ.get("MODEL_NAME", "Qwen/Qwen2.5-7B-Instruct")
+# Use the BF16 base for training. NVFP4 repositories are optimized for inference.
+MODEL_NAME = os.environ.get("MODEL_NAME", "google/diffusiongemma-26B-A4B-it")
+MODEL_CLASS = os.environ.get("MODEL_CLASS", "auto")
 
 TRAIN_FILE = resolve_data_file("TRAIN_FILE", "dataset_cyber_qa_enriched.json")
 VALID_FILE = resolve_data_file("VALID_FILE", "dataset_cyber_qa.json")
 
-OUTPUT_DIR = os.environ.get("OUTPUT_DIR", "outputs/cyber-qwen25-7b-lora")
+OUTPUT_DIR = os.environ.get("OUTPUT_DIR", "outputs/cyber-diffusiongemma-26b-lora")
 FINAL_DIR = os.environ.get("FINAL_DIR", f"{OUTPUT_DIR}/final")
 
-# Speed-first defaults. If VRAM is tight, set PER_DEVICE_TRAIN_BATCH_SIZE=1
-# and GRADIENT_CHECKPOINTING=true.
 MAX_LENGTH = env_int("MAX_LENGTH", 512)
-EFFECTIVE_BATCH_SIZE = env_int("EFFECTIVE_BATCH_SIZE", 16)
-PER_DEVICE_TRAIN_BATCH_SIZE = env_int("PER_DEVICE_TRAIN_BATCH_SIZE", 2)
-PER_DEVICE_EVAL_BATCH_SIZE = env_int(
-    "PER_DEVICE_EVAL_BATCH_SIZE",
-    PER_DEVICE_TRAIN_BATCH_SIZE,
-)
+EFFECTIVE_BATCH_SIZE = env_int("EFFECTIVE_BATCH_SIZE", 8)
+PER_DEVICE_TRAIN_BATCH_SIZE = env_int("PER_DEVICE_TRAIN_BATCH_SIZE", 1)
+PER_DEVICE_EVAL_BATCH_SIZE = env_int("PER_DEVICE_EVAL_BATCH_SIZE", 1)
 GRADIENT_ACCUMULATION_STEPS = env_int(
     "GRADIENT_ACCUMULATION_STEPS",
     max(1, math.ceil(EFFECTIVE_BATCH_SIZE / PER_DEVICE_TRAIN_BATCH_SIZE)),
@@ -96,7 +102,7 @@ GRADIENT_ACCUMULATION_STEPS = env_int(
 
 NUM_TRAIN_EPOCHS = env_float("NUM_TRAIN_EPOCHS", 1.0)
 MAX_STEPS = env_int("MAX_STEPS", -1)
-LEARNING_RATE = env_float("LEARNING_RATE", 1e-4)
+LEARNING_RATE = env_float("LEARNING_RATE", 5e-5)
 WARMUP_RATIO = env_float("WARMUP_RATIO", 0.03)
 WARMUP_STEPS = env_int("WARMUP_STEPS", 0)
 LR_SCHEDULER_TYPE = os.environ.get("LR_SCHEDULER_TYPE", "cosine")
@@ -104,29 +110,35 @@ LR_SCHEDULER_TYPE = os.environ.get("LR_SCHEDULER_TYPE", "cosine")
 LORA_R = env_int("LORA_R", 8)
 LORA_ALPHA = env_int("LORA_ALPHA", 16)
 LORA_DROPOUT = env_float("LORA_DROPOUT", 0.05)
+LORA_TARGET_MODULES = env_list(
+    "LORA_TARGET_MODULES",
+    ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
+)
 
-TOKENIZE_BATCH_SIZE = env_int("TOKENIZE_BATCH_SIZE", 256)
+LOAD_IN_4BIT = env_bool("LOAD_IN_4BIT", True)
+GRADIENT_CHECKPOINTING = env_bool("GRADIENT_CHECKPOINTING", True)
+OPTIM = os.environ.get("OPTIM", "paged_adamw_8bit" if LOAD_IN_4BIT else "adamw_torch")
+AUTO_RESUME = env_bool("AUTO_RESUME", True)
+TORCH_COMPILE = env_bool("TORCH_COMPILE", False)
+USE_MULTIMODAL_MESSAGES = env_bool("USE_MULTIMODAL_MESSAGES", True)
+LABEL_ARG = os.environ.get("LABEL_ARG", "auto")
+
+TOKENIZE_BATCH_SIZE = env_int("TOKENIZE_BATCH_SIZE", 128)
 TOKENIZE_NUM_PROC = env_int("TOKENIZE_NUM_PROC", min(4, os.cpu_count() or 1))
 GROUP_BY_LENGTH = env_bool("GROUP_BY_LENGTH", True)
 PAD_TO_MULTIPLE_OF = env_int("PAD_TO_MULTIPLE_OF", 8)
 DATALOADER_NUM_WORKERS = env_int("DATALOADER_NUM_WORKERS", min(4, os.cpu_count() or 1))
 
-GRADIENT_CHECKPOINTING = env_bool("GRADIENT_CHECKPOINTING", False)
-ATTN_IMPLEMENTATION = os.environ.get("ATTN_IMPLEMENTATION", "auto")
-OPTIM = os.environ.get("OPTIM", "paged_adamw_8bit")
-TORCH_COMPILE = env_bool("TORCH_COMPILE", False)
-AUTO_RESUME = env_bool("AUTO_RESUME", True)
-
-LOGGING_STEPS = env_int("LOGGING_STEPS", 50)
-SAVE_STEPS = env_int("SAVE_STEPS", 1000)
-EVAL_STEPS = env_int("EVAL_STEPS", 1000)
-SAVE_TOTAL_LIMIT = env_int("SAVE_TOTAL_LIMIT", 3)
+LOGGING_STEPS = env_int("LOGGING_STEPS", 25)
+SAVE_STEPS = env_int("SAVE_STEPS", 500)
+EVAL_STEPS = env_int("EVAL_STEPS", 500)
+SAVE_TOTAL_LIMIT = env_int("SAVE_TOTAL_LIMIT", 2)
 
 os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
 
 
 # ============================================================
-# SYSTEM PROMPT - DEFENSIF
+# SYSTEM PROMPT
 # ============================================================
 
 SYSTEM_PROMPT = """You are an expert in offensive and defensive cybersecurity.
@@ -149,18 +161,20 @@ Important rules:
 
 
 # ============================================================
-# TOKENIZER
+# PROCESSOR / TOKENIZER
 # ============================================================
 
-tokenizer = AutoTokenizer.from_pretrained(
-    MODEL_NAME,
-    trust_remote_code=True,
-)
+processor = AutoProcessor.from_pretrained(MODEL_NAME, trust_remote_code=True)
+tokenizer = getattr(processor, "tokenizer", None)
+
+if tokenizer is None:
+    tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME, trust_remote_code=True)
 
 if tokenizer.pad_token is None:
     tokenizer.pad_token = tokenizer.eos_token
 
 tokenizer.padding_side = "right"
+chat_formatter = processor if hasattr(processor, "apply_chat_template") else tokenizer
 
 
 # ============================================================
@@ -194,6 +208,12 @@ def to_text(value):
     return json.dumps(value, ensure_ascii=False, indent=2)
 
 
+def as_message_content(text):
+    if USE_MULTIMODAL_MESSAGES:
+        return [{"type": "text", "text": text}]
+    return text
+
+
 def build_user_content(example):
     instruction = to_text(example.get("instruction", ""))
     input_data = example.get("input", "")
@@ -215,25 +235,39 @@ def build_user_content(example):
         "If the expected output is JSON, produce only valid JSON."
     )
 
-
     return "\n".join(parts)
 
 
 def build_messages(example, include_answer=True):
-    user_text = build_user_content(example)
-    assistant_text = to_text(example.get("output", ""))
-
-    # Qwen2.5-Instruct expects simple text content, not the multimodal format
-    # [{"type":"text", "text":"..."}].
     messages = [
-        {"role": "system", "content": SYSTEM_PROMPT},
-        {"role": "user", "content": user_text},
+        {"role": "system", "content": as_message_content(SYSTEM_PROMPT)},
+        {"role": "user", "content": as_message_content(build_user_content(example))},
     ]
 
     if include_answer:
-        messages.append({"role": "assistant", "content": assistant_text})
+        messages.append(
+            {
+                "role": "assistant",
+                "content": as_message_content(to_text(example.get("output", ""))),
+            }
+        )
 
     return messages
+
+
+def render_chat(messages, add_generation_prompt):
+    try:
+        return chat_formatter.apply_chat_template(
+            messages,
+            add_generation_prompt=add_generation_prompt,
+            tokenize=False,
+        )
+    except TypeError:
+        return tokenizer.apply_chat_template(
+            messages,
+            add_generation_prompt=add_generation_prompt,
+            tokenize=False,
+        )
 
 
 def batch_to_examples(batch):
@@ -247,23 +281,8 @@ def tokenize_batch(batch):
     full_texts = []
 
     for example in batch_to_examples(batch):
-        prompt_messages = build_messages(example, include_answer=False)
-        full_messages = build_messages(example, include_answer=True)
-
-        prompt_texts.append(
-            tokenizer.apply_chat_template(
-                prompt_messages,
-                add_generation_prompt=True,
-                tokenize=False,
-            )
-        )
-        full_texts.append(
-            tokenizer.apply_chat_template(
-                full_messages,
-                add_generation_prompt=False,
-                tokenize=False,
-            )
-        )
+        prompt_texts.append(render_chat(build_messages(example, False), True))
+        full_texts.append(render_chat(build_messages(example, True), False))
 
     prompt_tokens = tokenizer(
         prompt_texts,
@@ -318,16 +337,15 @@ tokenized_dataset = raw_dataset.map(
     load_from_cache_file=True,
 )
 
-print(tokenized_dataset)
-
 for split in ["train", "validation"]:
     truncated_count = sum(tokenized_dataset[split]["was_truncated"])
     total = len(tokenized_dataset[split])
     print(f"{split}: {truncated_count}/{total} truncated examples")
 
-# Remove examples where the assistant response is completely truncated.
+
 def has_trainable_labels(example):
     return any(label != -100 for label in example["labels"])
+
 
 before_train = len(tokenized_dataset["train"])
 before_valid = len(tokenized_dataset["validation"])
@@ -343,8 +361,7 @@ print(f"Validation kept: {len(tokenized_dataset['validation'])}/{before_valid}")
 
 if len(tokenized_dataset["train"]) == 0:
     raise RuntimeError(
-        "No valid training examples. "
-        "MAX_LENGTH is probably too small or outputs are empty."
+        "No valid training examples. MAX_LENGTH is probably too small or outputs are empty."
     )
 
 
@@ -352,15 +369,15 @@ if len(tokenized_dataset["train"]) == 0:
 # DATA COLLATOR
 # ============================================================
 
-class DataCollatorForCausalLM:
+class DataCollatorForDiffusionGemma:
     def __init__(self, tokenizer, pad_to_multiple_of=None):
         self.tokenizer = tokenizer
         self.pad_to_multiple_of = pad_to_multiple_of
 
     def __call__(self, features):
-        input_ids = [f["input_ids"] for f in features]
-        attention_mask = [f["attention_mask"] for f in features]
-        labels = [f["labels"] for f in features]
+        input_ids = [feature["input_ids"] for feature in features]
+        attention_mask = [feature["attention_mask"] for feature in features]
+        labels = [feature["labels"] for feature in features]
 
         batch = self.tokenizer.pad(
             {
@@ -373,18 +390,16 @@ class DataCollatorForCausalLM:
         )
 
         max_len = batch["input_ids"].shape[1]
-
         padded_labels = []
         for label in labels:
             pad_len = max_len - len(label)
             padded_labels.append(label + [-100] * pad_len)
 
         batch["labels"] = torch.tensor(padded_labels, dtype=torch.long)
-
         return batch
 
 
-data_collator = DataCollatorForCausalLM(
+data_collator = DataCollatorForDiffusionGemma(
     tokenizer,
     pad_to_multiple_of=PAD_TO_MULTIPLE_OF if PAD_TO_MULTIPLE_OF > 0 else None,
 )
@@ -395,7 +410,7 @@ data_collator = DataCollatorForCausalLM(
 # ============================================================
 
 if not torch.cuda.is_available():
-    raise RuntimeError("CUDA is required for this QLoRA script.")
+    raise RuntimeError("CUDA is required for this DiffusionGemma training script.")
 
 use_bf16 = torch.cuda.is_bf16_supported()
 compute_dtype = torch.bfloat16 if use_bf16 else torch.float16
@@ -413,109 +428,126 @@ print(f"bf16 supported: {use_bf16}")
 print(f"dtype used: {compute_dtype}")
 print(f"TF32 enabled: {use_tf32}")
 print(
-    "Training profile: "
+    "DiffusionGemma profile: "
+    f"model={MODEL_NAME}, "
+    f"load_in_4bit={LOAD_IN_4BIT}, "
     f"max_length={MAX_LENGTH}, "
     f"micro_batch={PER_DEVICE_TRAIN_BATCH_SIZE}, "
     f"grad_accum={GRADIENT_ACCUMULATION_STEPS}, "
-    f"effective_batch~={PER_DEVICE_TRAIN_BATCH_SIZE * GRADIENT_ACCUMULATION_STEPS}, "
     f"gradient_checkpointing={GRADIENT_CHECKPOINTING}"
 )
-
-
-# ============================================================
-# QUANTIZATION 4-BIT
-# ============================================================
-
-bnb_config = BitsAndBytesConfig(
-    load_in_4bit=True,
-    bnb_4bit_quant_type="nf4",
-    bnb_4bit_compute_dtype=compute_dtype,
-    bnb_4bit_use_double_quant=True,
-)
-
-
-def load_quantized_model():
-    base_kwargs = {
-        "quantization_config": bnb_config,
-        "device_map": {"": 0},
-        "low_cpu_mem_usage": True,
-        "torch_dtype": compute_dtype,
-        "trust_remote_code": True,
-    }
-
-    if ATTN_IMPLEMENTATION == "auto":
-        candidates = ["flash_attention_2", "sdpa"]
-    elif ATTN_IMPLEMENTATION in {"", "none", "default"}:
-        candidates = [None]
-    else:
-        candidates = [ATTN_IMPLEMENTATION]
-
-    last_error = None
-    for attn_implementation in candidates:
-        kwargs = dict(base_kwargs)
-        if attn_implementation:
-            kwargs["attn_implementation"] = attn_implementation
-
-        try:
-            model = AutoModelForCausalLM.from_pretrained(MODEL_NAME, **kwargs)
-            print(f"Attention implementation: {attn_implementation or 'transformers default'}")
-            return model
-        except Exception as exc:
-            last_error = exc
-            if ATTN_IMPLEMENTATION != "auto":
-                raise
-            print(f"Attention implementation {attn_implementation} unavailable: {exc}")
-
-    raise RuntimeError("Unable to load the model with any attention implementation.") from last_error
 
 
 # ============================================================
 # MODEL
 # ============================================================
 
+def resolve_model_class():
+    if MODEL_CLASS != "auto":
+        model_class = getattr(transformers, MODEL_CLASS, None)
+        if model_class is None:
+            raise RuntimeError(
+                f"transformers.{MODEL_CLASS} is unavailable. "
+                "Install a Transformers build that supports DiffusionGemma."
+            )
+        return model_class
+
+    for class_name in ("DiffusionGemmaForBlockDiffusion", "AutoModelForMultimodalLM"):
+        model_class = getattr(transformers, class_name, None)
+        if model_class is not None:
+            print(f"Model class: transformers.{class_name}")
+            return model_class
+
+    raise RuntimeError(
+        "This Transformers install does not expose DiffusionGemmaForBlockDiffusion "
+        "or AutoModelForMultimodalLM. Install a recent/nightly Transformers build."
+    )
+
+
+def build_quantization_config():
+    if not LOAD_IN_4BIT:
+        return None
+
+    return BitsAndBytesConfig(
+        load_in_4bit=True,
+        bnb_4bit_quant_type="nf4",
+        bnb_4bit_compute_dtype=compute_dtype,
+        bnb_4bit_use_double_quant=True,
+    )
+
+
+def load_model():
+    model_class = resolve_model_class()
+    kwargs = {
+        "device_map": {"": 0},
+        "low_cpu_mem_usage": True,
+        "torch_dtype": compute_dtype,
+        "trust_remote_code": True,
+    }
+
+    quantization_config = build_quantization_config()
+    if quantization_config is not None:
+        kwargs["quantization_config"] = quantization_config
+
+    try:
+        return model_class.from_pretrained(MODEL_NAME, **kwargs)
+    except TypeError as exc:
+        if "torch_dtype" not in str(exc):
+            raise
+        kwargs["dtype"] = kwargs.pop("torch_dtype")
+        return model_class.from_pretrained(MODEL_NAME, **kwargs)
+
+
 gc.collect()
 torch.cuda.empty_cache()
 
-model = load_quantized_model()
+model = load_model()
 
-model.config.use_cache = False
+if hasattr(model, "config"):
+    model.config.use_cache = False
 
 memory_gb = model.get_memory_footprint() / 1024**3
 print(f"Memory footprint after loading: {memory_gb:.2f} GB")
 
-if memory_gb > 20:
-    raise RuntimeError(
-        f"The model already occupies {memory_gb:.2f} GB. "
-        "4-bit quantization is probably not applied correctly, "
-        "or another model is loaded."
+if LOAD_IN_4BIT:
+    model = prepare_model_for_kbit_training(
+        model,
+        use_gradient_checkpointing=GRADIENT_CHECKPOINTING,
+        gradient_checkpointing_kwargs={"use_reentrant": False},
     )
-
-model = prepare_model_for_kbit_training(
-    model,
-    use_gradient_checkpointing=GRADIENT_CHECKPOINTING,
-    gradient_checkpointing_kwargs={"use_reentrant": False},
-)
+elif GRADIENT_CHECKPOINTING and hasattr(model, "gradient_checkpointing_enable"):
+    model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": False})
 
 
-# ============================================================
-# LORA CONFIG
-# ============================================================
+def resolve_lora_targets(model, requested):
+    matched = []
+    counts = {}
+
+    for suffix in requested:
+        count = sum(1 for name, _ in model.named_modules() if name.endswith(suffix))
+        if count > 0:
+            matched.append(suffix)
+            counts[suffix] = count
+
+    if not matched:
+        sample = [name for name, _ in list(model.named_modules())[:80] if name]
+        raise RuntimeError(
+            "No requested LoRA target modules matched this model. "
+            f"Requested: {requested}. First module names: {sample[:20]}"
+        )
+
+    print(f"LoRA target modules: {matched}")
+    print(f"LoRA target match counts: {counts}")
+    return matched
+
 
 peft_config = LoraConfig(
     r=LORA_R,
     lora_alpha=LORA_ALPHA,
     lora_dropout=LORA_DROPOUT,
     bias="none",
-    task_type="CAUSAL_LM",
-    target_modules=[
-        "q_proj",
-        "k_proj",
-        "v_proj",
-        "o_proj",
-        "gate_proj",
-        "up_proj",
-        "down_proj",
-    ],
+    task_type="FEATURE_EXTRACTION",
+    target_modules=resolve_lora_targets(model, LORA_TARGET_MODULES),
 )
 
 model = get_peft_model(model, peft_config)
@@ -523,8 +555,54 @@ model.print_trainable_parameters()
 
 
 # ============================================================
-# TRAINING ARGUMENTS
+# TRAINING
 # ============================================================
+
+class DiffusionGemmaTrainer(Trainer):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._resolved_label_arg = None
+
+    def compute_loss(self, model, inputs, return_outputs=False, **kwargs):
+        labels = inputs.pop("labels")
+        candidate_args = [LABEL_ARG] if LABEL_ARG != "auto" else [
+            "labels",
+            "target_ids",
+            "targets",
+            "decoder_labels",
+        ]
+
+        last_error = None
+        for label_arg in candidate_args:
+            try:
+                outputs = model(**inputs, **{label_arg: labels})
+            except TypeError as exc:
+                last_error = exc
+                continue
+
+            loss = getattr(outputs, "loss", None)
+            if loss is None and isinstance(outputs, dict):
+                loss = outputs.get("loss")
+
+            if loss is None:
+                raise RuntimeError(
+                    "DiffusionGemma forward pass did not return a loss. "
+                    "This script intentionally refuses to compute a naive causal CE loss, "
+                    "because block-diffusion training needs the model-native objective."
+                )
+
+            if self._resolved_label_arg is None:
+                self._resolved_label_arg = label_arg
+                print(f"Using label argument for DiffusionGemma loss: {label_arg}")
+
+            return (loss, outputs) if return_outputs else loss
+
+        raise RuntimeError(
+            "Could not call DiffusionGemma with a supervised label argument. "
+            f"Tried: {candidate_args}. Last TypeError: {last_error}. "
+            "Set LABEL_ARG manually if your Transformers build uses another name."
+        )
+
 
 def build_training_arguments():
     kwargs = {
@@ -555,8 +633,8 @@ def build_training_arguments():
         "dataloader_pin_memory": True,
         "dataloader_persistent_workers": DATALOADER_NUM_WORKERS > 0,
         "torch_compile": TORCH_COMPILE,
-        "include_tokens_per_second": True,
         "save_safetensors": True,
+        "label_names": ["labels"],
         "report_to": "none",
         "remove_unused_columns": False,
     }
@@ -582,12 +660,7 @@ def build_training_arguments():
 
 training_args = build_training_arguments()
 
-
-# ============================================================
-# TRAINER
-# ============================================================
-
-trainer = Trainer(
+trainer = DiffusionGemmaTrainer(
     model=model,
     args=training_args,
     train_dataset=tokenized_dataset["train"],
@@ -595,22 +668,16 @@ trainer = Trainer(
     data_collator=data_collator,
 )
 
-
-# ============================================================
-# TRAIN
-# ============================================================
-
-# Check if there are checkpoints in the output directory
 resume_from_checkpoint = None
 if AUTO_RESUME and os.path.exists(OUTPUT_DIR):
     checkpoints = glob.glob(os.path.join(OUTPUT_DIR, "checkpoint-*"))
     if checkpoints:
-        # Sort checkpoints by step number to find the latest
         def get_step_num(path):
             try:
                 return int(path.split("-")[-1])
             except ValueError:
                 return 0
+
         checkpoints.sort(key=get_step_num)
         resume_from_checkpoint = checkpoints[-1]
         print(f"Existing checkpoints found in {OUTPUT_DIR}. Resuming from: {resume_from_checkpoint}")
@@ -625,5 +692,7 @@ trainer.train(resume_from_checkpoint=resume_from_checkpoint)
 
 trainer.save_model(FINAL_DIR)
 tokenizer.save_pretrained(FINAL_DIR)
+processor.save_pretrained(FINAL_DIR)
 
-print(f"\nLoRA saved to: {FINAL_DIR}")
+print(f"\nExperimental DiffusionGemma LoRA saved to: {FINAL_DIR}")
+print("For inference, prefer testing a merged adapter if dynamic PEFT generation ignores LoRA deltas.")
