@@ -21,7 +21,6 @@ from pathlib import Path
 
 import torch
 
-from datasets import load_dataset
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
@@ -34,6 +33,8 @@ from peft import (
     get_peft_model,
     prepare_model_for_kbit_training,
 )
+
+from train_dataset_utils import load_instruction_datasets
 
 
 # ============================================================
@@ -60,22 +61,10 @@ def env_float(name, default):
     return default if value in (None, "") else float(value)
 
 
-def resolve_data_file(env_name, default_name):
-    override = os.environ.get(env_name)
-    if override:
-        return override
-
-    cwd_path = Path(default_name)
-    if cwd_path.exists():
-        return str(cwd_path)
-
-    return str(SCRIPT_DIR / default_name)
-
-
 MODEL_NAME = os.environ.get("MODEL_NAME", "Qwen/Qwen2.5-7B-Instruct")
 
-TRAIN_FILE = resolve_data_file("TRAIN_FILE", "dataset_cyber_qa_enriched.json")
-VALID_FILE = resolve_data_file("VALID_FILE", "dataset_cyber_qa.json")
+DEFAULT_TRAIN_FILE = "dataset_cyber_qa_enriched.json"
+DEFAULT_VALID_FILE = "dataset_cyber_qa.json"
 
 OUTPUT_DIR = os.environ.get("OUTPUT_DIR", "outputs/cyber-qwen25-7b-lora")
 FINAL_DIR = os.environ.get("FINAL_DIR", f"{OUTPUT_DIR}/final")
@@ -167,12 +156,10 @@ tokenizer.padding_side = "right"
 # DATASET
 # ============================================================
 
-raw_dataset = load_dataset(
-    "json",
-    data_files={
-        "train": TRAIN_FILE,
-        "validation": VALID_FILE,
-    },
+raw_dataset = load_instruction_datasets(
+    SCRIPT_DIR,
+    DEFAULT_TRAIN_FILE,
+    DEFAULT_VALID_FILE,
 )
 
 print(raw_dataset)
@@ -271,35 +258,34 @@ def tokenize_batch(batch):
         truncation=True,
         max_length=MAX_LENGTH,
     )
-    full_tokens_no_trunc = tokenizer(
+    full_tokens = tokenizer(
         full_texts,
         add_special_tokens=False,
         truncation=False,
     )
-    full_tokens = tokenizer(
-        full_texts,
-        add_special_tokens=False,
-        truncation=True,
-        max_length=MAX_LENGTH,
-    )
 
     labels = []
+    input_ids_list = []
+    attention_masks = []
     was_truncated = []
     lengths = []
 
-    for index, input_ids in enumerate(full_tokens["input_ids"]):
+    for index, full_input_ids in enumerate(full_tokens["input_ids"]):
+        input_ids = full_input_ids[:MAX_LENGTH]
         example_labels = input_ids.copy()
         prompt_len = len(prompt_tokens["input_ids"][index])
         prompt_len = min(prompt_len, len(example_labels))
         example_labels[:prompt_len] = [-100] * prompt_len
 
+        input_ids_list.append(input_ids)
+        attention_masks.append(full_tokens["attention_mask"][index][:MAX_LENGTH])
         labels.append(example_labels)
-        was_truncated.append(len(full_tokens_no_trunc["input_ids"][index]) > MAX_LENGTH)
+        was_truncated.append(len(full_input_ids) > MAX_LENGTH)
         lengths.append(len(input_ids))
 
     return {
-        "input_ids": full_tokens["input_ids"],
-        "attention_mask": full_tokens["attention_mask"],
+        "input_ids": input_ids_list,
+        "attention_mask": attention_masks,
         "labels": labels,
         "was_truncated": was_truncated,
         "length": lengths,

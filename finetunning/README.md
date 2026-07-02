@@ -28,9 +28,25 @@ Optional: if your platform supports it, install FlashAttention 2 for faster atte
 
 ## Dataset Structure
 
-The script loads the training and validation data locally in JSON format from the workspace:
+By default, the scripts load the cybersecurity JSON files from this directory:
 - **Training dataset**: `dataset_cyber_qa_enriched.json`
 - **Validation dataset**: `dataset_cyber_qa.json`
+
+For faster dataset iteration, the training scripts also support multi-file loading without editing Python code:
+
+```bash
+# Train on every enriched local QA dataset and create validation automatically.
+DATASET_GLOB="dataset_*_qa_enriched.json" \
+VALIDATION_SPLIT=0.05 \
+python train_lora_qwen25_cyber_defensive_fixed_v2.py
+```
+
+```bash
+# Explicit train/validation files. Globs are accepted too.
+TRAIN_FILES="dataset_cyber_qa_enriched.json,dataset_finance_qa_enriched.json" \
+VALID_FILES="dataset_cyber_qa.json,dataset_finance_qa.json" \
+python train_lora_qwen25_cyber_defensive_fixed_v2.py
+```
 
 The JSON files should follow the standard instruction-following format:
 ```json
@@ -42,6 +58,28 @@ The JSON files should follow the standard instruction-following format:
   }
 ]
 ```
+
+The loader also accepts common aliases to make imported datasets quicker to add:
+- prompt fields: `instruction`, `prompt`, `question`, `query`, `task`
+- optional context fields: `input`, `context`, `ctx`, `data`
+- answer fields: `output`, `answer`, `response`, `completion`
+- simple chat fields: `messages` or `conversations` with user/human and assistant/gpt turns
+
+Useful dataset variables:
+
+| Variable | Default | Use |
+|---|---:|---|
+| `TRAIN_FILE` | `dataset_cyber_qa_enriched.json` | Single training file, kept for backward compatibility. |
+| `VALID_FILE` | `dataset_cyber_qa.json` | Single validation file, kept for backward compatibility. |
+| `TRAIN_FILES` | unset | Comma-separated training files or globs. |
+| `VALID_FILES` | unset | Comma-separated validation files or globs. |
+| `DATASET_FILES` | unset | Comma-separated train files; validation is auto-split unless `VALID_FILES` is set. |
+| `DATASET_GLOB` | unset | One or more comma-separated train globs; validation is auto-split unless `VALID_FILES` is set. |
+| `DATASET_DIR` | script directory | Base directory for relative dataset paths. |
+| `VALIDATION_SPLIT` | `0.05` | Fraction used for automatic validation split. |
+| `DATASET_SEED` | `42` | Shuffle/split seed. |
+| `MAX_TRAIN_SAMPLES` | `0` | Limit training examples for quick smoke tests. `0` means no limit. |
+| `MAX_VALID_SAMPLES` | `0` | Limit validation examples for quick smoke tests. `0` means no limit. |
 
 ### Prompt Template & Prompt Masking
 The dataset is formatted using a specialized cybersecurity system prompt (defining the assistant as an offensive and defensive cybersecurity expert). 
@@ -107,6 +145,18 @@ EVAL_STEPS=1000000 \
 python train_lora_qwen25_cyber_defensive_fixed_v2.py
 ```
 
+Fast dataset smoke test after adding new JSON files:
+```bash
+DATASET_GLOB="dataset_*_qa_enriched.json" \
+VALIDATION_SPLIT=0.05 \
+MAX_TRAIN_SAMPLES=5000 \
+MAX_VALID_SAMPLES=500 \
+MAX_STEPS=100 \
+SAVE_STEPS=1000000 \
+EVAL_STEPS=1000000 \
+python train_lora_qwen25_cyber_defensive_fixed_v2.py
+```
+
 More aggressive profile if VRAM allows it:
 ```bash
 PER_DEVICE_TRAIN_BATCH_SIZE=4 \
@@ -151,6 +201,9 @@ python train_lora_qwen25_cyber_defensive_fixed_v2.py
 | `OPTIM` | `paged_adamw_8bit` | Keep for QLoRA memory efficiency; try `adamw_torch_fused` only if your install supports it and VRAM is comfortable. |
 | `TF32` | auto | Enable/disable TensorFloat-32 matmul on compatible NVIDIA GPUs. |
 | `AUTO_RESUME` | `true` | Resume latest checkpoint automatically. |
+| `TRAIN_FILES` / `VALID_FILES` | unset | Add several local JSON files without changing code. |
+| `DATASET_GLOB` | unset | Quickly train on files matching a pattern. |
+| `MAX_TRAIN_SAMPLES` / `MAX_VALID_SAMPLES` | `0` | Cap examples for smoke tests. |
 
 ### VRAM and Resource Constraints
 - The script includes safety checks. If the base model takes more than 20 GB of VRAM right after loading, training will halt (indicating that 4-bit quantization did not load correctly).
