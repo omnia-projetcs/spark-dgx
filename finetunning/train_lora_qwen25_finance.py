@@ -11,10 +11,14 @@
 # export TOKENIZERS_PARALLELISM=false
 # python train_lora_qwen25_finance.py
 
+import os
+
+os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
+os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
+
 import gc
 import glob
 import inspect
-import os
 import json
 import math
 from pathlib import Path
@@ -69,11 +73,13 @@ DEFAULT_VALID_FILE = "dataset_finance_qa.json"
 OUTPUT_DIR = os.environ.get("OUTPUT_DIR", "outputs/finance-qwen25-7b-lora")
 FINAL_DIR = os.environ.get("FINAL_DIR", f"{OUTPUT_DIR}/final")
 
-# Speed-first defaults. If VRAM is tight, set PER_DEVICE_TRAIN_BATCH_SIZE=1
-# and GRADIENT_CHECKPOINTING=true.
+# 16 GB-safe defaults. Qwen's large vocabulary makes the causal-LM loss allocate
+# a large logits tensor, so micro-batch 2 can OOM even at 512 tokens.
+# For faster large-GPU runs, set PER_DEVICE_TRAIN_BATCH_SIZE=2 and
+# GRADIENT_CHECKPOINTING=false.
 MAX_LENGTH = env_int("MAX_LENGTH", 512)
 EFFECTIVE_BATCH_SIZE = env_int("EFFECTIVE_BATCH_SIZE", 16)
-PER_DEVICE_TRAIN_BATCH_SIZE = env_int("PER_DEVICE_TRAIN_BATCH_SIZE", 2)
+PER_DEVICE_TRAIN_BATCH_SIZE = env_int("PER_DEVICE_TRAIN_BATCH_SIZE", 1)
 PER_DEVICE_EVAL_BATCH_SIZE = env_int(
     "PER_DEVICE_EVAL_BATCH_SIZE",
     PER_DEVICE_TRAIN_BATCH_SIZE,
@@ -100,7 +106,7 @@ GROUP_BY_LENGTH = env_bool("GROUP_BY_LENGTH", True)
 PAD_TO_MULTIPLE_OF = env_int("PAD_TO_MULTIPLE_OF", 8)
 DATALOADER_NUM_WORKERS = env_int("DATALOADER_NUM_WORKERS", min(4, os.cpu_count() or 1))
 
-GRADIENT_CHECKPOINTING = env_bool("GRADIENT_CHECKPOINTING", False)
+GRADIENT_CHECKPOINTING = env_bool("GRADIENT_CHECKPOINTING", True)
 ATTN_IMPLEMENTATION = os.environ.get("ATTN_IMPLEMENTATION", "auto")
 OPTIM = os.environ.get("OPTIM", "paged_adamw_8bit")
 TORCH_COMPILE = env_bool("TORCH_COMPILE", False)
@@ -110,9 +116,6 @@ LOGGING_STEPS = env_int("LOGGING_STEPS", 50)
 SAVE_STEPS = env_int("SAVE_STEPS", 1000)
 EVAL_STEPS = env_int("EVAL_STEPS", 1000)
 SAVE_TOTAL_LIMIT = env_int("SAVE_TOTAL_LIMIT", 3)
-
-os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
-
 
 # ============================================================
 # SYSTEM PROMPT - FINANCE

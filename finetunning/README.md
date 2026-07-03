@@ -2,7 +2,7 @@
 
 This directory contains LoRA/QLoRA training scripts for Qwen 2.5, Mistral-Small-3.2, and DiffusionGemma on local instruction datasets.
 
-The training script leverages 4-bit NormalFloat (NF4) quantization, 8-bit Paged AdamW optimization, dynamic padding, length-grouped batches, batched tokenization, TF32 when available, and automatic FlashAttention 2 -> SDPA fallback. Gradient checkpointing is now optional: keep it disabled for speed, enable it for low-VRAM runs.
+The training scripts leverage 4-bit NormalFloat (NF4) quantization, 8-bit Paged AdamW optimization, dynamic padding, length-grouped batches, batched tokenization, TF32 when available, and automatic FlashAttention 2 -> SDPA fallback. The Qwen defaults favor 16 GB GPUs: micro-batch `1` with gradient checkpointing enabled. Larger GPUs can opt into the fast profile below.
 
 ---
 
@@ -107,7 +107,7 @@ The key hyperparameters configured in `train_lora_qwen25_cyber_defensive_fixed_v
   - Target Modules: `q_proj`, `k_proj`, `v_proj`, `o_proj`, `gate_proj`, `up_proj`, `down_proj` (all linear modules of the attention and MLP layers)
 - **Optimizer**: `paged_adamw_8bit`
 - **Learning Rate**: `1e-4` with a cosine schedule and `0.03` warmup ratio
-- **Batch Size**: Effective batch size of `16` by default (per-device batch size `2` * gradient accumulation steps `8`)
+- **Batch Size**: Effective batch size of `16` by default (per-device batch size `1` * gradient accumulation steps `16`)
 - **Epochs**: `1`
 - **Speed Optimizations**:
   - tokenization runs before model loading, in batches, with up to `4` CPU processes;
@@ -115,7 +115,7 @@ The key hyperparameters configured in `train_lora_qwen25_cyber_defensive_fixed_v
   - `group_by_length=True` reduces wasted padding;
   - `TF32` is enabled on Ampere/Blackwell-class GPUs;
   - attention uses `flash_attention_2` if available, otherwise `sdpa`;
-  - gradient checkpointing is disabled by default for speed and can be enabled for low VRAM.
+  - gradient checkpointing is enabled by default to keep Qwen 2.5 training inside 16 GB VRAM.
 
 ---
 
@@ -132,7 +132,7 @@ python train_lora_qwen25_cyber_defensive_fixed_v2.py
 
 ### Fast Profiles
 
-Default speed-first profile:
+Default 16 GB-safe profile:
 ```bash
 cd finetunning
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
@@ -161,16 +161,16 @@ EVAL_STEPS=1000000 \
 python train_lora_qwen25_cyber_defensive_fixed_v2.py
 ```
 
-More aggressive profile if VRAM allows it:
+Fast profile if VRAM allows it:
 ```bash
-PER_DEVICE_TRAIN_BATCH_SIZE=4 \
+PER_DEVICE_TRAIN_BATCH_SIZE=2 \
 EFFECTIVE_BATCH_SIZE=16 \
 GRADIENT_CHECKPOINTING=false \
 MAX_LENGTH=512 \
 python train_lora_qwen25_cyber_defensive_fixed_v2.py
 ```
 
-Low-VRAM profile if you hit OOM:
+Extra conservative profile if you still hit OOM:
 ```bash
 PER_DEVICE_TRAIN_BATCH_SIZE=1 \
 GRADIENT_ACCUMULATION_STEPS=16 \
@@ -194,10 +194,10 @@ python train_lora_qwen25_cyber_defensive_fixed_v2.py
 |---|---:|---|
 | `MAX_LENGTH` | `512` | Sequence length. Increase to `1024`/`2048` only if memory allows. |
 | `MAX_STEPS` | `-1` | Stop early for a benchmark. Use `200` before a full 160k-record run. |
-| `PER_DEVICE_TRAIN_BATCH_SIZE` | `2` | Micro-batch size. Higher is faster until VRAM is saturated. |
+| `PER_DEVICE_TRAIN_BATCH_SIZE` | `1` | Micro-batch size. Keep `1` on 16 GB GPUs; raise only when VRAM allows. |
 | `EFFECTIVE_BATCH_SIZE` | `16` | Target effective batch; auto-computes gradient accumulation unless overridden. |
 | `GRADIENT_ACCUMULATION_STEPS` | auto | Set directly for exact control. |
-| `GRADIENT_CHECKPOINTING` | `false` | `true` saves VRAM but slows training. |
+| `GRADIENT_CHECKPOINTING` | `true` | Saves VRAM but slows training; set `false` only for larger GPUs. |
 | `ATTN_IMPLEMENTATION` | `auto` | `auto` tries `flash_attention_2`, then `sdpa`; set `sdpa` to skip the FlashAttention attempt. |
 | `TOKENIZE_NUM_PROC` | up to `4` | CPU workers for preprocessing. |
 | `TOKENIZE_BATCH_SIZE` | `256` | Batch size for tokenizer calls. Lower if RAM is tight. |
@@ -211,11 +211,11 @@ python train_lora_qwen25_cyber_defensive_fixed_v2.py
 
 ### VRAM and Resource Constraints
 - The script includes safety checks. If the base model takes more than 20 GB of VRAM right after loading, training will halt (indicating that 4-bit quantization did not load correctly).
-- If you encounter Out-Of-Memory (OOM) errors during the backward pass:
+- If you encounter Out-Of-Memory (OOM) errors during the forward, loss, or backward pass:
   1. Kill any stale python processes (`pkill -f python`).
-  2. Use `PER_DEVICE_TRAIN_BATCH_SIZE=1`.
-  3. Enable `GRADIENT_CHECKPOINTING=true`.
-  4. Reduce `MAX_LENGTH` to `512` or lower.
+  2. Keep `PER_DEVICE_TRAIN_BATCH_SIZE=1`.
+  3. Keep `GRADIENT_CHECKPOINTING=true`.
+  4. Reduce `MAX_LENGTH` to `384` or `256`.
   5. Ensure `expandable_segments:True` is set in `PYTORCH_CUDA_ALLOC_CONF`.
 
 ---
