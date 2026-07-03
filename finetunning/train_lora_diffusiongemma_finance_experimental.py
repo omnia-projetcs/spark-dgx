@@ -507,7 +507,7 @@ def load_model():
     kwargs = {
         "device_map": resolve_device_map(),
         "low_cpu_mem_usage": True,
-        "torch_dtype": compute_dtype,
+        "dtype": compute_dtype,
         "trust_remote_code": True,
     }
 
@@ -536,10 +536,11 @@ def load_model():
             "ALLOW_LOW_VRAM=true DEVICE_MAP=auto."
         ) from exc
     except TypeError as exc:
-        if "torch_dtype" not in str(exc):
+        if "dtype" not in str(exc):
             raise
-        kwargs["dtype"] = kwargs.pop("torch_dtype")
-        return model_class.from_pretrained(MODEL_NAME, **kwargs)
+        legacy_kwargs = dict(kwargs)
+        legacy_kwargs["torch_dtype"] = legacy_kwargs.pop("dtype")
+        return model_class.from_pretrained(MODEL_NAME, **legacy_kwargs)
 
 
 gc.collect()

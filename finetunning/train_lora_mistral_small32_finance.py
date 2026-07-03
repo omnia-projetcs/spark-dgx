@@ -440,7 +440,7 @@ def load_quantized_model():
         "quantization_config": bnb_config,
         "device_map": {"": 0},
         "low_cpu_mem_usage": True,
-        "torch_dtype": compute_dtype,
+        "dtype": compute_dtype,
         "trust_remote_code": True,
     }
 
@@ -458,7 +458,14 @@ def load_quantized_model():
             kwargs["attn_implementation"] = attn_implementation
 
         try:
-            model = model_class.from_pretrained(MODEL_NAME, **kwargs)
+            try:
+                model = model_class.from_pretrained(MODEL_NAME, **kwargs)
+            except TypeError as exc:
+                if "dtype" not in str(exc):
+                    raise
+                legacy_kwargs = dict(kwargs)
+                legacy_kwargs["torch_dtype"] = legacy_kwargs.pop("dtype")
+                model = model_class.from_pretrained(MODEL_NAME, **legacy_kwargs)
             print(f"Attention implementation: {attn_implementation or 'transformers default'}")
             return model
         except Exception as exc:
