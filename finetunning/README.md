@@ -1,6 +1,6 @@
-# Fine-Tuning Qwen 2.5 for Cybersecurity (QLoRA)
+# Fine-Tuning LoRA / QLoRA
 
-This directory contains the pipeline to fine-tune **Qwen/Qwen2.5-7B-Instruct** using QLoRA (Quantized Low-Rank Adaptation) on cybersecurity QA datasets.
+This directory contains LoRA/QLoRA training scripts for Qwen 2.5, Mistral-Small-3.2, and DiffusionGemma on local instruction datasets.
 
 The training script leverages 4-bit NormalFloat (NF4) quantization, 8-bit Paged AdamW optimization, dynamic padding, length-grouped batches, batched tokenization, TF32 when available, and automatic FlashAttention 2 -> SDPA fallback. Gradient checkpointing is now optional: keep it disabled for speed, enable it for low-VRAM runs.
 
@@ -17,7 +17,7 @@ source venv/bin/activate
 
 # Upgrade pip and install dependencies
 pip install --upgrade pip
-pip install -U torch transformers datasets accelerate peft bitsandbytes sentencepiece protobuf
+pip install -U torch torchvision transformers datasets accelerate peft bitsandbytes sentencepiece protobuf pillow mistral-common
 ```
 
 Ensure you have a CUDA-compatible GPU setup. The script automatically detects and uses `bfloat16` if your hardware supports it, or falls back to `float16`.
@@ -28,9 +28,13 @@ Optional: if your platform supports it, install FlashAttention 2 for faster atte
 
 ## Dataset Structure
 
-By default, the scripts load the cybersecurity JSON files from this directory:
+By default, the cybersecurity scripts load the cybersecurity JSON files from this directory:
 - **Training dataset**: `dataset_cyber_qa_enriched.json`
 - **Validation dataset**: `dataset_cyber_qa.json`
+
+The finance scripts load the finance JSON files from this directory:
+- **Training dataset**: `dataset_finance_qa_enriched.json`
+- **Validation dataset**: `dataset_finance_qa.json`
 
 For faster dataset iteration, the training scripts also support multi-file loading without editing Python code:
 
@@ -82,7 +86,7 @@ Useful dataset variables:
 | `MAX_VALID_SAMPLES` | `0` | Limit validation examples for quick smoke tests. `0` means no limit. |
 
 ### Prompt Template & Prompt Masking
-The dataset is formatted using a specialized cybersecurity system prompt (defining the assistant as an offensive and defensive cybersecurity expert). 
+The cyber scripts use a specialized cybersecurity system prompt. The finance scripts use a finance and market analysis system prompt.
 To ensure the model learns only the assistant's responses and not the prompts:
 - The input tokens (system prompt + user instruction) are masked with a label of `-100`.
 - The loss is computed only on the assistant's output tokens.
@@ -216,6 +220,89 @@ python train_lora_qwen25_cyber_defensive_fixed_v2.py
 
 ---
 
+## Finance Dataset Training Scripts
+
+Three dedicated finance training entrypoints are available. Run the one you want to train:
+
+```bash
+cd finetunning
+export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+export TOKENIZERS_PARALLELISM=false
+
+# Qwen 2.5
+python train_lora_qwen25_finance.py
+
+# Mistral-Small-3.2
+python train_lora_mistral_small32_finance.py
+
+# DiffusionGemma
+python train_lora_diffusiongemma_finance_experimental.py
+```
+
+Default finance outputs:
+- **Qwen 2.5**: `outputs/finance-qwen25-7b-lora/final`
+- **Mistral-Small-3.2**: `outputs/finance-mistral-small3.2-lora/final`
+- **DiffusionGemma**: `outputs/finance-diffusiongemma-26b-lora/final`
+
+The Mistral-Small-3.2 script uses `Mistral3ForConditionalGeneration` and `mistral-common` tokenization, matching the Hugging Face model card.
+
+Quick smoke test example:
+
+```bash
+MAX_STEPS=10 \
+MAX_TRAIN_SAMPLES=20 \
+MAX_VALID_SAMPLES=10 \
+python train_lora_mistral_small32_finance.py
+```
+
+---
+
+## Mistral-Small-3.2 LoRA / QLoRA
+
+Mistral-Small-3.2 is a 24B parameter model. Due to its size, fine-tuning requires 4-bit QLoRA and aggressive gradient checkpointing to run on standard GPUs.
+
+Use the dedicated script:
+
+```bash
+cd finetunning
+export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+export TOKENIZERS_PARALLELISM=false
+
+python train_lora_mistral_small32_cyber_defensive.py
+```
+
+### Config & Memory Profiles
+
+- **Base model**: `mistralai/Mistral-Small-3.2-24B-Instruct-2506`
+- **Model class**: `transformers.Mistral3ForConditionalGeneration`
+- **Tokenizer**: `mistral-common` `MistralTokenizer`
+- **Output directory**: `outputs/cyber-mistral-small3.2-lora`
+- **LoRA targets**: `q_proj`, `k_proj`, `v_proj`, `o_proj`, `gate_proj`, `up_proj`, `down_proj`
+- **Gradient checkpointing**: enabled by default (`GRADIENT_CHECKPOINTING=true`) to save memory.
+- **Batch size**: default per-device batch size `1`, effective batch size `16` (via auto-computed gradient accumulation steps `16`).
+
+If you have a large GPU (e.g. 80 GB A100/H100), you can increase the per-device batch size:
+```bash
+PER_DEVICE_TRAIN_BATCH_SIZE=2 \
+python train_lora_mistral_small32_cyber_defensive.py
+```
+
+If memory is extremely tight:
+```bash
+MAX_LENGTH=256 \
+python train_lora_mistral_small32_cyber_defensive.py
+```
+
+To run a quick test:
+```bash
+MAX_STEPS=10 \
+MAX_TRAIN_SAMPLES=20 \
+MAX_VALID_SAMPLES=10 \
+python train_lora_mistral_small32_cyber_defensive.py
+```
+
+---
+
 ## Experimental: DiffusionGemma LoRA / QLoRA
 
 DiffusionGemma is not a standard causal language model. It uses a block-diffusion encoder/decoder architecture, so the Qwen script must not be reused by only changing `MODEL_NAME`.
@@ -236,6 +323,7 @@ Default profile:
 - **Quantization**: `LOAD_IN_4BIT=true` by default for QLoRA-style memory savings
 - **Batch**: per-device batch size `1`, effective batch `8`
 - **Gradient checkpointing**: enabled by default
+- **VRAM guard**: the script refuses to load by default below `MIN_GPU_MEMORY_GB=20` GiB because 16 GB cards OOM while loading the 26B model, before training starts.
 
 Useful profiles:
 
@@ -256,11 +344,18 @@ python train_lora_diffusiongemma_experimental.py
 ```
 
 ```bash
-# Low-memory experimental QLoRA
+# Lowest training-memory profile. This does not reduce model-load VRAM.
 LOAD_IN_4BIT=true \
 PER_DEVICE_TRAIN_BATCH_SIZE=1 \
 GRADIENT_ACCUMULATION_STEPS=16 \
 MAX_LENGTH=512 \
+python train_lora_diffusiongemma_experimental.py
+```
+
+```bash
+# Experimental CPU/disk offload attempt. Very slow and may still be unsupported.
+ALLOW_LOW_VRAM=true \
+DEVICE_MAP=auto \
 python train_lora_diffusiongemma_experimental.py
 ```
 
@@ -273,6 +368,7 @@ python train_lora_diffusiongemma_experimental.py
 
 Important notes:
 - `nvidia/diffusiongemma-26B-A4B-IT-NVFP4` is best treated as an inference-optimized vLLM/NVFP4 artifact. For fine-tuning, prefer the BF16 base or a BF16 fine-tune.
+- On a 16 GB GPU, use the Qwen 2.5 script or a smaller compatible base model. Lowering `MAX_LENGTH` or batch size cannot fix an OOM that happens during `from_pretrained`.
 - You may need a very recent or pre-release `transformers` build. The script looks for `DiffusionGemmaForBlockDiffusion` first, then `AutoModelForMultimodalLM`.
 - The script intentionally refuses to invent a naive causal loss if the model does not return a native training loss. Block-diffusion training should use the model-native objective.
 - Dynamic PEFT adapters may need extra validation for generation because DiffusionGemma has shared encoder/decoder weights. If inference ignores the LoRA delta, test a merged adapter.
@@ -285,7 +381,12 @@ The DiffusionGemma adapter is saved to:
 ## Outputs & Artifacts
 
 Once training completes, the LoRA adapters and tokenizer configurations will be saved to:
-- **Adapter Directory**: `outputs/cyber-qwen25-7b-lora/final`
+- **Adapter Directory (Qwen 2.5)**: `outputs/cyber-qwen25-7b-lora/final`
+- **Adapter Directory (Mistral-Small-3.2)**: `outputs/cyber-mistral-small3.2-lora/final`
+- **Adapter Directory (DiffusionGemma)**: `outputs/cyber-diffusiongemma-26b-lora/final`
+- **Adapter Directory (Finance Qwen 2.5)**: `outputs/finance-qwen25-7b-lora/final`
+- **Adapter Directory (Finance Mistral-Small-3.2)**: `outputs/finance-mistral-small3.2-lora/final`
+- **Adapter Directory (Finance DiffusionGemma)**: `outputs/finance-diffusiongemma-26b-lora/final`
 
 You can load these adapters on top of the base model using the Hugging Face `peft` library:
 

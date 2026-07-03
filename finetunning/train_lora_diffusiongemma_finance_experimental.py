@@ -1,6 +1,6 @@
 # train_lora_diffusiongemma_experimental.py
 #
-# Experimental LoRA/QLoRA fine-tuning for DiffusionGemma.
+# Experimental LoRA/QLoRA fine-tuning for DiffusionGemma on finance data.
 #
 # DiffusionGemma is not a standard AutoModelForCausalLM model. It uses a
 # block-diffusion encoder/decoder architecture, so this script is deliberately
@@ -15,7 +15,7 @@
 # Launch:
 # export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 # export TOKENIZERS_PARALLELISM=false
-# python train_lora_diffusiongemma_experimental.py
+# python train_lora_diffusiongemma_finance_experimental.py
 
 import gc
 import glob
@@ -76,10 +76,10 @@ def env_list(name, default):
 MODEL_NAME = os.environ.get("MODEL_NAME", "google/diffusiongemma-26B-A4B-it")
 MODEL_CLASS = os.environ.get("MODEL_CLASS", "auto")
 
-DEFAULT_TRAIN_FILE = "dataset_cyber_qa_enriched.json"
-DEFAULT_VALID_FILE = "dataset_cyber_qa.json"
+DEFAULT_TRAIN_FILE = "dataset_finance_qa_enriched.json"
+DEFAULT_VALID_FILE = "dataset_finance_qa.json"
 
-OUTPUT_DIR = os.environ.get("OUTPUT_DIR", "outputs/cyber-diffusiongemma-26b-lora")
+OUTPUT_DIR = os.environ.get("OUTPUT_DIR", "outputs/finance-diffusiongemma-26b-lora")
 FINAL_DIR = os.environ.get("FINAL_DIR", f"{OUTPUT_DIR}/final")
 
 MAX_LENGTH = env_int("MAX_LENGTH", 512)
@@ -136,21 +136,20 @@ os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
 # SYSTEM PROMPT
 # ============================================================
 
-SYSTEM_PROMPT = """You are an expert in offensive and defensive cybersecurity.
+SYSTEM_PROMPT = """You are an expert finance and market analysis assistant.
 
 Your role:
-- drive attack tools, produce commands if relevant;
-- analyze architectures;
-- analyze logs, alerts, network packets, EDR, SIEM, IDS/IPS events;
-- produce structured reports;
-- identify MITRE ATT&CK techniques when relevant;
-- propose defensive recommendations;
-- help with hardening, detection, remediation, and compliance.
+- analyze companies, markets, financial statements, macroeconomic context, risks, and valuation drivers;
+- explain trading, portfolio, accounting, and corporate finance concepts;
+- produce structured reports, calculations, and decision-support summaries;
+- distinguish facts, assumptions, estimates, and uncertainty;
+- help with risk management, compliance-aware analysis, and due diligence.
 
 Important rules:
-- do not invent IOCs, CVEs, CVSS scores, or technical proof;
+- do not invent prices, filings, ratios, ratings, dates, or sources;
 - if information is insufficient, say so clearly;
-- prioritize structured, actionable answers;
+- this is educational analysis, not personalized financial advice;
+- prioritize structured, traceable reasoning;
 - if the expected format is JSON, produce only valid JSON.
 """
 
@@ -223,7 +222,7 @@ def build_user_content(example):
         ])
 
     parts.append(
-        "\nRespond as an offensive and defensive cybersecurity expert. "
+        "\nRespond as a finance and market analysis expert. "
         "Respect the format expected by the training example. "
         "If the expected output is JSON, produce only valid JSON."
     )
