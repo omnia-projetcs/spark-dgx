@@ -85,6 +85,51 @@ Useful dataset variables:
 | `MAX_TRAIN_SAMPLES` | `0` | Limit training examples for quick smoke tests. `0` means no limit. |
 | `MAX_VALID_SAMPLES` | `0` | Limit validation examples for quick smoke tests. `0` means no limit. |
 
+### Practical Enrichment Workflow
+
+Do not enrich a full 160k-record dataset in one pass unless you really need it. A better workflow is to enrich a shuffled 10k-30k subset, split into small chunks, then train on that enriched subset first.
+
+Example for a 20k cybersecurity subset split into 1k-record files:
+
+```bash
+cd finetunning
+
+python prepare_enrichment_subset.py \
+  --input dataset_cyber_qa.json \
+  --output enrichment_work/cyber_to_enrich.json \
+  --limit 20000 \
+  --chunk-size 1000 \
+  --mode random \
+  --seed 42 \
+  --dedupe
+```
+
+This writes files like:
+
+```text
+enrichment_work/cyber_to_enrich.part001.json
+enrichment_work/cyber_to_enrich.part002.json
+...
+```
+
+Enrich those chunks progressively with your enrichment process. When you have enriched output chunks, train on the enriched subset:
+
+```bash
+TRAIN_FILES="enrichment_work/cyber_enriched.part*.json" \
+VALID_FILE="dataset_cyber_qa.json" \
+python train_lora_qwen25_cyber_defensive_fixed_v2.py
+```
+
+If you want to mix enriched examples with the original raw dataset:
+
+```bash
+TRAIN_FILES="enrichment_work/cyber_enriched.part*.json,dataset_cyber_qa.json" \
+VALID_FILE="dataset_cyber_qa.json" \
+python train_lora_qwen25_cyber_defensive_fixed_v2.py
+```
+
+Rule of thumb: start with `--limit 5000` for a pipeline check, then `20000`, then only scale further if the validation behavior improves.
+
 ### Prompt Template & Prompt Masking
 The cyber scripts use a specialized cybersecurity system prompt. The finance scripts use a finance and market analysis system prompt.
 To ensure the model learns only the assistant's responses and not the prompts:
