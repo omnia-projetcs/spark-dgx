@@ -2,7 +2,7 @@
 
 This directory contains LoRA/QLoRA training scripts for Qwen 2.5, Mistral-Small-3.2, and DiffusionGemma on local instruction datasets.
 
-The training scripts leverage 4-bit NormalFloat (NF4) quantization, 8-bit Paged AdamW optimization, dynamic padding, length-grouped batches, batched tokenization, TF32 when available, and automatic FlashAttention 2 -> SDPA fallback. The Qwen defaults favor 16 GB GPUs: micro-batch `1` with gradient checkpointing enabled. Larger GPUs can opt into the fast profile below.
+The training scripts leverage 4-bit NormalFloat (NF4) quantization, 8-bit Paged AdamW optimization, dynamic padding, length-grouped batches, batched tokenization, TF32 when available, and PyTorch SDPA attention by default. The Qwen defaults favor 16 GB GPUs: micro-batch `1` with gradient checkpointing enabled. Larger GPUs can opt into FlashAttention 2 or the fast profile below.
 
 ---
 
@@ -22,7 +22,7 @@ pip install -U torch torchvision transformers datasets accelerate peft bitsandby
 
 Ensure you have a CUDA-compatible GPU setup. The script automatically detects and uses `bfloat16` if your hardware supports it, or falls back to `float16`.
 
-Optional: if your platform supports it, install FlashAttention 2 for faster attention kernels. The script will try it automatically and fall back to PyTorch SDPA if it is unavailable.
+Optional: if your platform supports it, install FlashAttention 2 for faster attention kernels and launch with `ATTN_IMPLEMENTATION=flash_attention_2`.
 
 ---
 
@@ -114,7 +114,7 @@ The key hyperparameters configured in `train_lora_qwen25_cyber_defensive_fixed_v
   - dynamic padding pads to multiples of `8` for Tensor Core-friendly batches;
   - `group_by_length=True` reduces wasted padding;
   - `TF32` is enabled on Ampere/Blackwell-class GPUs;
-  - attention uses `flash_attention_2` if available, otherwise `sdpa`;
+  - attention uses `sdpa` by default; set `ATTN_IMPLEMENTATION=flash_attention_2` if FlashAttention 2 is installed;
   - gradient checkpointing is enabled by default to keep Qwen 2.5 training inside 16 GB VRAM.
 
 ---
@@ -198,7 +198,7 @@ python train_lora_qwen25_cyber_defensive_fixed_v2.py
 | `EFFECTIVE_BATCH_SIZE` | `16` | Target effective batch; auto-computes gradient accumulation unless overridden. |
 | `GRADIENT_ACCUMULATION_STEPS` | auto | Set directly for exact control. |
 | `GRADIENT_CHECKPOINTING` | `true` | Saves VRAM but slows training; set `false` only for larger GPUs. |
-| `ATTN_IMPLEMENTATION` | `auto` | `auto` tries `flash_attention_2`, then `sdpa`; set `sdpa` to skip the FlashAttention attempt. |
+| `ATTN_IMPLEMENTATION` | `sdpa` | Use `sdpa` by default. Set `flash_attention_2` only if installed, or `auto` to try FlashAttention then SDPA. |
 | `TOKENIZE_NUM_PROC` | up to `4` | CPU workers for preprocessing. |
 | `TOKENIZE_BATCH_SIZE` | `256` | Batch size for tokenizer calls. Lower if RAM is tight. |
 | `DATALOADER_NUM_WORKERS` | up to `4` | PyTorch dataloader workers. |
@@ -487,7 +487,7 @@ tokenizer = AutoTokenizer.from_pretrained(base_model_path)
 # 2. Charger le modèle de base sur CPU (pour économiser la VRAM du GPU)
 base_model = AutoModelForCausalLM.from_pretrained(
     base_model_path,
-    torch_dtype=torch.float16,
+    dtype=torch.float16,
     device_map="cpu"
 )
 

@@ -39,6 +39,12 @@ from transformers import (
 )
 
 from train_dataset_utils import load_instruction_datasets
+from train_runtime_utils import (
+    configure_training_warnings,
+    from_pretrained_with_dtype_fallback,
+)
+
+configure_training_warnings()
 
 
 # ============================================================
@@ -520,7 +526,7 @@ def load_model():
         kwargs["quantization_config"] = quantization_config
 
     try:
-        return model_class.from_pretrained(MODEL_NAME, **kwargs)
+        return from_pretrained_with_dtype_fallback(model_class, MODEL_NAME, kwargs)
     except torch.cuda.OutOfMemoryError as exc:
         total_gb = torch.cuda.get_device_properties(0).total_memory / 1024**3
         allocated_gb = torch.cuda.memory_allocated(0) / 1024**3
@@ -535,12 +541,6 @@ def load_model():
             "or try the experimental offload path with "
             "ALLOW_LOW_VRAM=true DEVICE_MAP=auto."
         ) from exc
-    except TypeError as exc:
-        if "dtype" not in str(exc):
-            raise
-        legacy_kwargs = dict(kwargs)
-        legacy_kwargs["torch_dtype"] = legacy_kwargs.pop("dtype")
-        return model_class.from_pretrained(MODEL_NAME, **legacy_kwargs)
 
 
 gc.collect()

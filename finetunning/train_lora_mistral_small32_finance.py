@@ -34,6 +34,12 @@ from peft import (
 )
 
 from train_dataset_utils import load_instruction_datasets
+from train_runtime_utils import (
+    configure_training_warnings,
+    from_pretrained_with_dtype_fallback,
+)
+
+configure_training_warnings()
 
 try:
     from mistral_common.protocol.instruct.request import ChatCompletionRequest
@@ -108,7 +114,7 @@ DATALOADER_NUM_WORKERS = env_int("DATALOADER_NUM_WORKERS", min(4, os.cpu_count()
 
 # Default gradient checkpointing to true since 24B is memory intensive
 GRADIENT_CHECKPOINTING = env_bool("GRADIENT_CHECKPOINTING", True)
-ATTN_IMPLEMENTATION = os.environ.get("ATTN_IMPLEMENTATION", "auto")
+ATTN_IMPLEMENTATION = os.environ.get("ATTN_IMPLEMENTATION", "sdpa")
 OPTIM = os.environ.get("OPTIM", "paged_adamw_8bit")
 TORCH_COMPILE = env_bool("TORCH_COMPILE", False)
 AUTO_RESUME = env_bool("AUTO_RESUME", True)
@@ -458,14 +464,11 @@ def load_quantized_model():
             kwargs["attn_implementation"] = attn_implementation
 
         try:
-            try:
-                model = model_class.from_pretrained(MODEL_NAME, **kwargs)
-            except TypeError as exc:
-                if "dtype" not in str(exc):
-                    raise
-                legacy_kwargs = dict(kwargs)
-                legacy_kwargs["torch_dtype"] = legacy_kwargs.pop("dtype")
-                model = model_class.from_pretrained(MODEL_NAME, **legacy_kwargs)
+            model = from_pretrained_with_dtype_fallback(
+                model_class,
+                MODEL_NAME,
+                kwargs,
+            )
             print(f"Attention implementation: {attn_implementation or 'transformers default'}")
             return model
         except Exception as exc:
