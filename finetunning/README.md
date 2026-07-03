@@ -209,6 +209,29 @@ python train_lora_qwen25_cyber_defensive_fixed_v2.py
 | `DATASET_GLOB` | unset | Quickly train on files matching a pattern. |
 | `MAX_TRAIN_SAMPLES` / `MAX_VALID_SAMPLES` | `0` | Cap examples for smoke tests. |
 
+### Global Progress
+
+Each training script prints a global plan before the first step:
+
+```text
+=== Global training plan ===
+Train examples: 160,000
+Effective batch: 16 (1 per-device x 1 GPU x 16 grad_accum)
+Steps per epoch: ~10,000
+Planned epochs: ~1.00
+Total optimizer steps: 10,000
+Intervals: log every 50 steps, eval every 1000 steps (~10 evals), save every 1000 steps (~10 saves)
+============================
+```
+
+During training, every logging interval also prints a compact global line:
+
+```text
+[global] step 1,250/10,000 (12.5%) | epoch 0.12 | elapsed 42m10s | eta 4h55m | next_eval 2000 | next_save 2000
+```
+
+Formula: `total_steps = ceil(train_examples / effective_batch) * epochs`, unless `MAX_STEPS` is set.
+
 ### VRAM and Resource Constraints
 - The script includes safety checks. If the base model takes more than 20 GB of VRAM right after loading, training will halt (indicating that 4-bit quantization did not load correctly).
 - If you encounter Out-Of-Memory (OOM) errors during the forward, loss, or backward pass:

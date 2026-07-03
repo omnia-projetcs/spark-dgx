@@ -40,6 +40,7 @@ from transformers import (
 
 from train_dataset_utils import load_instruction_datasets
 from train_runtime_utils import (
+    GlobalProgressCallback,
     configure_training_warnings,
     from_pretrained_with_dtype_fallback,
 )
@@ -712,6 +713,12 @@ trainer = DiffusionGemmaTrainer(
     train_dataset=tokenized_dataset["train"],
     eval_dataset=tokenized_dataset["validation"],
     data_collator=data_collator,
+    callbacks=[
+        GlobalProgressCallback(
+            len(tokenized_dataset["train"]),
+            len(tokenized_dataset["validation"]),
+        )
+    ],
 )
 
 resume_from_checkpoint = None
