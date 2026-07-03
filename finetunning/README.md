@@ -301,6 +301,69 @@ base_model = AutoModelForCausalLM.from_pretrained(base_model_name, device_map="a
 model = PeftModel.from_pretrained(base_model, adapter_path)
 ```
 
+### Export vers Hugging Face Hub
+
+Vous pouvez pousser vos adaptateurs LoRA (ou le modèle fusionné) directement sur le [Hugging Face Hub](https://huggingface.co).
+
+#### 1. Authentification avec votre token HF
+
+Générez un token d'accès avec les droits **write** sur [https://huggingface.co/settings/tokens](https://huggingface.co/settings/tokens), puis exportez-le dans votre environnement :
+
+```bash
+export HF_TOKEN="hf_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+```
+
+Ou connectez-vous de manière persistante via la CLI :
+
+```bash
+pip install -U huggingface_hub
+huggingface-cli login --token "$HF_TOKEN"
+```
+
+#### 2. Pousser les adaptateurs LoRA (léger, ~100 Mo)
+
+Ajoutez simplement `push_to_hub=True` à la sauvegarde de l'adaptateur, ou poussez-le après l'entraînement :
+
+```python
+from huggingface_hub import HfApi
+import os
+
+# Via l'API Python (après entraînement)
+api = HfApi(token=os.environ["HF_TOKEN"])
+api.upload_folder(
+    folder_path="outputs/cyber-qwen25-7b-lora/final",
+    repo_id="votre-org/cyber-qwen25-7b-lora",   # remplacer par votre namespace
+    repo_type="model",
+)
+```
+
+Ou depuis le script de merge, directement avec `push_to_hub` :
+
+```python
+# À ajouter à la fin de merge_lora.py
+from huggingface_hub import login
+import os
+
+login(token=os.environ["HF_TOKEN"])
+
+merged_model.push_to_hub("votre-org/cyber-qwen25-7b-merged")
+tokenizer.push_to_hub("votre-org/cyber-qwen25-7b-merged")
+```
+
+#### 3. Variable d'environnement dans le script d'entraînement
+
+Le script d'entraînement lit automatiquement `HF_TOKEN` si vous souhaitez activer `push_to_hub` dans `TrainingArguments` :
+
+```bash
+export HF_TOKEN="hf_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+HUB_MODEL_ID="votre-org/cyber-qwen25-7b-lora" \
+python train_lora_qwen25_cyber_defensive_fixed_v2.py
+```
+
+> **Note** : ne committez jamais votre token en clair dans un fichier. Utilisez toujours une variable d'environnement ou un gestionnaire de secrets.
+
+---
+
 ### Fusionner et Convertir en un Fichier Unique (Merge & Export to GGUF)
 
 Si vous souhaitez fusionner les poids LoRA avec le modèle de base pour obtenir un seul modèle complet, puis le convertir au format de fichier unique **GGUF** (très utile pour l'exécution locale avec Ollama, LM Studio ou llama.cpp) :
