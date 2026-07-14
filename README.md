@@ -190,6 +190,9 @@ A turnkey Bash script that launches a fully configured, production-ready **vLLM 
 # Launch a model and override the default Tensor Parallel size (number of GPUs)
 ./mix-vllm.sh --model RedHatAI/Mistral-Small-24B-Instruct-2501-FP8-dynamic --tp 2
 
+# Tune CPU-side threading for tokenizer/request-processing throughput
+./mix-vllm.sh --model nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-NVFP4 --threads 12
+
 # Check server health
 curl http://localhost:8000/health
 
@@ -201,9 +204,10 @@ The script supports the following command-line options:
 *   `--model <model_id>`: Launches a specific model directly, bypassing the interactive selection menu.
 *   `--tp <tp_size>`: Overrides the default Tensor Parallel size (number of GPUs) for the selected model. If omitted, the script automatically defaults to the recommended number of GPUs defined in the model catalog.
 *   `--port <port>`: Overrides the port on which the vLLM server is served (default is `8000`).
+*   `--threads <cpu_threads>` / `--cpu-threads <cpu_threads>`: Enables and sizes CPU-side threading for vLLM helper work. The launcher exports the matching OpenMP/BLAS/PyTorch thread variables and, when more than one thread is requested, enables a vLLM tokenizer pool of the same size for better high-concurrency throughput. If omitted, the script uses `VLLM_CPU_THREADS` or auto-detects a safe value from `nproc`.
 *   `--no-wait`: Runs the container in the background without waiting for the server to become healthy.
 
-Each model configuration includes optimized values for `--gpu-memory-utilization`, `--max-model-len`, `--max-num-batched-tokens`, attention backends, quantization settings, and tool-call parsers.
+Each model configuration includes optimized values for `--gpu-memory-utilization`, `--max-model-len`, `--max-num-batched-tokens`, attention backends, quantization settings, CPU/tokenizer threading, and tool-call parsers.
 
 #### Model Storage & Cleanup
 
