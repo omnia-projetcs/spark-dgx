@@ -87,6 +87,7 @@ WAIT_FOR_HEALTH=true
 ARENA_MODE=false
 CLEAN_ARENA=false
 TP_OVERRIDE=""
+THREADS_OVERRIDE=""
 
 # ── ARGUMENT PARSING ──────────────────────────────────────────────────────────
 while [[ $# -gt 0 ]]; do
@@ -131,9 +132,13 @@ while [[ $# -gt 0 ]]; do
       GPU_MEM_UTIL_OVERRIDE="$2"
       shift 2
       ;;
+    --threads|--cpu-threads)
+      THREADS_OVERRIDE="$2"
+      shift 2
+      ;;
     *)
       echo "Unknown option: $1"
-      echo "Usage: $0 [--no-wait] [--port <port>] [--model <model>] [--arena] [--clean-arena] [--tp <tp_size>] [--gpus <gpu_devices>] [--max-seqs <max_num_seqs>] [--max-len <max_model_len>] [--mem-util <gpu_memory_utilization>]"
+      echo "Usage: $0 [--no-wait] [--port <port>] [--model <model>] [--arena] [--clean-arena] [--tp <tp_size>] [--gpus <gpu_devices>] [--max-seqs <max_num_seqs>] [--max-len <max_model_len>] [--mem-util <gpu_memory_utilization>] [--threads <cpu_threads>]"
       exit 1
       ;;
   esac
@@ -1287,6 +1292,47 @@ if [[ "${MODEL}" != "AEON-7/Qwen3.6-35B-A3B-heretic-NVFP4" ]]; then
 fi
 
 # ── AUTO-DOWNLOAD MODELS ─────────────────────────────────────────────────────
+# Configure CPU-side threading used by vLLM for request handling, tokenization,
+# sampling glue, and BLAS/OpenMP-backed helper work.  The default intentionally
+# leaves a few cores free on DGX Spark while still enabling parallel host work;
+# use --threads to tune for latency or high-concurrency throughput.
+HOST_CPU_COUNT="$(nproc 2>/dev/null || echo 8)"
+if [[ -n "${THREADS_OVERRIDE}" ]]; then
+  CPU_THREADS="${THREADS_OVERRIDE}"
+elif [[ -n "${VLLM_CPU_THREADS:-}" ]]; then
+  CPU_THREADS="${VLLM_CPU_THREADS}"
+elif (( HOST_CPU_COUNT > 12 )); then
+  CPU_THREADS=$((HOST_CPU_COUNT - 4))
+else
+  CPU_THREADS="${HOST_CPU_COUNT}"
+fi
+
+if ! [[ "${CPU_THREADS}" =~ ^[0-9]+$ ]] || (( CPU_THREADS < 1 )); then
+  echo "❌ ERROR: --threads must be a positive integer (got '${CPU_THREADS}')."
+  exit 1
+fi
+
+# Tokenizer workers are useful for concurrent requests, but one worker is enough
+# for single-thread/low-latency runs.
+if (( CPU_THREADS > 1 )); then
+  TOKENIZER_POOL_SIZE="${TOKENIZER_POOL_SIZE:-${CPU_THREADS}}"
+else
+  TOKENIZER_POOL_SIZE="0"
+fi
+
+ENV_ARGS+=(
+  -e OMP_NUM_THREADS="${CPU_THREADS}"
+  -e MKL_NUM_THREADS="${CPU_THREADS}"
+  -e OPENBLAS_NUM_THREADS="${CPU_THREADS}"
+  -e NUMEXPR_NUM_THREADS="${CPU_THREADS}"
+  -e TORCH_NUM_THREADS="${CPU_THREADS}"
+  -e TOKENIZERS_PARALLELISM=true
+)
+
+if (( TOKENIZER_POOL_SIZE > 0 )); then
+  EXTRA_ARGS+=("--tokenizer-pool-size" "${TOKENIZER_POOL_SIZE}")
+fi
+
 # Downloads models that are not yet present locally.
 # Uses Docker + Python huggingface_hub (always present in vLLM images).
 #   - "repo_id|/local/dir"  → downloads to a specific directory (for volume mounts)
@@ -1438,6 +1484,7 @@ fi
 
 echo "🔥 ${MODEL}"
 echo "   image  : ${VLLM_IMAGE}"
+echo "   threads: ${CPU_THREADS} CPU thread(s), tokenizer pool=${TOKENIZER_POOL_SIZE}"
 echo "   ctx    : ${MAX_MODEL_LEN}   mem: ${GPU_MEM_UTIL}   seqs: ${MAX_NUM_SEQS}"
 echo "   gpus   : ${GPUS_DEVICE}   container: ${CONTAINER_NAME}"
 
