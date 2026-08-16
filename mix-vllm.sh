@@ -12,14 +12,12 @@
 #  ──    Neural-ICE/Gemma-4-E2B-it-NVFP4              ~120     NVFP4     eugr-nightly  ← multimodal, native audio, W4A4
 #  ──    bg-digitalservices/Gemma-4-E2B-NVFP4         ~120     NVFP4     eugr-nightly  ← base model, W4A4
 #  #5    Qwen/Qwen3.6-35B-A3B-FP8                      ~30      FP8       cu130-nightly
-#  #6    rdtand/MiniMax-M2.7-PrismaQuant-3.20bit       ~25      3.20bit   eugr-nightly
 #  #7    Intel/Qwen3-Coder-Next-int4-AutoRound         ~17      INT4      vllm-latest
 #  #8    RedHatAI/Qwen3.5-122B-A10B-NVFP4              ~17      NVFP4     eugr-nightly  ← best quality
 #  #9    nvidia/Nemotron-3-Super-120B-A12B-NVFP4       ~15      NVFP4     eugr-nightly
 #  ──    LiquidAI/LFM2.5-350M                         ~212      BF16      vllm-latest   ← ultra-lightweight
 #  ──    Qwen/Qwen3.5-0.8B                            ~103      BF16      vllm-latest   ← ultra-lightweight
 #  ──    RedHatAI/Mistral-Small-24B-FP8               ~8.6      FP8       cu130-nightly ← low VRAM (~24 GB)
-#  ──    dervig/m51Lab-MiniMax-M2.7-REAP-139B-A10B-NVFP4 fast   NVFP4     eugr-nightly
 #
 #  * gpt-oss MXFP4 uses eugr-nightly with CUTLASS backend (no local build needed)
 # ─────────────────────────────────────────────────────────────────────────────
@@ -160,7 +158,6 @@ if [[ -z "${MODEL}" ]]; then
     "Neural-ICE/Gemma-4-E2B-it-NVFP4|1|──  Gemma-4 E2B Instruct NVFP4 (~120 tok/s, 128K context, multimodal, audio, FP4 quantized)"
     "bg-digitalservices/Gemma-4-E2B-NVFP4|1|──  Gemma-4 E2B Base NVFP4 (~120 tok/s, 128K context, multimodal, audio, FP4 quantized)"
     "Qwen/Qwen3.6-35B-A3B-FP8|1|#5  Qwen 3.6 35B FP8 (~30 tok/s, 256K context)"
-    "rdtand/MiniMax-M2.7-PrismaQuant-3.20bit-vllm|1|#6  MiniMax-M2.7 PrismaQuant 3.20bit (~25 tok/s, 196K context)"
     "Intel/Qwen3-Coder-Next-int4-AutoRound|1|#7  Qwen 3 Coder Next int4 AutoRound (~17 tok/s, 1M context)"
     "RedHatAI/Qwen3.5-122B-A10B-NVFP4|2|#8  Qwen 3.5 122B NVFP4 (~17 tok/s, BEST QUALITY, 64K context)"
     "shieldstar/Qwen3.5-122B-A10B-int4-AutoRound-EC|1|──  Qwen 3.5 122B int4 AutoRound (z-lab DFlash, 196K context)"
@@ -171,14 +168,12 @@ if [[ -z "${MODEL}" ]]; then
     "LiquidAI/LFM2.5-350M|1|──  LiquidAI LFM 2.5 350M (~212 tok/s, BF16 dense, ultra-lightweight)"
     "Qwen/Qwen3.5-0.8B|1|──  Qwen 3.5 0.8B (~103 tok/s, BF16 dense, ultra-lightweight)"
 
-    "nvidia/MiniMax-M2.7-NVFP4|4|──  MiniMax-M2.7 NVFP4 (~24 tok/s, TP=4)"
-    "cyankiwi/MiniMax-M2.5-AWQ-4bit|4|──  MiniMax-M2.5 AWQ 4bit (TP=4)"
-    "cyankiwi/MiniMax-M2.7-AWQ-4bit|2|──  MiniMax-M2.7 AWQ 4bit (TP=2)"
 
-    "nvidia/Kimi-K2.6-NVFP4|8|──  Kimi-K2.6 NVFP4 MoE (TP=8 Ray cluster, drop-caches mod)"
-    "netarmy007/Kimi-K2.7-Code|8|──  Kimi-K2.7 Code (TP=8 Ray cluster, drop-caches mod)"
     "deepseek-ai/DeepSeek-V4-Flash|2|──  DeepSeek V4 Flash FP8 (TP=2, 200K context)"
-    "dervig/m51Lab-MiniMax-M2.7-REAP-139B-A10B-NVFP4-GB10|4|──  MiniMax-M2.7 REAP 139B NVFP4 (TP=4)"
+    "RedHatAI/Muse-Glimmer-30B-NVFP4|1|──  Muse Glimmer 30B NVFP4 (TP=1, 128K context, multimodal)"
+    "nvidia/DeepSeek-V4-Flash-nvfp4-DSpark|4|──  DeepSeek V4 Flash NVFP4 + integrated DSpark (TP=4 Ray cluster)"
+    "nvidia/MiniMax-M3-DSpark|4|──  MiniMax M3 + DSpark draft (TP=4 Ray cluster, multimodal)"
+    "nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4-DSpark|1|──  Nemotron 3.5 Lightning NVFP4 + DSpark draft (TP=1, DGX Spark optimized)"
     "sparkarena/Minimax-M3-v0-NVFP4|4|──  MiniMax-M3-v0 NVFP4 (TP=4)"
     "Kimuraxhalu/gemma-4-12B-coder-fable5-composer2.5-MTP-NVFP4|1|──  [TEST] Gemma-4 12B Coder Fable-5 Composer-2.5 MTP NVFP4 (TP=1)"
   )
@@ -239,7 +234,6 @@ if [[ -z "${MODEL}" ]]; then
     print_category 1 "🟢 x1 GB10 GPU REQUIRED (Fits in 128 GB VRAM)" "${BRIGHT_GREEN}"
     print_category 2 "🟡 x2 GB10 GPUs REQUIRED (Fits in 256 GB VRAM)" "${BRIGHT_YELLOW}"
     print_category 4 "🟠 x4 GB10 GPUs REQUIRED (Fits in 512 GB VRAM)" "${BRIGHT_ORANGE}"
-    print_category 8 "🔴 x8 GB10 GPUs REQUIRED (Fits in 1024 GB VRAM - Ray Distributed)" "${BRIGHT_RED}"
     
     while true; do
       read -p "👉 Enter model number [1-${#MODELS[@]}] or press Enter for default (#1): " choice
@@ -276,6 +270,16 @@ if [[ -z "${selected_gpus}" ]]; then
       break
     fi
   done
+fi
+
+# The catalog is scoped inside interactive selection, so preserve the recommended
+# multi-node size when one of these models is launched directly with --model.
+if [[ -z "${selected_gpus}" ]]; then
+  case "${MODEL}" in
+    "nvidia/DeepSeek-V4-Flash-nvfp4-DSpark" | "nvidia/MiniMax-M3-DSpark" | "sparkarena/Minimax-M3-v0-NVFP4")
+      selected_gpus=4
+      ;;
+  esac
 fi
 
 # Fallback selected_gpus to 1 if still not resolved
@@ -415,12 +419,14 @@ IMG_STOCK="vllm/vllm-openai:latest"
 IMG_GEMMA="vllm/vllm-openai:gemma"
 #         └─ Custom vLLM OpenAI image for Gemma models
 
+IMG_MUSE_GLIMMER="vllm/vllm-openai:muse-glimmer"
+#         └─ Official vLLM image with Muse Glimmer multimodal support
 
-IMG_MINIMAX_NVFP4="ghcr.io/spark-arena/dgx-vllm-eugr-nightly:2026050601"
-#         └─ Custom nightly for MiniMax-M2.7-NVFP4
+IMG_VLLM_NIGHTLY="vllm/vllm-openai:nightly"
+#         └─ Current vLLM nightly with DSpark and DeepSeek V4 support
 
-IMG_VLLM_NODE="vllm-node"
-#         └─ Local image for Ray distributed multi-node serving
+IMG_VLLM_0271="vllm/vllm-openai:v0.27.1"
+#         └─ Validated release for Nemotron 3.5 Lightning + DSpark
 
 IMG_DSV4="vllm-node-dsv4"
 #         └─ Local image for DeepSeek V4 Flash with PR 41834 SM12x support
@@ -435,7 +441,6 @@ EXTRA_ARGS=()
 ENV_ARGS=()
 VOLUME_ARGS=()
 MODEL_DOWNLOADS=()   # "repo_id|/local/dir" or "repo_id" (HF cache)
-
 case "${MODEL}" in
 
   # ═══════════════════════════════════════════════════════════════════════════
@@ -931,155 +936,6 @@ case "${MODEL}" in
 
 
   # ═══════════════════════════════════════════════════════════════════════════
-  # nvidia/MiniMax-M2.7-NVFP4
-  # ═══════════════════════════════════════════════════════════════════════════
-  "nvidia/MiniMax-M2.7-NVFP4")
-    VLLM_IMAGE="${IMG_MINIMAX_NVFP4}"
-    GPU_MEM_UTIL=0.85
-    MAX_MODEL_LEN=102400
-    MAX_BATCHED_TOKENS=32768
-    MAX_NUM_SEQS=8
-
-    ENV_ARGS=(
-      -e VLLM_MARLIN_USE_ATOMIC_ADD=1
-      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
-    )
-
-    EXTRA_ARGS=(
-      "--served-model-name"           "minimax-m2.7-nvfp4"
-      "-tp"                           "${TP_SIZE}"
-      "-pp"                           "1"
-      "--load-format"                 "instanttensor"
-      "--enable-auto-tool-choice"
-      "--tool-call-parser"            "minimax_m2"
-      "--reasoning-parser"            "minimax_m2"
-      "--kv-cache-dtype"              "fp8"
-    )
-    ;;
-
-  # ═══════════════════════════════════════════════════════════════════════════
-  # cyankiwi/MiniMax-M2.5-AWQ-4bit
-  # ═══════════════════════════════════════════════════════════════════════════
-  "cyankiwi/MiniMax-M2.5-AWQ-4bit")
-    VLLM_IMAGE="${IMG_VLLM_NODE}"
-    GPU_MEM_UTIL=0.7
-    MAX_MODEL_LEN=102400
-    MAX_BATCHED_TOKENS=32768
-    MAX_NUM_SEQS=8
-
-    ENV_ARGS=(
-      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
-    )
-
-    EXTRA_ARGS=(
-      "--served-model-name"            "minimax-m2.5-awq"
-      "-tp"                            "${TP_SIZE}"
-      "--distributed-executor-backend" "ray"
-      "--load-format"                  "fastsafetensors"
-      "--enable-auto-tool-choice"
-      "--tool-call-parser"             "minimax_m2"
-      "--reasoning-parser"             "minimax_m2"
-    )
-    ;;
-
-  # ═══════════════════════════════════════════════════════════════════════════
-  # cyankiwi/MiniMax-M2.7-AWQ-4bit
-  # ═══════════════════════════════════════════════════════════════════════════
-  "cyankiwi/MiniMax-M2.7-AWQ-4bit")
-    VLLM_IMAGE="${IMG_VLLM_NODE}"
-    GPU_MEM_UTIL=0.7
-    MAX_MODEL_LEN=102400
-    MAX_BATCHED_TOKENS=32768
-    MAX_NUM_SEQS=8
-
-    ENV_ARGS=(
-      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
-    )
-
-    EXTRA_ARGS=(
-      "--served-model-name"            "minimax-m2.7-awq"
-      "-tp"                            "${TP_SIZE}"
-      "--distributed-executor-backend" "ray"
-      "--load-format"                  "fastsafetensors"
-      "--enable-auto-tool-choice"
-      "--tool-call-parser"             "minimax_m2"
-      "--reasoning-parser"             "minimax_m2"
-    )
-    ;;
-
-  # ═══════════════════════════════════════════════════════════════════════════
-  # netarmy007/Kimi-K2.7-Code on 8 DGX Spark nodes
-  # ═══════════════════════════════════════════════════════════════════════════
-  "netarmy007/Kimi-K2.7-Code")
-    VLLM_IMAGE="${IMG_VLLM_NODE}"
-    GPU_MEM_UTIL=0.72
-    MAX_MODEL_LEN=32768
-    MAX_BATCHED_TOKENS=2048
-    MAX_NUM_SEQS=1
-
-    ENV_ARGS=(
-      -e VLLM_DISTRIBUTED_EXECUTOR_CONFIG='{"placement_group_options":{"strategy":"SPREAD"}}'
-      -e VLLM_MARLIN_USE_ATOMIC_ADD=1
-      -e VLLM_USE_FLASHINFER_SAMPLER=0
-      -e OMP_NUM_THREADS=4
-      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
-    )
-
-    EXTRA_ARGS=(
-      "--tensor-parallel-size"         "${TP_SIZE}"
-      "--distributed-executor-backend" "ray"
-      "--enforce-eager"
-      "--kv-cache-dtype"              "fp8"
-      "--mm-processor-cache-gb"       "0"
-      "--tool-call-parser"            "kimi_k2"
-      "--reasoning-parser"            "kimi_k2"
-      "--enable-auto-tool-choice"
-      "--served-model-name"           "kimi-k2.7-code"
-      "--no-async-scheduling"
-    )
-    ;;
-
-  # ═══════════════════════════════════════════════════════════════════════════
-  # nvidia/Kimi-K2.6-NVFP4 on 8 DGX Spark nodes
-  # ═══════════════════════════════════════════════════════════════════════════
-  "nvidia/Kimi-K2.6-NVFP4")
-    VLLM_IMAGE="${IMG_VLLM_NODE}"
-    GPU_MEM_UTIL=0.72
-    MAX_MODEL_LEN=32768
-    MAX_BATCHED_TOKENS=2048
-    MAX_NUM_SEQS=1
-    MODEL_DOWNLOADS=("none")
-
-    VOLUME_ARGS=(
-      -v /mnt/glm51-hf-cache:/root/.cache/huggingface
-      -v /mnt/glm51-hf-cache:/mnt/glm51-hf-cache
-    )
-
-    ENV_ARGS=(
-      -e HF_HUB_OFFLINE=1
-      -e TRANSFORMERS_OFFLINE=1
-      -e HF_HOME=/mnt/glm51-hf-cache
-      -e VLLM_DISTRIBUTED_EXECUTOR_CONFIG='{"placement_group_options":{"strategy":"SPREAD"}}'
-      -e VLLM_MARLIN_USE_ATOMIC_ADD=1
-      -e VLLM_USE_FLASHINFER_SAMPLER=0
-      -e OMP_NUM_THREADS=4
-    )
-
-    EXTRA_ARGS=(
-      "--tensor-parallel-size"         "${TP_SIZE}"
-      "--distributed-executor-backend" "ray"
-      "--enforce-eager"
-      "--kv-cache-dtype"              "fp8"
-      "--mm-processor-cache-gb"       "0"
-      "--tool-call-parser"            "kimi_k2"
-      "--reasoning-parser"            "kimi_k2"
-      "--enable-auto-tool-choice"
-      "--served-model-name"           "kimi-k2.6-nvfp4"
-      "--no-async-scheduling"
-    )
-    ;;
-
-  # ═══════════════════════════════════════════════════════════════════════════
   # deepseek-ai/DeepSeek-V4-Flash on dual DGX Spark TP=2
   # ═══════════════════════════════════════════════════════════════════════════
   "deepseek-ai/DeepSeek-V4-Flash")
@@ -1122,6 +978,130 @@ case "${MODEL}" in
     )
     ;;
 
+  # ══════════════════════════════════════════════════════════════════════════════════════════════════════
+  # Muse Glimmer 30B NVFP4 — official single-Spark vLLM profile
+  # ════════════════════════════════════════════════════════════════════════════════════════════════════════
+  "RedHatAI/Muse-Glimmer-30B-NVFP4")
+    VLLM_IMAGE="${IMG_MUSE_GLIMMER}"
+    GPU_MEM_UTIL=0.85
+    MAX_MODEL_LEN=102400
+    MAX_BATCHED_TOKENS=16384
+    MAX_NUM_SEQS=8
+
+    ENV_ARGS=(
+      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
+      -e VLLM_USE_V1=1
+    )
+
+    EXTRA_ARGS=(
+      "--served-model-name"    "muse-glimmer-30b-nvfp4"
+      "--generation-config"    "auto"
+      "--tensor-parallel-size" "${TP_SIZE}"
+      "--enable-auto-tool-choice"
+      "--tool-call-parser"     "muse_glimmer"
+      "--reasoning-parser"     "muse_glimmer"
+    )
+    ;;
+
+  # ══════════════════════════════════════════════════════════════════════════════════════════════════════
+  # DeepSeek V4 Flash — integrated NVFP4 target and DSpark draft
+  # ══════════════════════════════════════════════════════════════════════════════════════════════════════
+  "nvidia/DeepSeek-V4-Flash-nvfp4-DSpark")
+    VLLM_IMAGE="${IMG_VLLM_NIGHTLY}"
+    GPU_MEM_UTIL=0.90
+    MAX_MODEL_LEN=102400
+    MAX_BATCHED_TOKENS=4096
+    MAX_NUM_SEQS=8
+
+    ENV_ARGS=(
+      -e VLLM_ALLOW_LONG_MAX_MODEL_LEN=1
+      -e VLLM_USE_V1=1
+      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
+    )
+
+    EXTRA_ARGS=(
+      "--served-model-name"            "deepseek-v4-flash-nvfp4-dspark"
+      "--tensor-parallel-size"         "${TP_SIZE}"
+      "--distributed-executor-backend" "ray"
+      "--enable-expert-parallel"
+      "--kv-cache-dtype"               "fp8"
+      "--speculative-config"           '{"method":"dspark","num_speculative_tokens":7,"draft_sample_method":"greedy"}'
+      "--tokenizer-mode"               "deepseek_v4"
+      "--enable-auto-tool-choice"
+      "--tool-call-parser"             "deepseek_v4"
+      "--reasoning-parser"             "deepseek_v4"
+    )
+    ;;
+
+  # ════════════════════════════════════════════════════════════════════════════════════════════════════════
+  # MiniMax M3 target + external NVIDIA DSpark draft
+  # ════════════════════════════════════════════════════════════════════════════════════════════════════════
+  "nvidia/MiniMax-M3-DSpark")
+    VLLM_IMAGE="${IMG_VLLM_NIGHTLY}"
+    GPU_MEM_UTIL=0.90
+    MAX_MODEL_LEN=102400
+    MAX_BATCHED_TOKENS=8192
+    MAX_NUM_SEQS=8
+
+    MODEL_DOWNLOADS=(
+      "MiniMaxAI/MiniMax-M3"
+      "nvidia/MiniMax-M3-DSpark"
+    )
+
+    ENV_ARGS=(
+      -e VLLM_USE_V1=1
+      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
+    )
+
+    EXTRA_ARGS=(
+      "--served-model-name"            "minimax-m3-dspark"
+      "--tensor-parallel-size"         "${TP_SIZE}"
+      "--distributed-executor-backend" "ray"
+      "--block-size"                   "128"
+      "--speculative-config"           '{"method":"dspark","model":"nvidia/MiniMax-M3-DSpark","num_speculative_tokens":8}'
+      "--enable-auto-tool-choice"
+      "--tool-call-parser"             "minimax_m3"
+      "--reasoning-parser"             "minimax_m3"
+    )
+    MODEL="MiniMaxAI/MiniMax-M3"
+    ;;
+
+  # ══════════════════════════════════════════════════════════════════════════════════════════════════════
+  # Nemotron 3.5 Lightning target + external NVIDIA DSpark draft
+  # ═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+  "nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4-DSpark")
+    VLLM_IMAGE="${IMG_VLLM_0271}"
+    GPU_MEM_UTIL=0.91
+    MAX_MODEL_LEN=102400
+    MAX_BATCHED_TOKENS=16384
+    MAX_NUM_SEQS=8
+
+    MODEL_DOWNLOADS=(
+      "nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4"
+      "nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4-DSpark"
+    )
+
+    ENV_ARGS=(
+      -e VLLM_USE_V1=1
+      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
+    )
+
+    EXTRA_ARGS=(
+      "--served-model-name"                         "nemotron-3.5-lightning-dspark"
+      "--tensor-parallel-size"                      "${TP_SIZE}"
+      "--moe-backend"                               "marlin"
+      "--kv-cache-dtype"                            "fp8"
+      "--mamba-backend"                             "flashinfer"
+      "--mamba-cache-mode"                          "align"
+      "--speculative_config.model"                  "nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4-DSpark"
+      "--speculative_config.num_speculative_tokens" "3"
+      "--reasoning-parser"                          "nemotron_v3"
+      "--tool-call-parser"                          "qwen3_coder"
+      "--enable-auto-tool-choice"
+    )
+    MODEL="nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4"
+    ;;
+
 
 
 
@@ -1153,63 +1133,8 @@ case "${MODEL}" in
     ;;
 
   # ═══════════════════════════════════════════════════════════════════════════
-  # MiniMax-M2.7-PrismaQuant-3.20bit-vllm (rdtand), 196K context, 3.20bit
+  # sparkarena/Minimax-M3-v0-NVFP4, TP=4, NVFP4 Quant, block_size=128
   # ═══════════════════════════════════════════════════════════════════════════
-  "rdtand/MiniMax-M2.7-PrismaQuant-3.20bit-vllm")
-    VLLM_IMAGE="${IMG_EUGR}"
-    GPU_MEM_UTIL=0.90
-    MAX_MODEL_LEN=32768
-    MAX_BATCHED_TOKENS=32768
-    MAX_NUM_SEQS=8
-
-    ENV_ARGS=(
-      -e VLLM_HTTP_TIMEOUT_KEEP_ALIVE=600
-      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
-    )
-
-    EXTRA_ARGS=(
-      "--served-model-name"    "minimax-m2.7-prisma"
-      "--dtype"                "auto"
-      "--load-format"          "safetensors"
-      "--quantization"         "compressed-tensors"
-      "--kv-cache-dtype"       "fp8"
-      "--tensor-parallel-size" "${TP_SIZE}"
-      "--enable-auto-tool-choice"
-      "--tool-call-parser"     "minimax_m2"
-      "--reasoning-parser"     "minimax_m2"
-    )
-    ;;
-
-  # ═══════════════════════════════════════════════════════════════════════════
-  # dervig/m51Lab-MiniMax-M2.7-REAP-139B-A10B-NVFP4-GB10, TP=4, NVFP4 Quant, GB10
-  # ═══════════════════════════════════════════════════════════════════════════
-  "dervig/m51Lab-MiniMax-M2.7-REAP-139B-A10B-NVFP4-GB10")
-    VLLM_IMAGE="${IMG_MINIMAX_NVFP4}"
-    GPU_MEM_UTIL=0.85
-    MAX_MODEL_LEN=102400
-    MAX_BATCHED_TOKENS=32768
-    MAX_NUM_SEQS=8
-
-    ENV_ARGS=(
-      -e VLLM_MARLIN_USE_ATOMIC_ADD=1
-      -e HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
-    )
-
-    EXTRA_ARGS=(
-      "--served-model-name"           "minimax-m2.7-reap-139b"
-      "-tp"                           "${TP_SIZE}"
-      "-pp"                           "1"
-      "--load-format"                 "instanttensor"
-      "--enable-auto-tool-choice"
-      "--tool-call-parser"            "minimax_m2"
-      "--reasoning-parser"            "minimax_m2"
-      "--kv-cache-dtype"              "fp8"
-    )
-    ;;
-
-    # ═══════════════════════════════════════════════════════════════════════════
-    # sparkarena/Minimax-M3-v0-NVFP4, TP=4, NVFP4 Quant, block_size=128
-    # ═══════════════════════════════════════════════════════════════════════════
   "sparkarena/Minimax-M3-v0-NVFP4")
     VLLM_IMAGE="${IMG_EUGR}"
     GPU_MEM_UTIL=0.80
@@ -1236,8 +1161,8 @@ case "${MODEL}" in
     ;;
 
     # ═══════════════════════════════════════════════════════════════════════════
-    # Gemma-4 12B Coder Fable-5 Composer-2.5 MTP NVFP4 (TEST)
-    # ═══════════════════════════════════════════════════════════════════════════
+  # Gemma-4 12B Coder Fable-5 Composer-2.5 MTP NVFP4 (TEST)
+  # ══════════════════════════════════════════════════════════════════════════
   "Kimuraxhalu/gemma-4-12B-coder-fable5-composer2.5-MTP-NVFP4")
     VLLM_IMAGE="${IMG_GEMMA}"
     GPU_MEM_UTIL=0.90
@@ -1284,11 +1209,6 @@ if [[ -n "${MAX_MODEL_LEN_OVERRIDE}" ]]; then
 fi
 if [[ -n "${GPU_MEM_UTIL_OVERRIDE}" ]]; then
   GPU_MEM_UTIL="${GPU_MEM_UTIL_OVERRIDE}"
-fi
-
-# Force disable the unstable experimental V1 engine unless explicitly enabled by AEON-7
-if [[ "${MODEL}" != "AEON-7/Qwen3.6-35B-A3B-heretic-NVFP4" ]]; then
-  ENV_ARGS+=(-e VLLM_USE_V1=0)
 fi
 
 # ── AUTO-DOWNLOAD MODELS ─────────────────────────────────────────────────────
@@ -1489,17 +1409,6 @@ echo "   ctx    : ${MAX_MODEL_LEN}   mem: ${GPU_MEM_UTIL}   seqs: ${MAX_NUM_SEQS
 echo "   gpus   : ${GPUS_DEVICE}   container: ${CONTAINER_NAME}"
 
 # ── MOD: DROP CACHES ──────────────────────────────────────────────────────────
-# If selected model includes drop-caches mod, drop system caches to reclaim RAM
-if [[ "${MODEL}" == "nvidia/Kimi-K2.6-NVFP4" || "${MODEL}" == "netarmy007/Kimi-K2.7-Code" ]]; then
-  echo "🧹 Applying mod: mods/drop-caches..."
-  if [[ -w /proc/sys/vm/drop_caches ]]; then
-    echo "   Writing to /proc/sys/vm/drop_caches..."
-    sync; echo 3 > /proc/sys/vm/drop_caches 2>/dev/null || true
-  else
-    echo "   Note: Could not drop caches (insufficient permissions), proceeding..."
-  fi
-fi
-
 # ── ENGINE VERSION SELECTION ──────────────────────────────────────────────────
 # Recent vLLM nightlies enable the experimental V1 engine by default.
 # However, many of our quantized or custom configurations require the stable V0 engine.

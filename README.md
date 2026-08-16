@@ -20,6 +20,7 @@ This guide is designed to help researchers, developers, and data scientists get 
     - [Running vLLM via Docker](#running-vllm-via-docker)
 4. [Included Tools](#included-tools)
     - [`mix-vllm.sh` — Multi-Model Launcher](#mix-vllmsh--multi-model-launcher)
+    - [`minimax-h3-turbo.sh` — Video Generation](#minimax-h3-turbosh--video-generation)
     - [`benchmark.py` — Performance Testing](#benchmarkpy--performance-testing)
 5. [Useful Resources & External Links](#useful-resources--external-links)
 6. [Best Practices for DGX Spark (GB10)](#best-practices-for-dgx-spark-gb10)
@@ -116,7 +117,7 @@ curl http://localhost:8000/v1/chat/completions \
 
 ## Included Tools
 
-This repository ships with two ready-to-use scripts to deploy and benchmark models on your DGX Spark.
+This repository ships with three ready-to-use scripts to deploy, generate, and benchmark models on your DGX Spark.
 
 ### `mix-vllm.sh` — Multi-Model Launcher
 
@@ -136,7 +137,6 @@ A turnkey Bash script that launches a fully configured, production-ready **vLLM 
 | #6 | `Neural-ICE/Gemma-4-E2B-it-NVFP4` | ~120 | NVFP4 | 128K | 💬 🖼️ 🔊 🔧 🧠 | **Gemma 4 E2B Instruct NVFP4** — Highly optimized W4A4 conversational model |
 | #7 | `bg-digitalservices/Gemma-4-E2B-NVFP4` | ~120 | NVFP4 | 128K | 💬 🖼️ 🔊 | **Gemma 4 E2B Base NVFP4** — W4A4 quantized pre-trained model |
 | #8 | `Qwen/Qwen3.6-35B-A3B-FP8` | ~30 | FP8 | 256K | 💬 🔧 🧠 | 156 tok/s aggregate (c=32), cu130-nightly |
-| #9 | `rdtand/MiniMax-M2.7-PrismaQuant-3.20bit-vllm` | ~25 | 3.20bit | 196K | 💬 🔧 🧠 | MiniMax M2.7, PrismaQuant 3.20bit, standard eugr image |
 | #10 | `Intel/Qwen3-Coder-Next-int4-AutoRound` | ~17 | INT4 | 1M | 💬 🔧 | MoE FP8, YaRN RoPE scaling, 384 concurrent sequences |
 | #11 | `RedHatAI/Qwen3.5-122B-A10B-NVFP4` | ~17 | NVFP4 | 64K | 💬 🔧 🧠 | **Best quality** — RedHat calibration ≈ FP16, FlashInfer |
 | #12 | `shieldstar/Qwen3.5-122B-A10B-int4-AutoRound-EC` | — | INT4 | 196K | 💬 🔧 | AutoRound INT4, z-lab DFlash speculative decoding, custom vllm-node-tf5 image |
@@ -144,17 +144,20 @@ A turnkey Bash script that launches a fully configured, production-ready **vLLM 
 | #14 | `nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4` | ~15 | NVFP4 | 128K | 💬 🔧 🧠 | MoE 120B/12B active, Marlin dequant |
 | — | `LiquidAI/LFM2.5-350M` | ~212 | BF16 | 32K | 💬 | Ultra-lightweight 350M, ideal for testing/development |
 | — | `Qwen/Qwen3.5-0.8B` | ~103 | BF16 | 102K | 💬 🔧 | Lightweight 800M dense model, extremely fast, 102k context |
-| — | `nvidia/MiniMax-M2.7-NVFP4` | ~24 | NVFP4 | 196K | 💬 🔧 🧠 | MiniMax M2.7, TP×4, instanttensor format, FP8 KV-cache |
-| — | `dervig/m51Lab-MiniMax-M2.7-REAP-139B-A10B-NVFP4-GB10` | fast | NVFP4 | 102K | 💬 🔧 🧠 | MiniMax M2.7 REAP 139B, TP×4, instanttensor format |
 | — | `sparkarena/Minimax-M3-v0-NVFP4` | — | NVFP4 | 1M | 💬 🖼️ 🔧 🧠 | **MiniMax-M3-v0 NVFP4** — Native multimodal model, TP×4, 1M context, block_size=128 |
+| — | `RedHatAI/Muse-Glimmer-30B-NVFP4` | — | NVFP4 | 128K | 💬 🖼️ 🔧 🧠 | Muse Glimmer multimodal, official `muse-glimmer` image, TP×1 |
+| — | `nvidia/DeepSeek-V4-Flash-nvfp4-DSpark` | cluster | NVFP4 | 1M (102K default) | 💬 🔧 🧠 | Integrated DSpark speculative decoding, TP×4 Ray |
+| — | `nvidia/MiniMax-M3-DSpark` | cluster | DSpark | 1M (102K default) | 💬 🖼️ 🔧 🧠 | DSpark draft paired automatically with `MiniMaxAI/MiniMax-M3`, TP×4 Ray |
+| — | `nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4-DSpark` | — | NVFP4 + DSpark | 1M (102K default) | 💬 🔧 🧠 | Official single-DGX-Spark target/draft recipe, Marlin backend |
 | — | `Kimuraxhalu/gemma-4-12B-coder-fable5-composer2.5-MTP-NVFP4` | — | NVFP4 | 16K | 💬 🔧 🧠 | **[TEST] Gemma-4 12B Coder** — weight-only NVFP4, built-in MTP Speculative decoding, TP×1 |
-| — | `cyankiwi/MiniMax-M2.5-AWQ-4bit` | cluster | AWQ | 128K | 💬 🔧 🧠 | MiniMax M2.5, TP×4, Ray distributed backend |
-| — | `cyankiwi/MiniMax-M2.7-AWQ-4bit` | cluster | AWQ | 128K | 💬 🔧 🧠 | MiniMax M2.7, TP×2, Ray distributed backend |
-| — | `nvidia/Kimi-K2.6-NVFP4` | cluster | NVFP4 | 32K | 💬 🔧 🧠 | Kimi K2.6 MoE, TP×8 Ray cluster, shared HF cache, drop-caches mod |
-| — | `netarmy007/Kimi-K2.7-Code` | cluster | — | 256K | 💬 🔧 🧠 | Kimi K2.7 Code, TP×8 Ray cluster, drop-caches mod |
 | — | `deepseek-ai/DeepSeek-V4-Flash` | cluster | FP8 | 200K | 💬 🔧 🧠 | DeepSeek V4 Flash FP8, TP=2 MP, custom vllm-node-dsv4 image |
 
 > 💬 Text &nbsp; 🖼️ Image &nbsp; 🎥 Video &nbsp; 🔊 Audio &nbsp; 🔧 Tool-call (MCP-compatible) &nbsp; 🧠 Reasoning/thinking
+
+> [!NOTE]
+> The vLLM catalog is intentionally capped at four DGX Spark systems. `nvidia/Kimi-K3-NVFP4`
+> (~1.42 TB of weights) and `nvidia/DeepSeek-V4-Pro-nvfp4-DSpark` (~1.65 TB) are therefore
+> excluded because they cannot fit in the 512 GB aggregate memory of four GB10 systems.
 
 > [!WARNING]
 > **Hugging Face Token Required** — Most models need a valid Hugging Face access token to download weights. Without it, gated models (Llama, Gemma, etc.) will **fail to start**.
@@ -249,6 +252,41 @@ Downloaded models can take up significant disk space. The script stores download
   ```bash
   docker system prune -f
   ```
+
+---
+
+### `minimax-h3-turbo.sh` — Video Generation
+
+`lightx2v/Minimax-h3-Turbo` is a Diffusers LoRA for the `MiniMaxAI/MiniMax-H3`
+video model. It is intentionally handled by a separate launcher because it is an
+image/text-to-video pipeline, not a vLLM model or an OpenAI-compatible chat API.
+The base checkpoint is about 33 GB and the default workflow runs on one DGX
+Spark.
+
+Install the official runtime dependencies in a dedicated Python environment:
+
+```bash
+python3 -m pip install -U torch torchvision peft safetensors transformers accelerate pillow huggingface_hub
+python3 -m pip install -U git+https://github.com/huggingface/diffusers.git
+```
+
+Run the official four-step Turbo workflow:
+
+```bash
+./minimax-h3-turbo.sh
+
+# Other published checkpoints
+./minimax-h3-turbo.sh --variant 8step
+./minimax-h3-turbo.sh --variant 768p
+
+# Validate a custom job file without loading model weights
+./minimax-h3-turbo.sh --jobs-json ./my-video-jobs.json --dry-run
+```
+
+On first use, the launcher clones the official `ModelTC/Minimax-H3-Turbo`
+inference code into the user cache and downloads only the selected checkpoint
+from `lightx2v/Minimax-h3-Turbo`. Generated MP4 files are written to
+`outputs/minimax-h3-turbo/` by default.
 
 ---
 
@@ -383,23 +421,6 @@ Click on any model below to expand its detailed concurrency comparison table:
       2 │   4400.2ms │   7618.5ms │    7.156s │     512.0 │    198.31 │    143.08
       4 │   4817.4ms │   6133.1ms │    8.959s │     512.0 │    128.34 │    219.57
       8 │   9029.4ms │  14433.4ms │   13.295s │     512.0 │    126.37 │    219.51
-```
-
-</details>
-
-<details>
-<summary><b>5. minimax-m2.7-prisma (rdtand/MiniMax-M2.7-PrismaQuant-3.20bit-vllm)</b></summary>
-
-```
-══════════════════════════════════════════════════════════════════════
-  📊 COMPARISON TABLE (minimax-m2.7-prisma)
-══════════════════════════════════════════════════════════════════════
-   Conc │   TTFT avg │   TTFT p95 │   Lat avg │  Tok/resp │  t/s (req) │  t/s (agg)
-  ─────────────────────────────────────────────────────────────────────────────────
-      1 │    313.6ms │    713.4ms │   21.168s │     512.0 │     24.55 │     24.19
-      2 │    297.5ms │    438.7ms │   29.994s │     512.0 │     17.24 │     34.13
-      4 │    348.1ms │    384.9ms │   46.086s │     512.0 │     11.19 │     44.41
-      8 │   1011.4ms │   1129.8ms │   72.989s │     512.0 │      7.11 │     56.08
 ```
 
 </details>
