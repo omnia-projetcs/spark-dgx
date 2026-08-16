@@ -516,6 +516,9 @@ If you want to test engines other than vLLM:
 *   **[Ollama (ARM64 Native)](https://github.com/ollama/ollama)**: Super easy to install for simple terminal-based interaction.
 *   **[SGLang](https://github.com/sgl-project/sglang)**: Extremely high-throughput server, alternative to vLLM.
 
+### ⚡ Thermal, Power & Hardware Tuning
+*   **[agjs/gb10-clock-cap](https://github.com/agjs/gb10-clock-cap)**: GPU clock capping harness & systemd service for NVIDIA GB10 / DGX Spark. Reduces peak temperatures by **-12°C**, cuts GPU power draw by **-36%**, and eliminates thermal throttling with negligible (~1.6%) throughput cost.
+
 ---
 
 ## Best Practices for DGX Spark (GB10)
@@ -531,4 +534,19 @@ The Blackwell architecture has specialized hardware support for **FP4** and **FP
 
 ### 3. Multi-Node Scaling
 Using two DGX Spark units via their ConnectX-7 high-speed interfaces enables seamless model partitioning.
-*   Run vLLM with Ray or PyTorch Distributed to scale up to **Tensor Parallelism (TP) = 2** or **Pipeline Parallelism (PP) = 2** to run massive models up to 405B
+*   Run vLLM with Ray or PyTorch Distributed to scale up to **Tensor Parallelism (TP) = 2** or **Pipeline Parallelism (PP) = 2** to run massive models up to 405B.
+
+### 4. Thermal Management & GPU Clock Capping (Lower Heat & Power)
+Under sustained heavy inference workloads, the GB10 GPU can reach up to 90°C+ (approaching the ~95°C thermal trip point) and trigger thermal slowdown. Because LLM generation (token decoding) is heavily bound by memory bandwidth rather than core compute clocks, you can significantly drop operating temperature and power consumption without sacrificing token generation speed.
+
+*   **Cap GPU Clock to 2200 MHz:**
+    ```bash
+    sudo nvidia-smi -lgc 0,2200
+    ```
+    *(To reset back to default: `sudo nvidia-smi -rgc`)*
+*   **Key Results (from [agjs/gb10-clock-cap](https://github.com/agjs/gb10-clock-cap)):**
+    *   **Peak Temperature:** **-12°C** reduction (from 90°C stock down to 78°C).
+    *   **GPU Power Draw:** **-36%** power reduction (from ~63W down to ~40W per node).
+    *   **Thermal Throttling:** Completely eliminated (from 8.2s throttling to 0s).
+    *   **Inference Impact:** Decode throughput drops by only **~1.0%** (within measurement noise), and cold prefill latency increases by only ~3.9%.
+*   **Automated / Systemd Setup:** Check out the **[agjs/gb10-clock-cap](https://github.com/agjs/gb10-clock-cap)** repository for an automated measurement harness and systemd unit to persist clock caps across reboots.
